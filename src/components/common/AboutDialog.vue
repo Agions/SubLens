@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import Modal from '@/components/common/Modal.vue'
 
 interface Props {
   open: boolean
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'close'): void

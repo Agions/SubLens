@@ -30,7 +30,7 @@ onMounted(() => {
   
   // Register ? for shortcuts help
   window.addEventListener('keydown', (e) => {
-    if (e.key === '?' || (e.shift && e.key === '/')) {
+    if (e.key === '?' || (e.shiftKey && e.key === '/')) {
       shortcutsHelpRef.value?.open()
     }
   })

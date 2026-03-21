@@ -4,7 +4,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useTheme } from '@/composables/useTheme'
 
 const settingsStore = useSettingsStore()
-const { setTheme, toggleTheme, currentTheme } = useTheme()
+const { setTheme } = useTheme()
 
 const localSettings = ref({ ...settingsStore.settings })
 

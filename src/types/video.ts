@@ -27,11 +27,11 @@ export interface ROIPreset {
 }
 
 export const ROI_PRESETS: ROIPreset[] = [
-  { id: 'bottom', name: '底部字幕', icon: '⬇️', rect: { x: 0, y: 0, width: 100, height: 15, unit: 'percent' } },
-  { id: 'top', name: '顶部字幕', icon: '⬆️', rect: { x: 0, y: 85, width: 100, height: 15, unit: 'percent' } },
-  { id: 'left', name: '左侧字幕', icon: '⬅️', rect: { x: 0, y: 30, width: 40, height: 40, unit: 'percent' } },
-  { id: 'right', name: '右侧字幕', icon: '➡️', rect: { x: 60, y: 30, width: 40, height: 40, unit: 'percent' } },
-  { id: 'center', name: '中心字幕', icon: '⭕', rect: { x: 20, y: 70, width: 60, height: 20, unit: 'percent' } },
+  { id: 'bottom', name: '底部字幕', icon: '⬇️', rect: { id: 'bottom', name: '底部字幕', type: 'bottom', x: 0, y: 0, width: 100, height: 15, unit: 'percent', enabled: true } },
+  { id: 'top', name: '顶部字幕', icon: '⬆️', rect: { id: 'top', name: '顶部字幕', type: 'top', x: 0, y: 85, width: 100, height: 15, unit: 'percent', enabled: true } },
+  { id: 'left', name: '左侧字幕', icon: '⬅️', rect: { id: 'left', name: '左侧字幕', type: 'left', x: 0, y: 30, width: 40, height: 40, unit: 'percent', enabled: true } },
+  { id: 'right', name: '右侧字幕', icon: '➡️', rect: { id: 'right', name: '右侧字幕', type: 'right', x: 60, y: 30, width: 40, height: 40, unit: 'percent', enabled: true } },
+  { id: 'center', name: '中心字幕', icon: '⭕', rect: { id: 'center', name: '中心字幕', type: 'center', x: 20, y: 70, width: 60, height: 20, unit: 'percent', enabled: true } },
 ]
 
 export interface ROI {

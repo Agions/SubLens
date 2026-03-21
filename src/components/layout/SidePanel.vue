@@ -252,10 +252,10 @@ function handleExport(format: keyof typeof subtitleStore.exportFormats) {
         <h4 class="section-title">导出格式</h4>
         <div class="export-list">
           <button
-            v-for="(enabled, format) in subtitleStore.exportFormats"
+            v-for="format in (Object.keys(subtitleStore.exportFormats) as Array<keyof typeof subtitleStore.exportFormats>)"
             :key="format"
             class="export-btn"
-            @click="handleExport(format as keyof typeof subtitleStore.exportFormats)"
+            @click="handleExport(format)"
           >
             <span class="export-name">{{ format.toUpperCase() }}</span>
             <span class="export-desc">
