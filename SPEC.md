@@ -1,5 +1,7 @@
 # VisionSub v3.0 - 专业视频字幕提取工具
 
+> ⚠️ **文档状态**: 本文档描述的是 v3.0 版本的完整设计规范和架构。
+
 ## 1. Concept & Vision
 
 **核心理念**：一款专业级视频硬字幕提取工具，融合优雅的界面设计与强大的底层技术。界面如剪辑软件般精准专业，后端如AI助手般智能高效。支持帧级别的字幕与画面对应，让用户清晰看到每个字幕的来源。
@@ -486,28 +488,38 @@ anyhow = "1.0"         # 错误处理
 
 ---
 
-## 8. Roadmap
+## 8. Implementation Status
 
-### Phase 1: 基础框架 ✅
-- [ ] 项目初始化（Tauri + Vue + TypeScript）
-- [ ] 样式系统搭建（SCSS + CSS Variables）
-- [ ] 基础布局组件
-- [ ] CLI 脚手架
+### ✅ Phase 1: 基础框架 (已完成)
+- [x] 项目初始化（Tauri + Vue + TypeScript）
+- [x] 样式系统搭建（SCSS + CSS Variables）
+- [x] 基础布局组件 (ToolBar, SidePanel, VideoPreview, SubtitlePanel, StatusBar)
+- [x] CLI 脚手架 (visionsub-cli)
 
-### Phase 2: 核心功能 🚧
+### 🚧 Phase 2: 核心功能 (进行中)
 - [ ] 视频导入与播放
-- [ ] ROI 选择器
+- [ ] ROI 可视化选择器
 - [ ] Tesseract.js OCR 集成
 - [ ] 字幕列表与编辑
 
-### Phase 3: 高级功能 📋
+### 📋 Phase 3: 高级功能 (待开始)
 - [ ] 帧-字幕对应系统
-- [ ] 多格式导出
+- [ ] 多格式导出 (SRT, WebVTT, ASS, JSON)
 - [ ] 场景检测优化
 - [ ] 批处理支持
 
-### Phase 4: 打磨发布 🎉
+### 📋 Phase 4: 打磨发布 (待开始)
 - [ ] 主题系统
 - [ ] 快捷键支持
 - [ ] 安装包构建
 - [ ] 文档完善
+
+---
+
+## 9. Changelog
+
+### v3.0.0 (2026-03-21)
+- 🔥 完全重构，从 Python PyQt 迁移到 Tauri + Vue + TypeScript
+- ✨ 全新的深色科技风格 UI 设计
+- ⚡ 添加 CLI 工具支持
+- 📦 支持客户端和命令行两种使用方式

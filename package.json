@@ -1,13 +1,30 @@
 {
   "name": "visionsub",
-  "private": true,
   "version": "3.0.0",
+  "description": "Professional Video OCR Subtitle Extraction Tool",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri": "tauri"
+  },
+  "keywords": [
+    "video",
+    "subtitle",
+    "ocr",
+    "extraction",
+    "tauri",
+    "vue"
+  ],
+  "author": "Agions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Agions/VisionSub"
+  },
+  "bugs": {
+    "url": "https://github.com/Agions/VisionSub/issues"
   },
   "dependencies": {
     "vue": "^3.4.0",
