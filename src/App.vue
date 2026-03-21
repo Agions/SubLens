@@ -1,27 +1,41 @@
 <script setup lang="ts">
 import { onMounted, provide, ref } from 'vue'
+import { useTheme } from '@/composables/useTheme'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useSubtitleExtractor } from '@/composables/useSubtitleExtractor'
 import ToolBar from '@/components/layout/ToolBar.vue'
 import SidePanel from '@/components/layout/SidePanel.vue'
 import VideoPreview from '@/components/layout/VideoPreview.vue'
 import SubtitleList from '@/components/subtitle/SubtitleList.vue'
 import Timeline from '@/components/video/Timeline.vue'
 import StatusBar from '@/components/layout/StatusBar.vue'
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
-import { useSubtitleExtractor } from '@/composables/useSubtitleExtractor'
+import KeyboardShortcutsHelp from '@/components/common/KeyboardShortcutsHelp.vue'
 
+// Initialize theme
+useTheme()
+
+// Keyboard shortcuts
 const { setupShortcuts, cleanupShortcuts } = useKeyboardShortcuts()
-const subtitleExtractor = useSubtitleExtractor()
 
+// Subtitle extractor
+const subtitleExtractor = useSubtitleExtractor()
 provide('subtitleExtractor', subtitleExtractor)
 
 const showTimeline = ref(true)
+const shortcutsHelpRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null)
 
 onMounted(() => {
   console.log('[VisionSub] Application mounted')
   setupShortcuts()
+  
+  // Register ? for shortcuts help
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '?' || (e.shift && e.key === '/')) {
+      shortcutsHelpRef.value?.open()
+    }
+  })
 })
 
-// Expose cleanup for unmount
 import { onUnmounted } from 'vue'
 onUnmounted(() => {
   cleanupShortcuts()
@@ -42,6 +56,8 @@ onUnmounted(() => {
     </div>
     
     <StatusBar />
+    
+    <KeyboardShortcutsHelp ref="shortcutsHelpRef" />
   </div>
 </template>
 
