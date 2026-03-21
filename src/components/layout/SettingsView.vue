@@ -1,19 +1,28 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
+import { useTheme } from '@/composables/useTheme'
 
 const settingsStore = useSettingsStore()
+const { setTheme, toggleTheme, currentTheme } = useTheme()
 
 const localSettings = ref({ ...settingsStore.settings })
 
 watch(localSettings, (newSettings) => {
   Object.assign(settingsStore.settings, newSettings)
+  // Apply theme changes
+  setTheme(newSettings.theme)
 }, { deep: true })
+
+onMounted(() => {
+  localSettings.value = { ...settingsStore.settings }
+})
 
 function resetAll() {
   if (confirm('确定要重置所有设置为默认值吗？')) {
     settingsStore.resetSettings()
     localSettings.value = { ...settingsStore.settings }
+    setTheme(localSettings.value.theme)
   }
 }
 </script>

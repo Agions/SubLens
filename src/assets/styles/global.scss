@@ -6,20 +6,44 @@
 @import 'variables';
 @import 'mixins';
 
-// CSS Variables (for runtime theming)
+// CSS Variables - Default Dark Theme
 :root {
-  --primary: #{$primary};
-  --secondary: #{$secondary};
-  --accent: #{$accent};
-  --bg-base: #{$bg-base};
-  --bg-surface: #{$bg-surface};
-  --bg-elevated: #{$bg-elevated};
-  --bg-overlay: #{$bg-overlay};
-  --text-primary: #{$text-primary};
-  --text-secondary: #{$text-secondary};
-  --text-muted: #{$text-muted};
-  --border: #{$border};
-  --border-light: #{$border-light};
+  --primary: #0A84FF;
+  --secondary: #00D4AA;
+  --accent: #BF5AF2;
+  --bg-base: #0D0D0F;
+  --bg-surface: #151518;
+  --bg-elevated: #1C1C21;
+  --bg-overlay: #232328;
+  --text-primary: #FFFFFF;
+  --text-secondary: #98989D;
+  --text-muted: #5C5C61;
+  --border: #2C2C31;
+  --border-light: #3A3A40;
+  --success: #30D158;
+  --warning: #FFD60A;
+  --error: #FF453A;
+  --info: #64D2FF;
+}
+
+// Light Theme Override
+[data-theme="light"] {
+  --primary: #007AFF;
+  --secondary: #00B48D;
+  --accent: #AF52DE;
+  --bg-base: #F5F5F7;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #FAFAFA;
+  --bg-overlay: #E8E8ED;
+  --text-primary: #1D1D1F;
+  --text-secondary: #6E6E73;
+  --text-muted: #AEAEB2;
+  --border: #D2D2D7;
+  --border-light: #E5E5EA;
+  --success: #34C759;
+  --warning: #FF9F0A;
+  --error: #FF3B30;
+  --info: #007AFF;
 }
 
 // Base
@@ -49,13 +73,13 @@ body {
 
 // Selection
 ::selection {
-  background: $primary;
+  background: var(--primary);
   color: white;
 }
 
 // Links
 a {
-  color: $primary;
+  color: var(--primary);
   text-decoration: none;
   
   &:hover {
@@ -77,7 +101,8 @@ button {
   }
   
   &:focus-visible {
-    @include focus-ring;
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
@@ -88,18 +113,18 @@ select {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
-  background: $bg-surface;
-  border: 1px solid $border;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   padding: $space-2 $space-3;
   
   &:focus {
     outline: none;
-    border-color: $primary;
+    border-color: var(--primary);
   }
   
   &::placeholder {
-    color: $text-muted;
+    color: var(--text-muted);
   }
 }
 
@@ -110,13 +135,13 @@ select {
 }
 
 // Utility Classes
-.text-primary { color: $text-primary; }
-.text-secondary { color: $text-secondary; }
-.text-muted { color: $text-muted; }
-.text-accent { color: $primary; }
-.text-success { color: $success; }
-.text-warning { color: $warning; }
-.text-error { color: $error; }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
 
 .flex { display: flex; }
 .flex-center { @include flex-center; }
@@ -159,4 +184,10 @@ select {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+// Theme transition
+body,
+.app-container {
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
