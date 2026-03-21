@@ -6,9 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  release:
-    permissions:
-      contents: write
+  build:
     runs-on: ubuntu-latest
     
     steps:
@@ -35,14 +33,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: visionsub-dist-v${{ github.ref_name }}
+          name: visionsub-dist
           path: dist/
-      
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          prerelease: false
-          generate_release_notes: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
