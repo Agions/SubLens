@@ -19,16 +19,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
       
       - name: Install pnpm
-        run: npm install -g pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
       
       - name: Install dependencies
-        run: pnpm install
-      
-      - name: Get version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: pnpm install --frozen-lockfile
       
       - name: Build frontend
         run: pnpm build
@@ -36,20 +35,14 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: visionsub-dist
+          name: visionsub-dist-v${{ github.ref_name }}
           path: dist/
       
-      - name: Create Release
-        uses: actions/create-release@v1
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          prerelease: false
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: VisionSub v${{ steps.version.outputs.VERSION }}
-          draft: true
-          body: |
-            ## VisionSub v${{ steps.version.outputs.VERSION }}
-            
-            Built files available in artifacts.
-            
-            See [CHANGELOG](./CHANGELOG.md) for details.
