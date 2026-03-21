@@ -13,23 +13,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: ubuntu-22.04
-            target: deb
-          - platform: windows-2022
-            target: nsis
-          - platform: macos-14
-            target: dmg
+        platform: [ubuntu-22.04, windows-2022, macos-14]
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
       
       - name: Install pnpm
         run: npm install -g pnpm@8
@@ -37,10 +30,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       
-      - name: Setup Rust
+      - name: Setup Rust (Ubuntu/Linux)
+        if: runner.os == 'Linux'
         uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
+      
+      - name: Setup Rust (Windows)
+        if: runner.os == 'Windows'
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Setup Rust (macOS)
+        if: runner.os == 'macOS'
+        uses: dtolnay/rust-toolchain@stable
       
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -67,7 +67,11 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: '**'
           path: artifacts
+      
+      - name: List artifacts
+        run: find artifacts -type f -name '*.exe' -o -name '*.msi' -o -name '*.dmg' -o -name '*.deb'
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
