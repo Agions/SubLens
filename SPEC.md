@@ -493,25 +493,28 @@ anyhow = "1.0"         # 错误处理
 ### ✅ Phase 1: 基础框架 (已完成)
 - [x] 项目初始化（Tauri + Vue + TypeScript）
 - [x] 样式系统搭建（SCSS + CSS Variables）
-- [x] 基础布局组件 (ToolBar, SidePanel, VideoPreview, SubtitlePanel, StatusBar)
+- [x] 基础布局组件 (ToolBar, SidePanel, VideoPreview, SubtitleList, StatusBar)
 - [x] CLI 脚手架 (visionsub-cli)
 - [x] Pinia 状态管理 (project, subtitle, settings stores)
 - [x] TypeScript 类型定义 (video, subtitle types)
 
-### 🚧 Phase 2: 核心功能 (进行中)
+### ✅ Phase 2: 核心功能 (已完成)
 - [x] 视频导入与播放 (useVideoPlayer composable)
 - [x] ROI 可视化选择器 (ROISelector component)
 - [x] Tesseract.js OCR 集成 (useOCREngine composable)
-- [ ] 字幕列表与编辑
-- [ ] 帧-字幕对应数据模型
+- [x] 字幕列表与编辑 (SubtitleList component)
+- [x] 帧-字幕对应数据模型
+- [x] 文件导出功能 (useFileOperations composable)
+- [x] Rust 文件操作命令
 
-### 📋 Phase 3: 高级功能 (待开始)
-- [ ] 多格式导出 (SRT, WebVTT, ASS, JSON)
+### 🚧 Phase 3: 高级功能 (进行中)
 - [ ] 场景检测优化
 - [ ] 批处理支持
+- [ ] 更多 OCR 引擎集成
 
 ### 📋 Phase 4: 打磨发布 (待开始)
-- [ ] 主题系统
+- [x] 设置页面 (SettingsView)
+- [ ] 主题系统 (dark/light)
 - [ ] 快捷键支持
 - [ ] 安装包构建
 - [ ] 文档完善

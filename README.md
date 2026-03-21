@@ -1,162 +1,148 @@
 # VisionSub v3.0
 
+> 专业视频字幕提取工具 - Tauri + Vue 3 + TypeScript
+
 <div align="center">
 
-### 🔥 Professional Video Subtitle Extraction Tool
-
-**Tauri + Vue 3 + TypeScript + SCSS**
-
-*[English](./README.md) · 中文*
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Agions/VisionSub/pulls)
+[![Stars](https://img.shields.io/github/stars/Agions/VisionSub?style=social)](https://github.com/Agions/VisionSub/stargazers)
 
 </div>
 
 ---
 
-## ✨ Features
+## ✨ 特性
 
-### 🎬 Desktop Application
-- **Modern UI**: Dark tech theme inspired by professional video editing software
-- **Visual ROI Selection**: Drag & drop subtitle region selection with presets
-- **Real-time Preview**: Live OCR preview with frame navigation
-- **Multi-format Export**: SRT, WebVTT, ASS, JSON (with frame mapping)
+### 🖥️ 桌面客户端
+- **现代化 UI**: 深色科技风格，灵感来自专业视频剪辑软件
+- **可视化 ROI 选择**: 拖拽选择字幕区域，支持多种预设
+- **实时预览**: 字幕实时识别，预览效果
+- **帧-字幕对应**: 每个字幕精确对应视频帧位置
 
-### ⌨️ CLI Tool
+### ⌨️ 命令行工具
 ```bash
-# Extract subtitles
+# 提取字幕
 visionsub-cli extract video.mp4 --output ./subs --format srt,vtt,json
 
-# Preview frame
+# 预览帧
 visionsub-cli preview video.mp4 --frame 1500
 
-# Get video info
+# 查看视频信息
 visionsub-cli info video.mp4
 ```
 
-### 🗺️ Frame-Subtitle Mapping
-Each subtitle entry contains:
-- Start/End frame numbers
-- Associated frame thumbnails
-- ROI source region
-- Confidence score
+## 🚀 快速开始
 
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|:---|:---|
-| Desktop Framework | Tauri 2.x |
-| Frontend | Vue 3 + TypeScript |
-| Styling | SCSS + CSS Variables |
-| State Management | Pinia |
-| Video Processing | WebCodecs API / Native FFmpeg |
-| OCR Engine | Tesseract.js (WASM) / PaddleOCR |
-
-## 📂 Project Structure
-
-```
-visionsub/
-├── src/                          # Vue Frontend
-│   ├── components/             # UI Components
-│   │   ├── layout/           # Layout (ToolBar, SidePanel...)
-│   │   ├── video/            # Video player, ROI selector
-│   │   └── subtitle/         # Subtitle list, editor
-│   ├── composables/           # Vue Composables
-│   ├── stores/               # Pinia Stores
-│   └── types/                # TypeScript Types
-│
-├── src-tauri/                 # Rust Backend
-│   ├── src/
-│   │   ├── commands/         # Tauri IPC Commands
-│   │   │   ├── video.rs    # Video processing
-│   │   │   ├── ocr.rs      # OCR integration
-│   │   │   └── export.rs    # Subtitle export
-│   │   └── lib.rs
-│   └── Cargo.toml
-│
-├── SPEC.md                    # Design Specification
-└── README.md
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
+### 环境要求
 - Node.js 18+
 - Rust 1.70+
 - pnpm 8+
 
-### Install Dependencies
+### 安装依赖
 
 ```bash
-# Install frontend dependencies
+# 安装前端依赖
 pnpm install
 
-# Install Rust dependencies
-cd src-tauri && cargo build
+# 构建 Rust 后端
+cd src-tauri && cargo build --release
 ```
 
-### Development
+### 开发
 
 ```bash
-# Run frontend dev server
+# 启动前端开发服务器
 pnpm dev
 
-# Run Tauri app
+# 启动 Tauri 应用
 pnpm tauri dev
 ```
 
-### Build
+### 构建
 
 ```bash
-# Build frontend
+# 构建前端
 pnpm build
 
-# Build Tauri app
+# 构建 Tauri 应用
 pnpm tauri build
 ```
 
-## 🎯 Supported Formats
+## 🎯 支持格式
 
-### Input Video
-| Format | Extension |
+### 输入视频
+| 格式 | 扩展名 |
 |:---|:---|
-| MP4 | .mp4 |
-| MKV | .mkv |
-| AVI | .avi |
-| MOV | .mov |
-| WebM | .webm |
+| MP4 | `.mp4` |
+| MKV | `.mkv` |
+| AVI | `.avi` |
+| MOV | `.mov` |
+| WebM | `.webm` |
 
-### Output Subtitles
-| Format | Frame Mapping | Description |
+### 输出字幕
+| 格式 | 帧对应 | 说明 |
 |:---|:---|:---|
-| SRT | ❌ | Standard subtitle format |
-| WebVTT | ❌ | Web video text tracks |
-| ASS | ❌ | Advanced SubStation Alpha |
-| JSON | ✅ | Structured data with frame info |
-| TXT | ❌ | Plain text |
+| SRT | ❌ | 标准字幕格式 |
+| WebVTT | ❌ | Web 视频字幕 |
+| ASS | ❌ | 高级字幕格式 |
+| JSON | ✅ | 含帧映射信息 |
+| TXT | ❌ | 纯文本 |
 
-## 🎨 UI Preview
+## 🛠️ 技术栈
+
+| 层级 | 技术 |
+|:---|:---|
+| **桌面框架** | Tauri 2.x |
+| **前端** | Vue 3 + TypeScript |
+| **样式** | SCSS + CSS Variables |
+| **状态管理** | Pinia |
+| **OCR 引擎** | Tesseract.js (WASM) |
+
+## 📂 项目结构
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  VisionSub  │  Project  │  📂  │  💾  │    ⚙️        │
-├──────────┬─────────────────────────────┬─────────────────┤
-│          │                             │                 │
-│  📁 Files│    🎬 Video Preview       │  📝 Subtitles   │
-│  📊 Progress                           │  ⏱️ Timeline   │
-│  🎯 ROI  │    [ROI Selection Area]   │  🔍 Frame Info  │
-│  ⚙️ OCR  │                             │                 │
-│          │  ▶️  00:01:23 / 00:05:00  │                 │
-├──────────┴─────────────────────────────┴─────────────────┤
-│  Frame: #2341  │  FPS: 30  │  1920×1080  │  PaddleOCR  │
-└─────────────────────────────────────────────────────────┘
+visionsub/
+├── src/                          # Vue 前端
+│   ├── components/             # UI 组件
+│   │   ├── layout/           # 布局组件
+│   │   ├── video/            # 视频相关
+│   │   └── subtitle/         # 字幕相关
+│   ├── composables/           # Vue Composables
+│   ├── stores/               # Pinia 状态管理
+│   └── types/                # TypeScript 类型
+│
+├── src-tauri/                 # Rust 后端
+│   └── src/
+│       └── commands/         # Tauri IPC 命令
+│
+├── SPEC.md                    # 设计规范
+└── README.md
 ```
 
-## 📜 License
+## 🎨 界面预览
 
-MIT License - see [LICENSE](./LICENSE) file.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  VisionSub  │  项目  │  📂  │  💾  │              ⚙️     │
+├──────────┬─────────────────────────────────┬─────────────────┤
+│          │                                 │                 │
+│  📁 文件 │      🎬 视频预览区域           │  📝 字幕列表    │
+│  📊 进度 │      [ROI 选择区域]           │  ⏱️ 时间轴     │
+│  🎯 区域 │                                 │  🔍 帧详情      │
+│  🔧 OCR  │      ▶️  00:01:23 / 00:05:00  │                 │
+│          │                                 │                 │
+├──────────┴─────────────────────────────────┴─────────────────┤
+│  帧: #2341  │  FPS: 30  │  1920×1080  │  PaddleOCR      │
+└─────────────────────────────────────────────────────────────┘
+```
 
-## 🙏 Acknowledgments
+## 📜 许可证
 
-- [Tauri](https://tauri.app/) - Build smaller, faster desktop apps
-- [Vue.js](https://vuejs.org/) - The progressive JavaScript framework
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) - Ultra-fast OCR engine
-- [Tesseract.js](https://github.com/naptha/tesseract.js) - Pure JS OCR
+[MIT License](./LICENSE) - 详情请查看 LICENSE 文件。
+
+## 🙏 致谢
+
+- [Tauri](https://tauri.app/) - 构建更小更快的桌面应用
+- [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
+- [Tesseract.js](https://github.com/naptha/tesseract.js) - 纯 JavaScript OCR 引擎
