@@ -31,6 +31,9 @@ pub fn run() {
             commands::file::write_text_file,
             commands::file::read_text_file,
             commands::file::get_file_info,
+            commands::scene::detect_scenes,
+            commands::scene::calculate_frame_similarity,
+            commands::scene::get_video_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

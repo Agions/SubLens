@@ -1,86 +1,41 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Dependencies
+node_modules/
 
-# Virtual environments
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Build outputs
+dist/
+dist-tauri/
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# Type checking
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Linting
-.ruff_cache/
-
-# Build artifacts
-*.dmg
-*.app
-*.exe
-*.spec
-
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Data files
-*.mp4
-*.avi
-*.mkv
-*.mov
-*.wmv
-*.flv
-*.webm
-*.m4v
-*.3gp
-data/processed/
-data/raw/   
+# Environment
+.env
+.env.local
+.env.*.local
 
+# Test
+coverage/
+
+# Temporary
+*.tmp
+*.temp
+*.bak
