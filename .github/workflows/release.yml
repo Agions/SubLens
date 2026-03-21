@@ -9,28 +9,19 @@ jobs:
   release:
     permissions:
       contents: write
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ubuntu-latest]
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+        run: npm install -g pnpm
       
       - name: Install dependencies
         run: pnpm install
@@ -40,8 +31,6 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
       
       - name: Build frontend
-        env:
-          VERSION: ${{ steps.version.outputs.VERSION }}
         run: pnpm build
       
       - name: Create draft release
@@ -50,7 +39,7 @@ jobs:
           body: |
             ## VisionSub v${{ steps.version.outputs.VERSION }}
             
-            Download the installer for your platform.
+            Download the built files from the artifacts.
             
             See [CHANGELOG](./CHANGELOG.md) for details.
           draft: true
