@@ -6,17 +6,30 @@ on:
       - 'v*'
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-tauri:
+    permissions:
+      contents: write
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            target: deb
+          - platform: windows-2022
+            target: nsis
+          - platform: macos-14
+            target: dmg
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
       
       - name: Install pnpm
         run: npm install -g pnpm@8
@@ -24,11 +37,43 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       
-      - name: Build frontend
-        run: pnpm build
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          name: visionsub-dist
-          path: dist/
+          toolchain: stable
+      
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'VisionSub v${{ github.ref_name }}'
+          releaseBody: |
+            ## VisionSub v${{ github.ref_name }}
+            
+            Download the installer for your platform.
+            
+            See CHANGELOG for details.
+          releaseDraft: false
+          prerelease: false
+
+  create-release:
+    needs: build-tauri
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          prerelease: false
+          files: artifacts/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
