@@ -1,0 +1,162 @@
+// ============================================
+// VisionSub Global Styles
+// ============================================
+
+@import 'reset';
+@import 'variables';
+@import 'mixins';
+
+// CSS Variables (for runtime theming)
+:root {
+  --primary: #{$primary};
+  --secondary: #{$secondary};
+  --accent: #{$accent};
+  --bg-base: #{$bg-base};
+  --bg-surface: #{$bg-surface};
+  --bg-elevated: #{$bg-elevated};
+  --bg-overlay: #{$bg-overlay};
+  --text-primary: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-muted: #{$text-muted};
+  --border: #{$border};
+  --border-light: #{$border-light};
+}
+
+// Base
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-ui;
+  font-size: $text-base;
+  line-height: 1.5;
+  color: $text-primary;
+  background-color: $bg-base;
+  overflow: hidden;
+  @include custom-scrollbar(8px);
+}
+
+// Selection
+::selection {
+  background: $primary;
+  color: white;
+}
+
+// Links
+a {
+  color: $primary;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Buttons
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  
+  &:focus {
+    outline: none;
+  }
+  
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Inputs
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: $bg-surface;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  padding: $space-2 $space-3;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+  
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+// Scrollable
+.scrollable {
+  overflow: auto;
+  @include custom-scrollbar;
+}
+
+// Utility Classes
+.text-primary { color: $text-primary; }
+.text-secondary { color: $text-secondary; }
+.text-muted { color: $text-muted; }
+.text-accent { color: $primary; }
+.text-success { color: $success; }
+.text-warning { color: $warning; }
+.text-error { color: $error; }
+
+.flex { display: flex; }
+.flex-center { @include flex-center; }
+.flex-between { @include flex-between; }
+.flex-column { @include flex-column; }
+
+.gap-1 { gap: $space-1; }
+.gap-2 { gap: $space-2; }
+.gap-3 { gap: $space-3; }
+.gap-4 { gap: $space-4; }
+
+// Animations
+@keyframes entrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

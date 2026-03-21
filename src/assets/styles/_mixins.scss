@@ -1,0 +1,129 @@
+// ============================================
+// VisionSub Design System - Mixins
+// ============================================
+
+// Flexbox
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Typography
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Background
+@mixin bg-gradient($direction: to bottom, $from: $bg-surface, $to: $bg-elevated) {
+  background: linear-gradient($direction, $from, $to);
+}
+
+// Interactive
+@mixin interactive {
+  cursor: pointer;
+  user-select: none;
+  transition: all $transition-fast;
+  
+  &:hover {
+    background-color: $bg-overlay;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@mixin focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 2px $primary;
+}
+
+// Glass Effect
+@mixin glass {
+  background: rgba($bg-elevated, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid $border;
+}
+
+// Scrollbar
+@mixin custom-scrollbar($width: 6px) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $border-light;
+    border-radius: $radius-full;
+    
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+// Noise Texture
+@mixin noise($opacity: 0.03) {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: $opacity;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+// Glow Effect
+@mixin glow($color: $primary, $size: 20px) {
+  box-shadow: 0 0 $size rgba($color, 0.4);
+}
+
+// Animation Keyframes
+@mixin keyframes($name) {
+  @keyframes #{$name} {
+    @content;
+  }
+}
+
+// Entrance Animation
+@mixin entrance($delay: 0ms) {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: entrance $transition-slow forwards;
+  animation-delay: $delay;
+}
