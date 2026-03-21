@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
-import ROISelector from './ROISelector.vue'
+import ROISelector from '@/components/video/ROISelector.vue'
 
 const projectStore = useProjectStore()
 const subtitleStore = useSubtitleStore()

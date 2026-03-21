@@ -3,9 +3,8 @@ import { ref, computed } from 'vue'
 import Modal from '@/components/common/Modal.vue'
 import Button from '@/components/common/Button.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useFileOperations } from '@/composables/useFileOperations'
 
-const props = defineProps<{
+defineProps<{
   open: boolean
 }>()
 
@@ -15,7 +14,6 @@ const emit = defineEmits<{
 }>()
 
 const subtitleStore = useSubtitleStore()
-const fileOps = useFileOperations()
 
 const selectedFormats = computed(() => {
   return Object.entries(subtitleStore.exportFormats)
@@ -82,13 +80,13 @@ const formatDescriptions: Record<string, string> = {
 
       <div class="formats-grid">
         <label
-          v-for="(enabled, format) in subtitleStore.exportFormats"
+          v-for="format in (Object.keys(subtitleStore.exportFormats) as Array<keyof typeof subtitleStore.exportFormats>)"
           :key="format"
-          :class="['format-item', { selected: enabled }]"
+          :class="['format-item', { selected: subtitleStore.exportFormats[format] }]"
         >
           <input
             type="checkbox"
-            v-model="subtitleStore.exportFormats[format as keyof typeof subtitleStore.exportFormats]"
+            v-model="subtitleStore.exportFormats[format]"
           />
           <div class="format-info">
             <span class="format-name">{{ format.toUpperCase() }}</span>

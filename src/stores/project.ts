@@ -80,10 +80,10 @@ export const useProjectStore = defineStore('project', () => {
     const preset = ROI_PRESETS.find(p => p.id === presetId)
     if (preset) {
       selectedROI.value = {
+        ...preset.rect,
         id: preset.id,
         name: preset.name,
         type: preset.id as ROI['type'],
-        ...preset.rect,
         enabled: true
       }
     }

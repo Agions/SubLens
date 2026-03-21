@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/core'
-import { open, save } from '@tauri-apps/plugin-dialog'
 
 export interface FileInfo {
   path: string
