@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, ExportFormats } from '@/types/subtitle'
-import { formatSRT, formatWebVTT, formatJSON } from '@/types/subtitle'
+import { formatSRT, formatWebVTT, formatASS, formatJSON } from '@/types/subtitle'
 
 export const useSubtitleStore = defineStore('subtitle', () => {
   // State
@@ -18,7 +18,7 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   const exportFormats = ref<ExportFormats>({
     srt: true,
     vtt: false,
-    ass: false,
+    ass: true,
     json: true,
     txt: false
   })
@@ -138,12 +138,14 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   }
   
   // Export
-  function exportToFormat(format: 'srt' | 'vtt' | 'json' | 'txt'): string {
+  function exportToFormat(format: 'srt' | 'vtt' | 'ass' | 'json' | 'txt'): string {
     switch (format) {
       case 'srt':
         return formatSRT(subtitles.value)
       case 'vtt':
         return formatWebVTT(subtitles.value)
+      case 'ass':
+        return formatASS(subtitles.value)
       case 'json':
         return formatJSON(subtitles.value)
       case 'txt':

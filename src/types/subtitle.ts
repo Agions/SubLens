@@ -60,6 +60,31 @@ export function formatWebVTT(subtitles: SubtitleItem[]): string {
   return header + content
 }
 
+// ASS Format (Advanced SubStation Alpha)
+export function formatASS(subtitles: SubtitleItem[]): string {
+  const header = `[Script Info]
+Title: VisionSub Export
+ScriptType: v4.00+
+Collisions: Normal
+PlayDepth: 0
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
+
+  const events = subtitles.map(sub => {
+    const start = formatTimestampASS(sub.startTime)
+    const end = formatTimestampASS(sub.endTime)
+    const text = sub.text.replace(/\\/g, '\\\\').replace(/\{/g, '\\{').replace(/\}/g, '\\}')
+    return `Dialogue: 0,${start},${end},Default,,0,0,0,,${text}`
+  }).join('\n')
+
+  return header + '\n' + events
+}
+
 // JSON Format (with frame mapping)
 export function formatJSON(subtitles: SubtitleItem[]): string {
   return JSON.stringify({
@@ -91,4 +116,16 @@ function formatTimestamp(seconds: number, separator: string): string {
   const pad = (n: number, len = 2) => n.toString().padStart(len, '0')
   
   return `${pad(hrs)}:${pad(mins)}:${pad(secs)}${separator}${pad(ms, 3)}`
+}
+
+// ASS timestamp formatter (h:mm:ss.cc)
+function formatTimestampASS(seconds: number): string {
+  const hrs = Math.floor(seconds / 3600)
+  const mins = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+  const cs = Math.floor((seconds % 1) * 100)
+  
+  const pad = (n: number, len = 2) => n.toString().padStart(len, '0')
+  
+  return `${hrs}:${pad(mins)}:${pad(secs)}.${pad(cs)}`
 }
