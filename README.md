@@ -197,12 +197,6 @@ VisionSub/
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 深色主题
-![Dark Theme](./assets/preview-dark.png)
-
-### 浅色主题
-![Light Theme](./assets/preview-light.png)
-
 ## 📜 许可证
 
 [MIT License](./LICENSE) - 详情请查看 LICENSE 文件。
