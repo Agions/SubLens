@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, ExportFormats } from '@/types/subtitle'
-import { formatSRT, formatWebVTT, formatASS, formatJSON } from '@/types/subtitle'
+import { formatSRT, formatWebVTT, formatASS, formatSSA, formatJSON, formatLRC, formatSBV, formatCSV } from '@/types/subtitle'
 
 export const useSubtitleStore = defineStore('subtitle', () => {
   // State
@@ -18,9 +18,13 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   const exportFormats = ref<ExportFormats>({
     srt: true,
     vtt: false,
-    ass: true,
+    ass: false,
+    ssa: false,
     json: true,
-    txt: false
+    txt: false,
+    lrc: false,
+    sbv: false,
+    csv: false
   })
   
   // Edit History (for undo/redo)
@@ -138,7 +142,7 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   }
   
   // Export
-  function exportToFormat(format: 'srt' | 'vtt' | 'ass' | 'json' | 'txt'): string {
+  function exportToFormat(format: 'srt' | 'vtt' | 'ass' | 'ssa' | 'json' | 'txt' | 'lrc' | 'sbv' | 'csv'): string {
     switch (format) {
       case 'srt':
         return formatSRT(subtitles.value)
@@ -146,10 +150,18 @@ export const useSubtitleStore = defineStore('subtitle', () => {
         return formatWebVTT(subtitles.value)
       case 'ass':
         return formatASS(subtitles.value)
+      case 'ssa':
+        return formatSSA(subtitles.value)
       case 'json':
         return formatJSON(subtitles.value)
       case 'txt':
         return subtitles.value.map(sub => sub.text).join('\n')
+      case 'lrc':
+        return formatLRC(subtitles.value)
+      case 'sbv':
+        return formatSBV(subtitles.value)
+      case 'csv':
+        return formatCSV(subtitles.value)
       default:
         return ''
     }
