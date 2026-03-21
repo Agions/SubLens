@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, provide } from 'vue'
 import ToolBar from '@/components/layout/ToolBar.vue'
 import SidePanel from '@/components/layout/SidePanel.vue'
 import VideoPreview from '@/components/layout/VideoPreview.vue'
-import SubtitlePanel from '@/components/layout/SubtitlePanel.vue'
+import SubtitleList from '@/components/subtitle/SubtitleList.vue'
 import StatusBar from '@/components/layout/StatusBar.vue'
 
 onMounted(() => {
@@ -18,7 +18,7 @@ onMounted(() => {
     <div class="app-main">
       <SidePanel />
       <VideoPreview />
-      <SubtitlePanel />
+      <SubtitleList />
     </div>
     
     <StatusBar />

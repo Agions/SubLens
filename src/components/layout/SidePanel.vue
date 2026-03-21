@@ -1,118 +1,269 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useProjectStore } from '@/stores/project'
+import { useSubtitleStore } from '@/stores/subtitle'
+import { ROI_PRESETS, type OCREngine } from '@/types/video'
 
-const activeSection = ref<'files' | 'progress' | 'roi' | 'ocr'>('files')
+const projectStore = useProjectStore()
+const subtitleStore = useSubtitleStore()
 
-const roiPresets = [
-  { id: 'bottom', name: '底部字幕', icon: '⬇️' },
-  { id: 'top', name: '顶部字幕', icon: '⬆️' },
-  { id: 'left', name: '左侧字幕', icon: '⬅️' },
-  { id: 'right', name: '右侧字幕', icon: '➡️' },
-  { id: 'center', name: '中心字幕', icon: '⭕' },
-]
+type TabKey = 'files' | 'progress' | 'roi' | 'ocr' | 'export'
+const activeTab = ref<TabKey>('files')
 
-const ocrEngines = [
+const ocrEngines: { id: OCREngine; name: string; recommended: boolean }[] = [
   { id: 'paddle', name: 'PaddleOCR', recommended: true },
-  { id: 'easy', name: 'EasyOCR', recommended: false },
-  { id: 'tesseract', name: 'Tesseract', recommended: false },
+  { id: 'easyocr', name: 'EasyOCR', recommended: false },
+  { id: 'tesseract', name: 'Tesseract.js', recommended: false },
 ]
 
-const selectedEngine = ref('paddle')
-const selectedPreset = ref('bottom')
+const languages = [
+  { id: 'ch', name: '中文', selected: true },
+  { id: 'en', name: '英文', selected: false },
+  { id: 'ja', name: '日文', selected: false },
+  { id: 'ko', name: '韩文', selected: false },
+]
+
+const selectedLanguages = ref<string[]>(['ch'])
+const confidenceThreshold = ref(70)
+
+const isExtracting = computed(() => subtitleStore.isExtracting)
+
+function toggleLanguage(id: string) {
+  const idx = selectedLanguages.value.indexOf(id)
+  if (idx === -1) {
+    selectedLanguages.value.push(id)
+  } else {
+    selectedLanguages.value.splice(idx, 1)
+  }
+  projectStore.setLanguages([...selectedLanguages.value])
+}
+
+function handleStartExtraction() {
+  if (!projectStore.hasVideo) return
+  subtitleStore.startExtraction()
+  // TODO: Start extraction process
+}
+
+function handleStopExtraction() {
+  subtitleStore.finishExtraction()
+}
+
+function handleExport(format: keyof typeof subtitleStore.exportFormats) {
+  const content = subtitleStore.exportToFormat(format)
+  if (content) {
+    // Export would be handled by useFileOperations
+    console.log(`Exporting ${format}:`, content.slice(0, 100))
+  }
+}
 </script>
 
 <template>
   <aside class="side-panel">
-    <!-- Section Tabs -->
-    <div class="section-tabs">
+    <!-- Tabs -->
+    <div class="tabs">
       <button
-        v-for="section in ['files', 'progress', 'roi', 'ocr'] as const"
-        :key="section"
-        :class="['tab', { active: activeSection === section }]"
-        @click="activeSection = section"
+        v-for="tab in [
+          { key: 'files', icon: '📁', label: '文件' },
+          { key: 'progress', icon: '📊', label: '进度' },
+          { key: 'roi', icon: '🎯', label: '区域' },
+          { key: 'ocr', icon: '🔧', label: 'OCR' },
+        ] as const"
+        :key="tab.key"
+        :class="['tab', { active: activeTab === tab.key }]"
+        @click="activeTab = tab.key"
       >
-        {{ section === 'files' ? '📁' : section === 'progress' ? '📊' : section === 'roi' ? '🎯' : '🔧' }}
+        <span class="tab-icon">{{ tab.icon }}</span>
+        <span class="tab-label">{{ tab.label }}</span>
       </button>
     </div>
-    
-    <!-- Files Section -->
-    <div v-if="activeSection === 'files'" class="section">
-      <h3 class="section-title">文件列表</h3>
-      <div class="empty-state">
-        <span class="empty-icon">📂</span>
-        <p class="empty-text">拖拽视频文件到这里</p>
-        <p class="empty-hint">支持 MP4, MKV, AVI, MOV, WebM</p>
-      </div>
-    </div>
-    
-    <!-- Progress Section -->
-    <div v-if="activeSection === 'progress'" class="section">
-      <h3 class="section-title">处理进度</h3>
-      <div class="progress-area">
-        <div class="progress-ring">
-          <svg viewBox="0 0 100 100">
-            <circle class="ring-bg" cx="50" cy="50" r="45" />
-            <circle class="ring-fill" cx="50" cy="50" r="45" 
-              stroke-dasharray="283" stroke-dashoffset="0" />
-          </svg>
-          <span class="progress-text">0%</span>
-        </div>
-        <div class="progress-info">
-          <span class="progress-label">等待处理</span>
-          <span class="progress-detail">已提取 0 条字幕</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- ROI Section -->
-    <div v-if="activeSection === 'roi'" class="section">
-      <h3 class="section-title">字幕区域</h3>
-      <div class="roi-presets">
-        <button
-          v-for="preset in roiPresets"
-          :key="preset.id"
-          :class="['preset-btn', { active: selectedPreset === preset.id }]"
-          @click="selectedPreset = preset.id"
-        >
-          <span class="preset-icon">{{ preset.icon }}</span>
-          <span class="preset-name">{{ preset.name }}</span>
-        </button>
-      </div>
-    </div>
-    
-    <!-- OCR Section -->
-    <div v-if="activeSection === 'ocr'" class="section">
-      <h3 class="section-title">OCR 设置</h3>
-      <div class="ocr-settings">
-        <div class="setting-group">
-          <label class="setting-label">OCR 引擎</label>
-          <div class="engine-list">
-            <button
-              v-for="engine in ocrEngines"
-              :key="engine.id"
-              :class="['engine-btn', { active: selectedEngine === engine.id }]"
-              @click="selectedEngine = engine.id"
-            >
-              <span class="engine-name">{{ engine.name }}</span>
-              <span v-if="engine.recommended" class="engine-badge">推荐</span>
-            </button>
+
+    <!-- Files Tab -->
+    <div v-if="activeTab === 'files'" class="tab-content">
+      <div class="section">
+        <h4 class="section-title">当前视频</h4>
+        <div v-if="projectStore.hasVideo" class="video-info">
+          <div class="info-row">
+            <span class="info-label">文件:</span>
+            <span class="info-value truncate">{{ projectStore.videoPath }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">分辨率:</span>
+            <span class="info-value">{{ projectStore.videoMeta?.width }} × {{ projectStore.videoMeta?.height }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">时长:</span>
+            <span class="info-value">{{ projectStore.duration.toFixed(1) }}s</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">FPS:</span>
+            <span class="info-value">{{ projectStore.videoMeta?.fps }}</span>
           </div>
         </div>
-        
-        <div class="setting-group">
-          <label class="setting-label">识别语言</label>
-          <div class="lang-chips">
-            <span class="chip active">中文</span>
-            <span class="chip">英文</span>
-            <span class="chip">日文</span>
-            <span class="chip">韩文</span>
+        <div v-else class="empty-state">
+          <span class="empty-icon">📂</span>
+          <p>未加载视频</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Tab -->
+    <div v-if="activeTab === 'progress'" class="tab-content">
+      <div class="section">
+        <h4 class="section-title">处理进度</h4>
+        <div class="progress-display">
+          <div class="progress-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="45" />
+              <circle 
+                class="ring-fill" 
+                cx="50" 
+                cy="50" 
+                r="45"
+                :stroke-dasharray="283"
+                :stroke-dashoffset="283 - (283 * subtitleStore.extractProgress) / 100"
+              />
+            </svg>
+            <span class="progress-text">{{ Math.round(subtitleStore.extractProgress) }}%</span>
+          </div>
+          
+          <div class="progress-info">
+            <div class="progress-stat">
+              <span class="stat-label">已处理帧</span>
+              <span class="stat-value">{{ subtitleStore.currentExtractFrame }}</span>
+            </div>
+            <div class="progress-stat">
+              <span class="stat-label">检测字幕</span>
+              <span class="stat-value">{{ subtitleStore.totalCount }}</span>
+            </div>
           </div>
         </div>
-        
-        <div class="setting-group">
-          <label class="setting-label">置信度阈值</label>
-          <input type="range" min="0" max="100" value="70" class="threshold-slider" />
-          <span class="threshold-value">70%</span>
+
+        <div class="progress-actions">
+          <button 
+            v-if="!isExtracting"
+            class="btn btn-primary"
+            :disabled="!projectStore.hasVideo"
+            @click="handleStartExtraction"
+          >
+            ▶️ 开始提取
+          </button>
+          <button 
+            v-else
+            class="btn btn-danger"
+            @click="handleStopExtraction"
+          >
+            ⏹️ 停止
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI Tab -->
+    <div v-if="activeTab === 'roi'" class="tab-content">
+      <div class="section">
+        <h4 class="section-title">字幕区域预设</h4>
+        <div class="roi-grid">
+          <button
+            v-for="preset in ROI_PRESETS"
+            :key="preset.id"
+            :class="['roi-btn', { active: projectStore.selectedROI?.id === preset.id }]"
+            @click="projectStore.selectROIPreset(preset.id)"
+          >
+            <span class="roi-icon">{{ preset.icon }}</span>
+            <span class="roi-name">{{ preset.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h4 class="section-title">当前区域</h4>
+        <div v-if="projectStore.selectedROI" class="roi-info">
+          <div class="info-row">
+            <span class="info-label">类型:</span>
+            <span class="info-value">{{ projectStore.selectedROI.type }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">位置:</span>
+            <span class="info-value">
+              X: {{ projectStore.selectedROI.x.toFixed(1) }}%
+              Y: {{ projectStore.selectedROI.y.toFixed(1) }}%
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">尺寸:</span>
+            <span class="info-value">
+              W: {{ projectStore.selectedROI.width.toFixed(1) }}%
+              H: {{ projectStore.selectedROI.height.toFixed(1) }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OCR Tab -->
+    <div v-if="activeTab === 'ocr'" class="tab-content">
+      <div class="section">
+        <h4 class="section-title">OCR 引擎</h4>
+        <div class="engine-list">
+          <button
+            v-for="engine in ocrEngines"
+            :key="engine.id"
+            :class="['engine-btn', { active: projectStore.extractOptions.ocrEngine === engine.id }]"
+            @click="projectStore.setOCREngine(engine.id)"
+          >
+            <span class="engine-name">{{ engine.name }}</span>
+            <span v-if="engine.recommended" class="engine-badge">推荐</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h4 class="section-title">识别语言</h4>
+        <div class="lang-chips">
+          <button
+            v-for="lang in languages"
+            :key="lang.id"
+            :class="['lang-chip', { active: selectedLanguages.includes(lang.id) }]"
+            @click="toggleLanguage(lang.id)"
+          >
+            {{ lang.name }}
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h4 class="section-title">置信度阈值</h4>
+        <div class="slider-group">
+          <input
+            type="range"
+            v-model="confidenceThreshold"
+            min="0"
+            max="100"
+            class="slider"
+          />
+          <span class="slider-value">{{ confidenceThreshold }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Tab -->
+    <div v-if="activeTab === 'export'" class="tab-content">
+      <div class="section">
+        <h4 class="section-title">导出格式</h4>
+        <div class="export-list">
+          <button
+            v-for="(enabled, format) in subtitleStore.exportFormats"
+            :key="format"
+            class="export-btn"
+            @click="handleExport(format as keyof typeof subtitleStore.exportFormats)"
+          >
+            <span class="export-name">{{ format.toUpperCase() }}</span>
+            <span class="export-desc">
+              {{ format === 'srt' ? '标准字幕' :
+                 format === 'vtt' ? 'Web视频' :
+                 format === 'json' ? '含帧信息' : '纯文本' }}
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -129,44 +280,59 @@ const selectedPreset = ref('bottom')
   overflow: hidden;
 }
 
-.section-tabs {
+.tabs {
   display: flex;
   padding: $space-2;
   gap: $space-1;
   border-bottom: 1px solid $border;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: $space-2;
+  border-radius: $radius-md;
+  opacity: 0.5;
+  transition: all $transition-fast;
   
-  .tab {
-    flex: 1;
-    padding: $space-2;
+  &:hover {
+    opacity: 0.8;
+    background: $bg-overlay;
+  }
+  
+  &.active {
+    opacity: 1;
+    background: $primary-dim;
+  }
+  
+  .tab-icon {
     font-size: 16px;
-    border-radius: $radius-md;
-    opacity: 0.5;
-    transition: all $transition-fast;
-    
-    &:hover {
-      opacity: 0.8;
-      background: $bg-overlay;
-    }
-    
-    &.active {
-      opacity: 1;
-      background: $primary-dim;
-    }
+  }
+  
+  .tab-label {
+    font-size: $text-xs;
   }
 }
 
-.section {
+.tab-content {
   flex: 1;
-  padding: $space-4;
   overflow-y: auto;
+  padding: $space-4;
   @include custom-scrollbar;
+}
+
+.section {
+  margin-bottom: $space-6;
 }
 
 .section-title {
   font-size: $text-sm;
   font-weight: 600;
   color: $text-secondary;
-  margin-bottom: $space-4;
+  margin-bottom: $space-3;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -174,33 +340,55 @@ const selectedPreset = ref('bottom')
 .empty-state {
   @include flex-center;
   flex-direction: column;
-  padding: $space-8;
-  border: 2px dashed $border;
-  border-radius: $radius-lg;
-  text-align: center;
+  gap: $space-2;
+  padding: $space-6;
+  background: $bg-elevated;
+  border-radius: $radius-md;
+  color: $text-muted;
   
   .empty-icon {
-    font-size: 48px;
-    margin-bottom: $space-3;
+    font-size: 32px;
     opacity: 0.5;
-  }
-  
-  .empty-text {
-    font-size: $text-base;
-    color: $text-secondary;
-    margin-bottom: $space-2;
-  }
-  
-  .empty-hint {
-    font-size: $text-xs;
-    color: $text-muted;
   }
 }
 
-.progress-area {
-  @include flex-center;
+.video-info,
+.roi-info {
+  background: $bg-elevated;
+  border-radius: $radius-md;
+  padding: $space-3;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $space-1 0;
+  
+  .info-label {
+    font-size: $text-sm;
+    color: $text-muted;
+  }
+  
+  .info-value {
+    font-size: $text-sm;
+    color: $text-primary;
+    
+    &.truncate {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.progress-display {
+  display: flex;
   flex-direction: column;
+  align-items: center;
   gap: $space-4;
+  margin-bottom: $space-4;
 }
 
 .progress-ring {
@@ -237,28 +425,69 @@ const selectedPreset = ref('bottom')
 }
 
 .progress-info {
+  display: flex;
+  gap: $space-6;
+}
+
+.progress-stat {
   text-align: center;
   
-  .progress-label {
+  .stat-label {
     display: block;
-    font-size: $text-base;
-    color: $text-primary;
+    font-size: $text-xs;
+    color: $text-muted;
     margin-bottom: $space-1;
   }
   
-  .progress-detail {
-    font-size: $text-sm;
-    color: $text-muted;
+  .stat-value {
+    font-family: $font-display;
+    font-size: $text-lg;
+    font-weight: 600;
+    color: $text-primary;
   }
 }
 
-.roi-presets {
+.progress-actions {
+  .btn {
+    width: 100%;
+    padding: $space-3;
+    font-weight: 600;
+    border-radius: $radius-md;
+    transition: all $transition-fast;
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, $primary, $accent);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: $shadow-glow-primary;
+    }
+  }
+  
+  .btn-danger {
+    background: $error;
+    color: white;
+    
+    &:hover {
+      background: darken($error, 10%);
+    }
+  }
+}
+
+.roi-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: $space-2;
 }
 
-.preset-btn {
+.roi-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -279,28 +508,13 @@ const selectedPreset = ref('bottom')
     background: $primary-dim;
   }
   
-  .preset-icon {
+  .roi-icon {
     font-size: 24px;
   }
   
-  .preset-name {
+  .roi-name {
     font-size: $text-xs;
     color: $text-secondary;
-  }
-}
-
-.ocr-settings {
-  display: flex;
-  flex-direction: column;
-  gap: $space-5;
-}
-
-.setting-group {
-  .setting-label {
-    display: block;
-    font-size: $text-sm;
-    color: $text-secondary;
-    margin-bottom: $space-2;
   }
 }
 
@@ -344,13 +558,12 @@ const selectedPreset = ref('bottom')
   gap: $space-2;
 }
 
-.chip {
+.lang-chip {
   padding: $space-1 $space-3;
   background: $bg-elevated;
   border: 1px solid $border;
   border-radius: $radius-full;
   font-size: $text-sm;
-  cursor: pointer;
   transition: all $transition-fast;
   
   &:hover {
@@ -364,13 +577,18 @@ const selectedPreset = ref('bottom')
   }
 }
 
-.threshold-slider {
-  width: 100%;
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.slider {
+  flex: 1;
   height: 4px;
   appearance: none;
   background: $bg-overlay;
   border-radius: $radius-full;
-  outline: none;
   
   &::-webkit-slider-thumb {
     appearance: none;
@@ -383,12 +601,44 @@ const selectedPreset = ref('bottom')
   }
 }
 
-.threshold-value {
-  display: block;
-  text-align: right;
-  font-size: $text-sm;
+.slider-value {
   font-family: $font-display;
+  font-size: $text-sm;
   color: $text-secondary;
-  margin-top: $space-1;
+  min-width: 40px;
+  text-align: right;
+}
+
+.export-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-3;
+  background: $bg-elevated;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  transition: all $transition-fast;
+  
+  &:hover {
+    border-color: $primary;
+    background: $primary-dim;
+  }
+  
+  .export-name {
+    font-family: $font-display;
+    font-weight: 600;
+    color: $text-primary;
+  }
+  
+  .export-desc {
+    font-size: $text-xs;
+    color: $text-muted;
+  }
 }
 </style>
