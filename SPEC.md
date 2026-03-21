@@ -514,11 +514,13 @@ anyhow = "1.0"         # 错误处理
 - [x] ASS 字幕导出
 - [ ] 更多 OCR 引擎集成 (PaddleOCR native)
 
-### 🚧 Phase 4: 打磨发布 (进行中)
+### ✅ Phase 4: 打磨发布 (进行中)
 - [x] 设置页面 (SettingsView)
 - [x] 键盘快捷键 (useKeyboardShortcuts)
 - [x] 时间轴组件 (Timeline)
-- [ ] 主题系统 (dark/light)
+- [x] 主题系统 (dark/light) - CSS Variables
+- [x] 通用 UI 组件 (Button, Modal, Tooltip)
+- [x] 快捷键帮助面板
 - [ ] 安装包构建
 - [ ] 文档完善
 
@@ -526,8 +528,12 @@ anyhow = "1.0"         # 错误处理
 
 ## 9. Changelog
 
-### v3.0.0 (2026-03-21)
+### v3.0.0 (2026-03-21/22)
 - 🔥 完全重构，从 Python PyQt 迁移到 Tauri + Vue + TypeScript
 - ✨ 全新的深色科技风格 UI 设计
 - ⚡ 添加 CLI 工具支持
 - 📦 支持客户端和命令行两种使用方式
+- 🌈 支持 dark/light 主题切换
+- ⌨️ 完整的键盘快捷键支持
+- 📋 批量处理功能
+- 🎬 时间轴组件和帧导航
