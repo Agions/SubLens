@@ -196,11 +196,15 @@ $ visionsub-cli extract video.mp4 --output ./subs --format srt,vtt
 #### 导出格式
 | 格式 | 说明 | 帧对应 |
 |------|------|--------|
-| SRT | 标准字幕格式 | ❌ |
-| WebVTT | Web字幕格式 | ❌ |
-| ASS | 高级字幕（带样式） | ❌ |
-| JSON | 结构化数据 | ✅ 完整帧对应 |
+| SRT | SubRip - 最通用 | ❌ |
+| WebVTT | Web视频字幕 | ❌ |
+| ASS | Advanced SubStation Alpha | ❌ |
+| SSA | SubStation Alpha | ❌ |
+| JSON | 结构化数据（完整帧对应） | ✅ |
 | TXT | 纯文本 | ❌ |
+| LRC | 歌词格式 | ❌ |
+| SBV | YouTube字幕 | ❌ |
+| CSV | Excel表格 | ✅ |
 
 ### 4.2 CLI 模式
 
