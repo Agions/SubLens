@@ -1,3 +1,0 @@
-"""
-VisionSub utilities module
-"""
