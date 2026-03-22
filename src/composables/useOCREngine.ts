@@ -12,6 +12,9 @@ export interface OCRResult {
   }
 }
 
+// 模块缓存，避免重复加载
+let cachedTesseractModule: any = null
+
 export function useOCREngine() {
   const isReady = ref(false)
   const isProcessing = ref(false)
@@ -21,14 +24,58 @@ export function useOCREngine() {
   // Tesseract worker (lazy loaded)
   const worker = shallowRef<any>(null)
   
+  /**
+   * 安全地提取ROI，处理边界情况
+   */
+  function safeExtractROI(
+    imageData: ImageData,
+    roiX: number,
+    roiY: number,
+    roiWidth: number,
+    roiHeight: number
+  ): ImageData {
+    // 确保ROI在图像范围内
+    const safeX = Math.max(0, Math.min(Math.floor(roiX), imageData.width - 1))
+    const safeY = Math.max(0, Math.min(Math.floor(roiY), imageData.height - 1))
+    const safeW = Math.max(1, Math.min(Math.floor(roiWidth), imageData.width - safeX))
+    const safeH = Math.max(1, Math.min(Math.floor(roiHeight), imageData.height - safeY))
+    
+    const roiImageData = new ImageData(safeW, safeH)
+    
+    for (let y = 0; y < safeH; y++) {
+      for (let x = 0; x < safeW; x++) {
+        const srcIdx = ((safeY + y) * imageData.width + (safeX + x)) * 4
+        const dstIdx = (y * safeW + x) * 4
+        
+        // 严格边界检查
+        if (srcIdx + 3 < imageData.data.length && dstIdx + 3 < roiImageData.data.length) {
+          roiImageData.data[dstIdx] = imageData.data[srcIdx]
+          roiImageData.data[dstIdx + 1] = imageData.data[srcIdx + 1]
+          roiImageData.data[dstIdx + 2] = imageData.data[srcIdx + 2]
+          roiImageData.data[dstIdx + 3] = 255 // Alpha 通道
+        }
+      }
+    }
+    
+    return roiImageData
+  }
+  
   // Initialize OCR engine
   async function init(engine: OCREngine = 'tesseract', langs: string[] = ['eng', 'chi_sim']) {
     error.value = null
     
     try {
       if (engine === 'tesseract') {
-        // Dynamically import Tesseract.js
-        const Tesseract = await import('tesseract.js')
+        // 缓存 Tesseract 模块避免重复加载
+        if (!cachedTesseractModule) {
+          cachedTesseractModule = await import('tesseract.js')
+        }
+        const Tesseract = cachedTesseractModule
+        
+        // 如果已有 worker，先终止
+        if (worker.value) {
+          await worker.value.terminate()
+        }
         
         // Create worker
         worker.value = await Tesseract.createWorker(langs.join('+'), 1, {
@@ -101,20 +148,14 @@ export function useOCREngine() {
     roi: { x: number; y: number; width: number; height: number },
     config: OCRConfig
   ): Promise<OCRResult> {
-    // Extract ROI from image data
-    const roiImageData = new ImageData(roi.width, roi.height)
-    
-    for (let y = 0; y < roi.height; y++) {
-      for (let x = 0; x < roi.width; x++) {
-        const srcIdx = ((roi.y + y) * imageData.width + (roi.x + x)) * 4
-        const dstIdx = (y * roi.width + x) * 4
-        
-        roiImageData.data[dstIdx] = imageData.data[srcIdx]
-        roiImageData.data[dstIdx + 1] = imageData.data[srcIdx + 1]
-        roiImageData.data[dstIdx + 2] = imageData.data[srcIdx + 2]
-        roiImageData.data[dstIdx + 3] = imageData.data[srcIdx + 3]
-      }
-    }
+    // 安全地提取ROI，处理边界情况
+    const roiImageData = safeExtractROI(
+      imageData,
+      roi.x,
+      roi.y,
+      roi.width,
+      roi.height
+    )
     
     const results = await processImageData(roiImageData, config)
     
@@ -127,7 +168,12 @@ export function useOCREngine() {
     return {
       text: fullText,
       confidence: avgConfidence,
-      boundingBox: roi
+      boundingBox: {
+        x: roi.x,
+        y: roi.y,
+        width: roi.width,
+        height: roi.height
+      }
     }
   }
   
