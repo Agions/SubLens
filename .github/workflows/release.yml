@@ -4,65 +4,124 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version (e.g., v3.0.0)'
+        required: false
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
+  # Build web version
   build-web:
-    name: Build Web
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: '20'
-      
-      - name: Install pnpm
-        run: npm install -g pnpm@8
-      
+          version: 9
+          run-install: true
+
+      - uses: bcomnes/npm-browser-role@v1
+        with:
+          role: build
+
       - name: Install dependencies
-        run: pnpm install
-      
+        run: pnpm install --frozen-lockfile
+
       - name: Build web
         run: pnpm build
-      
-      - name: Upload web artifacts
+        env:
+          CI: true
+
+      - name: Upload web build
         uses: actions/upload-artifact@v4
         with:
-          name: visionsub-web
+          name: web-build
           path: dist/
 
-  create-release:
+  # Build Tauri desktop app
+  build-tauri:
     needs: build-web
-    permissions:
-      contents: write
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: ubuntu-22.04
+            args: ''
+          - platform: windows-latest
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          name: visionsub-web
-          path: artifacts/
-      
-      - name: Create zip
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && contains(matrix.args, 'aarch64') && 'aarch64-apple-darwin' || 'x86_64-apple-darwin' }}
+
+      - name: Install dependencies (ubuntu)
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
-          cd artifacts
-          zip -r ../visionsub-web.zip .
-          cd ..
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: false
-          prerelease: false
-          name: VisionSub ${{ github.ref_name }}
-          body: |
-            ## VisionSub ${{ github.ref_name }}
-            
-            Web build - extract and run with any HTTP server.
-            
-            See CHANGELOG for details.
-          files: visionsub-web.zip
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libffmpegthumbnailer-dev libjpeg-dev libvips-dev ffmpeg
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        run: pnpm build
+        env:
+          CI: true
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'VisionSub ${{ github.ref_name }}'
+          releaseBody: |
+            ## VisionSub ${{ github.ref_name }}
+
+            Professional video subtitle extraction tool.
+
+            ### Features
+            - 🎬 Video subtitle extraction via OCR
+            - 🔍 Tesseract.js powered OCR
+            - 📋 Multiple export formats (SRT, VTT, ASS, JSON, TXT)
+            - ⌨️ Keyboard shortcuts
+            - 🌈 Theme switching
+            - 📦 Desktop + CLI dual mode
+
+            ### Downloads
+            - macOS (Apple Silicon)
+            - macOS (Intel)
+            - Linux
+            - Windows
+
+          artifacts: |
+            .vite/dist
+            src-tauri/target/release/bundle/

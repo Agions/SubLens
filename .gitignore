@@ -39,3 +39,6 @@ coverage/
 *.tmp
 *.temp
 *.bak
+
+# Spec (auto-generated, do not commit)
+SPEC.md

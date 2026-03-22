@@ -1,16 +1,94 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useProjectStore } from '@/stores/project'
+import { useSubtitleStore } from '@/stores/subtitle'
+import { useFileOperations } from '@/composables/useFileOperations'
+import { useVideoPlayer } from '@/composables/useVideoPlayer'
+import { useVideoMetadata } from '@/composables/useVideoMetadata'
 import AboutDialog from '@/components/common/AboutDialog.vue'
+
+const projectStore = useProjectStore()
+const subtitleStore = useSubtitleStore()
 
 const projectName = ref('未命名项目')
 const showAbout = ref(false)
+const isLoading = ref(false)
 
-function handleOpenFile() {
-  console.log('[ToolBar] Open file')
+async function handleOpenFile() {
+  if (isLoading.value) return
+  
+  try {
+    const fileOps = useFileOperations()
+    
+    const filePath = await fileOps.openFileDialog('选择视频文件')
+    if (!filePath) return
+    
+    isLoading.value = true
+    
+    // Update project with new video
+    const { getVideoMetadata } = useVideoMetadata()
+    const metadata = await getVideoMetadata(filePath)
+    
+    projectStore.setVideo(filePath, metadata)
+    
+    // Extract filename for display
+    const filename = filePath.split('/').pop() || filePath.split('\\').pop() || 'video'
+    projectName.value = filename.replace(/\.[^.]+$/, '')
+    
+    // Initialize video player with the file
+    const videoPlayer = useVideoPlayer()
+    await videoPlayer.loadVideo(filePath)
+    
+  } catch (e) {
+    console.error('[ToolBar] Failed to open file:', e)
+    alert(`打开文件失败: ${e}`)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function handleSave() {
-  console.log('[ToolBar] Save project')
+async function handleSave() {
+  if (isLoading.value) return
+  
+  try {
+    const fileOps = useFileOperations()
+    
+    // Get subtitles in project format
+    const subtitles = subtitleStore.subtitles.map(sub => ({
+      id: sub.id,
+      index: sub.index,
+      start_time: sub.startTime,
+      end_time: sub.endTime,
+      start_frame: sub.startFrame,
+      end_frame: sub.endFrame,
+      text: sub.text,
+      confidence: sub.confidence,
+      language: sub.language,
+      roi: sub.roi
+    }))
+    
+    // Save as JSON project file
+    const filePath = await fileOps.saveFileDialog('保存项目', `${projectName.value}.visionsub.json`)
+    if (!filePath) return
+    
+    isLoading.value = true
+    
+    const projectData = JSON.stringify({
+      version: '3.0.0',
+      projectName: projectName.value,
+      videoPath: projectStore.videoPath,
+      subtitles
+    }, null, 2)
+    
+    await fileOps.writeTextFile(filePath, projectData)
+    console.log('[ToolBar] Project saved to:', filePath)
+    
+  } catch (e) {
+    console.error('[ToolBar] Failed to save project:', e)
+    alert(`保存失败: ${e}`)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function openAbout() {

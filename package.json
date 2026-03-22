@@ -1,6 +1,6 @@
 {
   "name": "visionsub",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Professional Video OCR Subtitle Extraction Tool",
   "type": "module",
   "scripts": {

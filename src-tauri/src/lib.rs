@@ -21,6 +21,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::video::get_video_metadata,
             commands::video::extract_frames,
+            commands::video::extract_frame_at_time,
             commands::video::detect_scenes,
             commands::ocr::process_frame,
             commands::ocr::process_roi,

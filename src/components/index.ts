@@ -8,10 +8,13 @@ export { default as KeyboardShortcutsHelp } from './common/KeyboardShortcutsHelp
 export { default as ToolBar } from './layout/ToolBar.vue'
 export { default as SidePanel } from './layout/SidePanel.vue'
 export { default as VideoPreview } from './layout/VideoPreview.vue'
-export { default as SubtitleList } from './layout/SubtitleList.vue'
 export { default as StatusBar } from './layout/StatusBar.vue'
 export { default as SettingsView } from './layout/SettingsView.vue'
 export { default as BatchProcessView } from './layout/BatchProcessView.vue'
+
+// Subtitle Components
+export { default as SubtitleList } from './subtitle/SubtitleList.vue'
+export { default as ExportDialog } from './subtitle/ExportDialog.vue'
 
 // Video Components
 export { default as ROISelector } from './video/ROISelector.vue'

@@ -1,4 +1,4 @@
-# VisionSub v3.0
+# VisionSub v3.0.1
 
 > 专业的视频字幕提取工具 - 从视频中提取字幕并与画面帧一一对应
 
@@ -8,7 +8,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Agions/VisionSub/pulls)
 [![Stars](https://img.shields.io/github/stars/Agions/VisionSub?style=social)](https://github.com/Agions/VisionSub/stargazers)
 [![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue.svg)](https://github.com/Agions/VisionSub/actions)
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/Agions/VisionSub/releases)
+[![Version](https://img.shields.io/badge/version-3.0.1-blue.svg)](https://github.com/Agions/VisionSub/releases)
 
 </div>
 

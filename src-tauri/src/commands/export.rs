@@ -27,6 +27,8 @@ pub enum ExportFormat {
     WebVTT,
     #[serde(rename = "ass")]
     ASS,
+    #[serde(rename = "ssa")]
+    SSA,
     #[serde(rename = "json")]
     JSON,
     #[serde(rename = "txt")]
@@ -38,6 +40,7 @@ impl ExportFormat {
         match s.to_lowercase().as_str() {
             "vtt" => ExportFormat::WebVTT,
             "ass" => ExportFormat::ASS,
+            "ssa" => ExportFormat::SSA,
             "json" => ExportFormat::JSON,
             "txt" => ExportFormat::TXT,
             _ => ExportFormat::SRT,
@@ -94,6 +97,80 @@ fn export_as_txt(subtitles: &[SubtitleItem]) -> String {
         .join("\n")
 }
 
+fn export_as_ass(subtitles: &[SubtitleItem]) -> String {
+    // ASS/SSA Advanced Substation Alpha format
+    let mut output = String::from(
+        "[Script Info]
+Title: VisionSub Export
+ScriptType: v4.00+
+Collisions: Normal
+PlayDepth: 0
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+");
+    
+    for sub in subtitles {
+        let start = format_timestamp_ass(sub.start_time);
+        let end = format_timestamp_ass(sub.end_time);
+        let text = sub.text
+            .replace(",", "\\,")
+            .replace("\n", "\\N")
+            .replace("{", "\\{")
+            .replace("}", "\\}");
+        output.push_str(&format!(
+            "Dialogue: 0,{},{},Default,,0,0,0,,{}\n",
+            start, end, text
+        ));
+    }
+    
+    output
+}
+
+fn format_timestamp_ass(seconds: f64) -> String {
+    let hours = (seconds / 3600.0).floor() as u32;
+    let minutes = ((seconds % 3600.0) / 60.0).floor() as u32;
+    let secs = (seconds % 60.0).floor() as u32;
+    let centisecs = ((seconds % 1.0) * 100.0).floor() as u32;
+    format!("{}:{:02}:{:02}.{:02}", hours, minutes, secs, centisecs)
+}
+
+fn export_as_ssa(subtitles: &[SubtitleItem]) -> String {
+    // SSA (SubStation Alpha) - older format with v4.00
+    let mut output = String::from(
+        "[Script Info]
+Title:VisionSub Export
+ScriptType:v4.00
+Collisions:Normal
+PlayDepth:0
+
+[V4 Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, TertiaryColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, AlphaLevel, Encoding
+Style: Default,Arial,20,16777215,65535,255,0,-1,0,1,2,2,2,10,10,10,0,1
+
+[Events]
+Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+");
+    
+    for sub in subtitles {
+        let start = format_timestamp_ass(sub.start_time);
+        let end = format_timestamp_ass(sub.end_time);
+        let text = sub.text
+            .replace(",", "\\,")
+            .replace("\n", "\\N");
+        output.push_str(&format!(
+            "Dialogue: Marked=0,{},{},Default,,0000,0000,0000,,{}\n",
+            start, end, text
+        ));
+    }
+    
+    output
+}
+
 fn export_as_json(subtitles: &[SubtitleItem]) -> String {
     let output = serde_json::json!({
         "version": "3.0",
@@ -147,7 +224,8 @@ pub async fn export_subtitles(
     let content = match format {
         ExportFormat::SRT => export_as_srt(&subtitles),
         ExportFormat::WebVTT => export_as_vtt(&subtitles),
-        ExportFormat::ASS => return Err("ASS export not yet implemented".to_string()),
+        ExportFormat::ASS => export_as_ass(&subtitles),
+        ExportFormat::SSA => export_as_ssa(&subtitles),
         ExportFormat::JSON => export_as_json(&subtitles),
         ExportFormat::TXT => export_as_txt(&subtitles),
     };

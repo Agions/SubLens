@@ -6,6 +6,7 @@ export { useSubtitleExtractor } from './useSubtitleExtractor'
 export { useKeyboardShortcuts } from './useKeyboardShortcuts'
 export { useBatchProcessor } from './useBatchProcessor'
 export { useTheme } from './useTheme'
+export { useVideoMetadata } from './useVideoMetadata'
 
 // Types
 export type { KeyboardShortcut } from './useKeyboardShortcuts'

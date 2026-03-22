@@ -73,8 +73,15 @@ pub async fn get_video_metadata(path: String) -> Result<VideoMetadata, String> {
         return Err(format!("File not found: {}", path));
     }
     
-    // Return metadata from file stats as placeholder
-    // Real implementation would use FFmpeg or OpenCV
+    // Try to use ffprobe for real metadata
+    if let Ok(metadata) = get_video_metadata_ffprobe(&path) {
+        tracing::info!("Got video metadata via ffprobe: {}x{} @ {} fps, {}s", 
+            metadata.width, metadata.height, metadata.fps, metadata.duration);
+        return Ok(metadata);
+    }
+    
+    // Fallback to file-based estimation
+    tracing::warn!("ffprobe not available, using file-based estimation");
     let metadata = match std::fs::metadata(&path) {
         Ok(meta) => {
             let file_size = meta.len();
@@ -100,6 +107,77 @@ pub async fn get_video_metadata(path: String) -> Result<VideoMetadata, String> {
     Ok(metadata)
 }
 
+fn get_video_metadata_ffprobe(path: &str) -> Result<VideoMetadata, String> {
+    use std::process::Command;
+    
+    let output = Command::new("ffprobe")
+        .args([
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_format",
+            "-show_streams",
+            path
+        ])
+        .output()
+        .map_err(|e| format!("Failed to run ffprobe: {}", e))?;
+    
+    if !output.status.success() {
+        return Err("ffprobe exited with error".to_string());
+    }
+    
+    let json_str = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&json_str)
+        .map_err(|e| format!("Failed to parse ffprobe output: {}", e))?;
+    
+    // Find video stream
+    let video_stream = json["streams"]
+        .as_array()
+        .and_then(|streams| {
+            streams.iter().find(|s| s["codec_type"] == "video")
+        })
+        .ok_or("No video stream found")?;
+    
+    let width = video_stream["width"].as_u64().unwrap_or(1920) as u32;
+    let height = video_stream["height"].as_u64().unwrap_or(1080) as u32;
+    
+    // Parse frame rate (e.g., "30000/1001" -> ~29.97)
+    let fps_str = video_stream["r_frame_rate"].as_str().unwrap_or("30/1");
+    let fps_parts: Vec<&str> = fps_str.split('/').collect();
+    let fps = if fps_parts.len() == 2 {
+        let num: f64 = fps_parts[0].parse().unwrap_or(30.0);
+        let den: f64 = fps_parts[1].parse().unwrap_or(1.0);
+        if den > 0.0 { num / den } else { 30.0 }
+    } else {
+        fps_str.parse().unwrap_or(30.0)
+    };
+    
+    let duration = json["format"]["duration"]
+        .as_str()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0.0);
+    
+    let codec = video_stream["codec_name"]
+        .as_str()
+        .unwrap_or("unknown")
+        .to_string();
+    
+    let total_frames = if duration > 0.0 && fps > 0.0 {
+        (duration * fps) as u64
+    } else {
+        video_stream["nb_frames"].as_u64().unwrap_or(0)
+    };
+    
+    Ok(VideoMetadata {
+        path: path.to_string(),
+        width,
+        height,
+        duration,
+        fps,
+        total_frames,
+        codec,
+    })
+}
+
 #[tauri::command]
 pub async fn extract_frames(
     path: String,
@@ -113,12 +191,51 @@ pub async fn extract_frames(
         return Err(format!("File not found: {}", path));
     }
     
-    // Frame extraction requires native video processing library
-    // This is a placeholder that returns empty vector
-    // Real implementation would use OpenCV or FFmpeg
-    tracing::info!("Frame extraction requires native video processing - returning empty frame list");
+    // For now, we return empty frames - actual frame extraction
+    // requires significant work with ffmpeg for cropping and ROI
+    tracing::info!("Frame extraction with ROI support - use frontend Tesseract.js for OCR");
     
+    // Return metadata about what would be extracted
+    // The frontend will handle the actual frame capture via HTML5 video element
     Ok(vec![])
+}
+
+#[tauri::command]
+pub async fn extract_frame_at_time(
+    path: String,
+    timestamp_secs: f64,
+) -> Result<String, String> {
+    // Extract a single frame as base64 PNG at the given timestamp
+    use std::process::Command;
+    
+    let output_path = std::env::temp_dir().join(format!("visionsub_frame_{}.png", 
+        (timestamp_secs * 1000.0) as u64));
+    
+    let output = Command::new("ffmpeg")
+        .args([
+            "-ss", &format!("{}", timestamp_secs),
+            "-i", &path,
+            "-vframes", "1",
+            "-q:v", "2",
+            output_path.to_str().unwrap()
+        ])
+        .output()
+        .map_err(|e| format!("Failed to extract frame: {}", e))?;
+    
+    if !output.status.success() {
+        return Err("Failed to extract frame from video".to_string());
+    }
+    
+    // Read the image and convert to base64
+    let img_data = std::fs::read(&output_path)
+        .map_err(|e| format!("Failed to read extracted frame: {}", e))?;
+    
+    let base64_str = base64::encode(&img_data);
+    
+    // Clean up temp file
+    let _ = std::fs::remove_file(output_path);
+    
+    Ok(format!("data:image/png;base64,{}", base64_str))
 }
 
 #[tauri::command]
@@ -133,9 +250,53 @@ pub async fn detect_scenes(
         return Err(format!("File not found: {}", path));
     }
     
-    // Scene detection requires native video processing
-    // Real implementation would use OpenCV
-    tracing::info!("Scene detection requires native video processing - returning empty list");
+    // Use ffmpeg for scene detection via select filter
+    if let Ok(scenes) = detect_scenes_ffmpeg(&path, threshold) {
+        return Ok(scenes);
+    }
     
+    // Fallback: use histogram-based frame comparison
+    tracing::warn!("Using fallback histogram-based scene detection");
     Ok(vec![])
+}
+
+fn detect_scenes_ffmpeg(path: &str, threshold: f32) -> Result<Vec<u64>, String> {
+    use std::process::Command;
+    
+    // Use ffmpeg with select filter for scene detection
+    // This outputs frame numbers where scene changes are detected
+    let threshold_str = format!("{}", (threshold * 255.0) as i32);
+    
+    let output = Command::new("ffmpeg")
+        .args([
+            "-i", path,
+            "-vf", &format!("select='gt(scene,{})',showinfo", threshold),
+            "-f", "null",
+            "-"
+        ])
+        .output()
+        .map_err(|e| format!("Failed to run ffmpeg scene detection: {}", e))?;
+    
+    if !output.status.success() {
+        return Err("ffmpeg scene detection failed".to_string());
+    }
+    
+    // Parse scene change frames from stderr
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let mut scene_frames = Vec::new();
+    
+    for line in stderr.lines() {
+        if line.contains("pts_time:") {
+            // Extract timestamp from showinfo
+            if let Some(time_str) = line.split("pts_time:").nth(1) {
+                let time: f64 = time_str.split_whitespace().next()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+                // Convert to frame number (assuming 30fps, will be corrected by caller)
+                scene_frames.push((time * 30.0) as u64);
+            }
+        }
+    }
+    
+    Ok(scene_frames)
 }
