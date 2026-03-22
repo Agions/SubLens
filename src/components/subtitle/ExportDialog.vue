@@ -5,13 +5,32 @@ import Button from '@/components/common/Button.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 
 defineProps<{
-  open: boolean
+  open?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'update:open', value: boolean): void
 }>()
+
+const isOpen = ref(false)
+
+function open() {
+  isOpen.value = true
+}
+
+function close() {
+  isOpen.value = false
+  emit('close')
+  emit('update:open', false)
+  exportResults.value = []
+}
+
+function openDialog() {
+  isOpen.value = true
+}
+
+defineExpose({ open: openDialog, close })
 
 const subtitleStore = useSubtitleStore()
 
@@ -41,7 +60,6 @@ async function handleExport() {
       const ext = format === 'ssa' ? 'ssa' : format === 'sbv' ? 'sbv' : format
       const fileName = `${baseName}.${ext}`
 
-      // For now, just log - actual file writing would use Tauri
       console.log(`[Export] ${fileName}: ${content.length} chars`)
       exportResults.value.push(`✅ ${format.toUpperCase()}: ${fileName}`)
     } catch (e) {
@@ -50,12 +68,6 @@ async function handleExport() {
   }
 
   isExporting.value = false
-}
-
-function close() {
-  emit('close')
-  emit('update:open', false)
-  exportResults.value = []
 }
 
 const formatDescriptions: Record<string, string> = {
@@ -72,7 +84,7 @@ const formatDescriptions: Record<string, string> = {
 </script>
 
 <template>
-  <Modal :open="open" title="导出字幕" size="md" @close="close">
+  <Modal :open="isOpen" title="导出字幕" size="md" @close="close">
     <div class="export-content">
       <p class="export-info">
         共 {{ subtitleStore.totalCount }} 条字幕将被导出

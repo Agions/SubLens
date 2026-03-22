@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useVideoPlayer } from './useVideoPlayer'
@@ -16,6 +16,13 @@ export function useKeyboardShortcuts() {
   const projectStore = useProjectStore()
   const subtitleStore = useSubtitleStore()
   const videoPlayer = useVideoPlayer()
+  
+  // Callback for export dialog
+  const onExportCallback = ref<(() => void) | null>(null)
+  
+  function setExportCallback(cb: () => void) {
+    onExportCallback.value = cb
+  }
 
   const shortcuts: KeyboardShortcut[] = [
     // Playback
@@ -76,8 +83,9 @@ export function useKeyboardShortcuts() {
     
     // Export
     { key: 's', ctrl: true, action: () => {
-      // Trigger export dialog
-      console.log('[Shortcuts] Export triggered')
+      if (onExportCallback.value) {
+        onExportCallback.value()
+      }
     }, description: '导出字幕' },
     
     // Help
@@ -129,6 +137,7 @@ export function useKeyboardShortcuts() {
     shortcuts,
     setupShortcuts,
     cleanupShortcuts,
-    getShortcutText
+    getShortcutText,
+    setExportCallback
   }
 }

@@ -10,12 +10,13 @@ import SubtitleList from '@/components/subtitle/SubtitleList.vue'
 import Timeline from '@/components/video/Timeline.vue'
 import StatusBar from '@/components/layout/StatusBar.vue'
 import KeyboardShortcutsHelp from '@/components/common/KeyboardShortcutsHelp.vue'
+import ExportDialog from '@/components/subtitle/ExportDialog.vue'
 
 // Initialize theme
 useTheme()
 
 // Keyboard shortcuts
-const { setupShortcuts, cleanupShortcuts } = useKeyboardShortcuts()
+const { setupShortcuts, cleanupShortcuts, setExportCallback } = useKeyboardShortcuts()
 
 // Subtitle extractor
 const subtitleExtractor = useSubtitleExtractor()
@@ -23,10 +24,16 @@ provide('subtitleExtractor', subtitleExtractor)
 
 const showTimeline = ref(true)
 const shortcutsHelpRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null)
+const exportDialogRef = ref<InstanceType<typeof ExportDialog> | null>(null)
 
 onMounted(() => {
   console.log('[VisionSub] Application mounted')
   setupShortcuts()
+  
+  // Set up export shortcut callback
+  setExportCallback(() => {
+    exportDialogRef.value?.open()
+  })
   
   // Register ? for shortcuts help
   window.addEventListener('keydown', (e) => {
@@ -58,6 +65,7 @@ onUnmounted(() => {
     <StatusBar />
     
     <KeyboardShortcutsHelp ref="shortcutsHelpRef" />
+    <ExportDialog ref="exportDialogRef" />
   </div>
 </template>
 
