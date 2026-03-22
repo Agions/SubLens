@@ -1,11 +1,26 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { ROI_PRESETS, type OCREngine } from '@/types/video'
 
 const projectStore = useProjectStore()
 const subtitleStore = useSubtitleStore()
+
+// Inject export dialog opener from App.vue
+const openExportDialog = inject<() => void>('openExportDialog')
+
+// Override handleExport to open dialog instead of just logging
+function handleExport(format: keyof typeof subtitleStore.exportFormats) {
+  // Toggle format selection
+  subtitleStore.exportFormats[format] = !subtitleStore.exportFormats[format]
+}
+
+function openExport() {
+  if (openExportDialog) {
+    openExportDialog()
+  }
+}
 
 type TabKey = 'files' | 'progress' | 'roi' | 'ocr' | 'export'
 const activeTab = ref<TabKey>('files')
@@ -45,14 +60,6 @@ function handleStartExtraction() {
 
 function handleStopExtraction() {
   subtitleStore.finishExtraction()
-}
-
-function handleExport(format: keyof typeof subtitleStore.exportFormats) {
-  const content = subtitleStore.exportToFormat(format)
-  if (content) {
-    // Export would be handled by useFileOperations
-    console.log(`Exporting ${format}:`, content.slice(0, 100))
-  }
 }
 </script>
 
@@ -254,6 +261,7 @@ function handleExport(format: keyof typeof subtitleStore.exportFormats) {
             v-for="format in (Object.keys(subtitleStore.exportFormats) as Array<keyof typeof subtitleStore.exportFormats>)"
             :key="format"
             class="export-btn"
+            :class="{ selected: subtitleStore.exportFormats[format] }"
             @click="handleExport(format)"
           >
             <span class="export-name">{{ format.toUpperCase() }}</span>
@@ -264,6 +272,9 @@ function handleExport(format: keyof typeof subtitleStore.exportFormats) {
             </span>
           </button>
         </div>
+        <button class="export-action-btn" @click="openExport">
+          📤 导出字幕
+        </button>
       </div>
     </div>
   </aside>

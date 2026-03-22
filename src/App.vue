@@ -22,6 +22,12 @@ const { setupShortcuts, cleanupShortcuts, setExportCallback } = useKeyboardShort
 const subtitleExtractor = useSubtitleExtractor()
 provide('subtitleExtractor', subtitleExtractor)
 
+// Export dialog opener
+function openExportDialog() {
+  exportDialogRef.value?.open()
+}
+provide('openExportDialog', openExportDialog)
+
 const showTimeline = ref(true)
 const shortcutsHelpRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null)
 const exportDialogRef = ref<InstanceType<typeof ExportDialog> | null>(null)
