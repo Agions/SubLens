@@ -90,8 +90,7 @@ export function useKeyboardShortcuts() {
     
     // Help
     { key: '?', shift: true, action: () => {
-      // Toggle shortcuts help
-      console.log('[Shortcuts] Help triggered')
+      // Shortcuts help is handled in App.vue
     }, description: '显示快捷键' },
   ]
 
