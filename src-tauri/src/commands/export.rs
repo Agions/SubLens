@@ -195,18 +195,7 @@ fn export_as_json(subtitles: &[SubtitleItem]) -> String {
 }
 
 fn chrono_lite_now() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let duration = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-    let secs = duration.as_secs();
-    // Simple ISO8601-like format without external dependencies
-    let days = secs / 86400;
-    let remaining = secs % 86400;
-    let hours = remaining / 3600;
-    let minutes = (remaining % 3600) / 60;
-    let seconds = remaining % 60;
-    format!("1970-01-01T{:02}:{:02}:{:02}Z (Unix timestamp: {})", hours, minutes, seconds, secs)
+    chrono::Local::now().to_rfc3339()
 }
 
 #[tauri::command]
