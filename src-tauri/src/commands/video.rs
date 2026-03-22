@@ -208,8 +208,14 @@ pub async fn extract_frame_at_time(
     // Extract a single frame as base64 PNG at the given timestamp
     use std::process::Command;
     
-    let output_path = std::env::temp_dir().join(format!("visionsub_frame_{}.png", 
-        (timestamp_secs * 1000.0) as u64));
+    // 使用 PID 和时间戳避免竞争
+    let pid = std::process::id();
+    let timestamp_ms = (timestamp_secs * 1000.0) as u64;
+    let output_path = std::env::temp_dir().join(format!(
+        "visionsub_frame_{}_{}.png", 
+        pid,
+        timestamp_ms
+    ));
     
     let output = Command::new("ffmpeg")
         .args([
@@ -233,7 +239,7 @@ pub async fn extract_frame_at_time(
     let base64_str = base64::encode(&img_data);
     
     // Clean up temp file
-    let _ = std::fs::remove_file(output_path);
+    let _ = std::fs::remove_file(&output_path);
     
     Ok(format!("data:image/png;base64,{}", base64_str))
 }
@@ -250,8 +256,14 @@ pub async fn detect_scenes(
         return Err(format!("File not found: {}", path));
     }
     
+    // 获取视频 FPS 用于帧号计算
+    let fps = match get_video_metadata_ffprobe(&path) {
+        Ok(meta) => meta.fps,
+        Err(_) => 30.0, // 默认 30fps
+    };
+    
     // Use ffmpeg for scene detection via select filter
-    if let Ok(scenes) = detect_scenes_ffmpeg(&path, threshold) {
+    if let Ok(scenes) = detect_scenes_ffmpeg(&path, threshold, fps) {
         return Ok(scenes);
     }
     
@@ -260,7 +272,7 @@ pub async fn detect_scenes(
     Ok(vec![])
 }
 
-fn detect_scenes_ffmpeg(path: &str, threshold: f32) -> Result<Vec<u64>, String> {
+fn detect_scenes_ffmpeg(path: &str, threshold: f32, fps: f64) -> Result<Vec<u64>, String> {
     use std::process::Command;
     
     // Use ffmpeg with select filter for scene detection
@@ -292,8 +304,8 @@ fn detect_scenes_ffmpeg(path: &str, threshold: f32) -> Result<Vec<u64>, String> 
                 let time: f64 = time_str.split_whitespace().next()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(0.0);
-                // Convert to frame number (assuming 30fps, will be corrected by caller)
-                scene_frames.push((time * 30.0) as u64);
+                // Convert to frame number using actual FPS
+                scene_frames.push((time * fps) as u64);
             }
         }
     }

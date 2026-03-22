@@ -19,6 +19,17 @@ export interface BatchOptions {
   languages: string[]
   sceneThreshold: number
   confidenceThreshold: number
+  maxConcurrency?: number
+}
+
+/**
+ * 生成加密安全的唯一ID
+ */
+function generateJobId(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return `job-${globalThis.crypto.randomUUID()}`;
+  }
+  return `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export function useBatchProcessor() {
@@ -29,7 +40,7 @@ export function useBatchProcessor() {
   // Add files to queue
   function addToQueue(inputPaths: string[], options: BatchOptions): BatchJob[] {
     const newJobs: BatchJob[] = inputPaths.map(inputPath => ({
-      id: `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: generateJobId(),
       inputPath,
       outputPath: options.outputDir,
       status: 'pending',
@@ -40,15 +51,54 @@ export function useBatchProcessor() {
     return newJobs
   }
 
-  // Start batch processing
+  // Start batch processing with concurrency control
   async function startBatch(options: BatchOptions) {
     if (isProcessing.value) return
     
     isProcessing.value = true
     
+    const maxConcurrency = options.maxConcurrency || 2
     const pendingJobs = jobs.value.filter(j => j.status === 'pending')
     
-    for (const job of pendingJobs) {
+    // Process jobs with concurrency limit
+    const chunk = pendingJobs.slice(0, maxConcurrency)
+    const remaining = pendingJobs.slice(maxConcurrency)
+    
+    // Start concurrent processing
+    const processChunk = async () => {
+      const running: Promise<void>[] = []
+      
+      for (const job of chunk) {
+        if (!isProcessing.value) break
+        
+        const promise = (async () => {
+          currentJob.value = job
+          job.status = 'processing'
+          job.startedAt = new Date()
+          
+          try {
+            await processJob(job, options)
+            job.status = 'completed'
+            job.progress = 100
+          } catch (e) {
+            job.status = 'failed'
+            job.error = e instanceof Error ? e.message : String(e)
+          } finally {
+            job.completedAt = new Date()
+            currentJob.value = null
+          }
+        })()
+        
+        running.push(promise)
+      }
+      
+      await Promise.all(running)
+    }
+    
+    await processChunk()
+    
+    // Process remaining jobs
+    for (const job of remaining) {
       if (!isProcessing.value) break
       
       currentJob.value = job

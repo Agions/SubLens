@@ -43,9 +43,26 @@ export const useSettingsStore = defineStore('settings', () => {
   // Persist on change
   watch(settings, (newSettings) => {
     try {
-      localStorage.setItem('visionsub-settings', JSON.stringify(newSettings))
-    } catch (e) {
-      console.warn('[Settings] Failed to save settings:', e)
+      const serialized = JSON.stringify(newSettings)
+      // 检查 localStorage 容量
+      if (serialized.length > 5 * 1024 * 1024) { // 5MB 限制
+        console.warn('[Settings] Settings too large to save:', serialized.length, 'bytes')
+        return
+      }
+      localStorage.setItem('visionsub-settings', serialized)
+    } catch (e: any) {
+      if (e.name === 'QuotaExceededError' || e.code === 22) {
+        console.warn('[Settings] localStorage quota exceeded, clearing old data')
+        // 尝试清理并重试
+        try {
+          localStorage.removeItem('visionsub-settings')
+          localStorage.setItem('visionsub-settings', JSON.stringify(DEFAULT_SETTINGS))
+        } catch {
+          console.error('[Settings] Failed to save even after clearing')
+        }
+      } else {
+        console.warn('[Settings] Failed to save settings:', e)
+      }
     }
   }, { deep: true })
   

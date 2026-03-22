@@ -27,7 +27,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: asset: https://asset.localhost; connect-src 'self' https://*.vision-sub.com wss://*.vision-sub.com; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' blob:"
     }
   },
   "bundle": {

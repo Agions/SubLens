@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2026-03-22
+
+### 🐛 Fixed
+
+- Fix `useOCREngine` ROI bounds checking to prevent out-of-bounds access
+- Fix `useBatchProcessor` Job ID generation (use crypto.randomUUID)
+- Fix `video.rs` temp file race condition (add PID to filename)
+- Fix scene detection hardcoded FPS issue (use dynamic FPS from metadata)
+- Add `localStorage` quota check to prevent QUOTA_EXCEEDED_ERR
+
+### 🔒 Security
+
+- Configure Tauri Content Security Policy (CSP)
+- Add OCR engine module caching to avoid redundant loads
+
+### 🔧 Changed
+
+- Remove empty directories (services/ocr, services/tauri, views)
+- Optimize batch processing concurrency control
+
 ## [3.0.1] - 2026-03-22
 
 ### 🐛 Fixed
