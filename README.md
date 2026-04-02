@@ -1,6 +1,6 @@
-# VisionSub v3.0.1
+# VisionSub v3.1.1
 
-> 专业的视频字幕提取工具 - 从视频中提取字幕并与画面帧一一对应
+> 专业的视频硬字幕提取工具 — 提取字幕与画面帧一一对应，支持高准确度 OCR 后处理
 
 <div align="center">
 
@@ -8,7 +8,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Agions/VisionSub/pulls)
 [![Stars](https://img.shields.io/github/stars/Agions/VisionSub?style=social)](https://github.com/Agions/VisionSub/stargazers)
 [![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue.svg)](https://github.com/Agions/VisionSub/actions)
-[![Version](https://img.shields.io/badge/version-3.0.1-blue.svg)](https://github.com/Agions/VisionSub/releases)
+[![Version](https://img.shields.io/badge/version-3.1.1-blue.svg)](https://github.com/Agions/VisionSub/releases)
 
 </div>
 
@@ -17,12 +17,26 @@
 ## ✨ 特性
 
 ### 🖥️ 桌面客户端
-- **现代化 UI**: 深色科技风格，灵感来自专业视频剪辑软件
-- **可视化 ROI 选择**: 拖拽选择字幕区域，支持多种预设
-- **实时预览**: 字幕实时识别，预览效果
-- **帧-字幕对应**: 每个字幕精确对应视频帧位置
-- **主题切换**: 支持深色/浅色主题
-- **批处理**: 批量处理多个视频文件
+- **深色科技风格 UI**：专业视频剪辑工具美学，霓虹点缀
+- **可视化 ROI 选择**：拖拽选择字幕区域，预设（底部/顶部/左侧/右侧/中心）
+- **实时预览**：字幕实时识别，预览效果
+- **帧-字幕对应**：每个字幕精确对应视频帧位置
+- **主题切换**：暗色/亮色一键切换
+- **批处理**：双栏布局处理多视频文件
+
+### 🤖 高准确度 OCR 引擎
+
+| 引擎 | 技术 | 精度 | 速度 | 语言 |
+|:---|:---|:---:|:---:|:---:|
+| **PaddleOCR** | PP-OCRv5 深度学习 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 80+ |
+| **EasyOCR** | PyTorch | ⭐⭐⭐⭐ | ⭐⭐⭐ | 80+ |
+| **Tesseract.js** | LSTM + WASM | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 100+ |
+
+**准确度增强管道：**
+- 多通道 OCR：多次识别取最优结果
+- 文字后处理：全角→半角标点转换、去除重复字符、中文错字修正
+- 置信度校准：混合语言/超短文本/重复字符自动降分
+- 字幕合并：基于 Levenshtein 相似度自动去重
 
 ### ⌨️ 键盘快捷键
 | 按键 | 功能 |
@@ -40,11 +54,11 @@
 # 提取字幕 (多格式)
 visionsub-cli extract video.mp4 --output ./subs --format srt,vtt,json
 
-# 指定 ROI 区域
-visionsub-cli extract video.mp4 --roi bottom
+# 指定 ROI 区域 + OCR 引擎
+visionsub-cli extract video.mp4 --roi bottom --ocr paddle --lang ch,en
 
-# 自定义 OCR 引擎
-visionsub-cli extract video.mp4 --ocr paddleocr --lang ch,en
+# 自定义置信度阈值
+visionsub-cli extract video.mp4 --confidence 80
 
 # 预览帧
 visionsub-cli preview video.mp4 --frame 1500
@@ -104,7 +118,7 @@ npx visionsub-cli --help
 
 ### 输出字幕
 | 格式 | 帧对应 | 说明 |
-|:---|:---|:---|
+|:---|:---:|:---|
 | SRT | ❌ | SubRip - 最通用 |
 | WebVTT | ❌ | Web 视频字幕 |
 | ASS | ❌ | Advanced SubStation Alpha |
@@ -125,17 +139,7 @@ npx visionsub-cli --help
 | **状态管理** | Pinia |
 | **构建工具** | Vite |
 | **后端** | Rust |
-| **OCR 引擎** | Tesseract.js (WASM), PaddleOCR (Native) |
-
-## 🔧 OCR 引擎
-
-VisionSub 支持多种 OCR 引擎，可根据需求选择：
-
-| 引擎 | 类型 | 语言支持 | GPU | 特点 |
-|:---|:---|:---|:---|:---|
-| Tesseract.js | WebAssembly | 10+ | ❌ | 快速、免安装 |
-| PaddleOCR | Native | 80+ | ✅ | 高精度、中文优化 |
-| EasyOCR | Native | 80+ | ✅ | 多语言支持 |
+| **OCR 引擎** | Tesseract.js (WASM), PaddleOCR (Native), EasyOCR |
 
 ## 📂 项目结构
 
@@ -147,11 +151,11 @@ VisionSub/
 │   │   ├── common/            # 通用组件 (Button, Modal, Tooltip...)
 │   │   ├── layout/            # 布局组件 (ToolBar, SidePanel...)
 │   │   ├── video/             # 视频组件 (ROISelector, Timeline)
-│   │   └── subtitle/          # 字幕组件 (ExportDialog)
+│   │   └── subtitle/          # 字幕组件 (ExportDialog, SubtitleList)
 │   ├── composables/            # Vue Composables
 │   │   ├── useVideoPlayer.ts
-│   │   ├── useOCREngine.ts
-│   │   ├── useSubtitleExtractor.ts
+│   │   ├── useOCREngine.ts    # OCR 引擎 + 后处理管道
+│   │   ├── useSubtitleExtractor.ts  # 字幕提取循环
 │   │   ├── useBatchProcessor.ts
 │   │   └── ...
 │   ├── stores/                 # Pinia 状态管理
@@ -183,18 +187,43 @@ VisionSub/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  📽️ VisionSub  │  未命名项目  │  📂  │  💾  │  🖼️  │  ⚙️  ℹ️  │
+│  VisionSub  │  未命名项目  │  打开  │  保存  │  ☀ 主题  │  ℹ️  │
 ├──────────────┬───────────────────────────────────┬─────────────┤
 │              │                                   │             │
-│  📁 文件     │         🎬 视频预览区域            │  📝 字幕    │
-│  📊 进度     │         ┌─────────────────┐        │  🔍 搜索    │
-│  🎯 ROI区域  │         │   ROI 选取框    │        │             │
-│  🔧 OCR设置  │         └─────────────────┘        │  00:00:12   │
-│  📤 导出     │                                   │  00:00:15   │
-│              │      ▶️  00:01:23 / 00:05:00       │  00:00:18   │
+│  文件列表    │        视频预览区域               │  字幕列表   │
+│  处理进度    │    ┌───────────────────┐          │  置信度徽章 │
+│  ROI 区域    │    │   字幕叠加层      │          │  内联编辑   │
+│  OCR 设置    │    │   + timeline      │          │             │
+│  导出        │    └───────────────────┘          │  00:00:12   │
+│              │      ▶  00:01:23 / 00:05:00      │  00:00:15   │
 ├──────────────┴───────────────────────────────────┴─────────────┤
-│  帧: #2341  │  FPS: 30  │  1920×1080  │  Tesseract.js     │
+│  帧: #2341  │  FPS: 30  │  1920×1080  │  PaddleOCR          │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+**OCR 设置面板预览：**
+```
+┌──────────────────────────────┐
+│  预估准确率  ████████░░  95% │
+├──────────────────────────────┤
+│  OCR 引擎                     │
+│  [PP-OCRv5] [EO] [TS]       │
+│   精度 ★★★★★  速度 ★★★★☆     │
+├──────────────────────────────┤
+│  识别语言                     │
+│  🇨🇳 中文  🇬🇧 英文  🇯🇵 日文 │
+├──────────────────────────────┤
+│  高级选项 ▾ 展开              │
+│  ☑ 多通道 OCR                │
+│  ☑ 文字后处理                 │
+│  ☑ 字幕合并 (80%)             │
+│  场景灵敏度 ────●────         │
+│  帧间隔  [1]                 │
+├──────────────────────────────┤
+│  置信度阈值 ────●────  70%    │
+│                              │
+│  [  ▶ 开始提取  ]            │
+└──────────────────────────────┘
 ```
 
 ## 📜 许可证
