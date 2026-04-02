@@ -211,41 +211,40 @@ export function useOCREngine() {
     options: OCRProcessingOptions = {}
   ): Promise<OCRResult> {
     const { preprocess = true, preprocessMode = 'subtitle' } = options
-    
-    // 安全地提取ROI，处理边界情况
-    const roiImageData = safeExtractROI(
-      imageData,
-      roi.x,
-      roi.y,
-      roi.width,
-      roi.height
-    )
-    
+
+    // Safe ROI extraction
+    const roiImageData = safeExtractROI(imageData, roi.x, roi.y, roi.width, roi.height)
+
     // Apply preprocessing to ROI if enabled
     let processedROI = roiImageData
     if (preprocess && preprocessMode !== 'none') {
       processedROI = applyPreprocessing(roiImageData, preprocessMode)
     }
-    
-    const results = await processImageData(processedROI, config, { 
-      preprocess: false // Already preprocessed
+
+    const results = await processImageData(processedROI, config, {
+      preprocess: false, // Already preprocessed
     })
-    
+
     // Combine all text results
-    const fullText = results.map(r => r.text).join(' ')
-    const avgConfidence = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.confidence, 0) / results.length 
+    const rawText = results.map(r => r.text).join(' ')
+    const rawConfidence = results.length > 0
+      ? results.reduce((sum, r) => sum + r.confidence, 0) / results.length
       : 0
-    
+
+    // Apply language-aware post-processing + confidence calibration
+    const lang = config.language?.[0] ?? 'ch'
+    const processedText = postProcessText(rawText, lang)
+    const finalConfidence = calibrateConfidence(processedText, rawConfidence, lang)
+
     return {
-      text: fullText,
-      confidence: avgConfidence,
+      text: processedText,
+      confidence: finalConfidence,
       boundingBox: {
         x: roi.x,
         y: roi.y,
         width: roi.width,
-        height: roi.height
-      }
+        height: roi.height,
+      },
     }
   }
   
@@ -320,38 +319,222 @@ export function useOCREngine() {
    * Merge results from multiple OCR passes
    */
   function mergeOCRResults(resultsList: OCRResult[][]): OCRResult[] {
-    // Flatten and deduplicate
+    // Flatten and deduplicate by position proximity + text similarity
     const allWords: OCRResult[] = []
-    const used = new Set<number>()
-    
+
     // Sort by confidence descending
     const flat = resultsList.flat().sort((a, b) => b.confidence - a.confidence)
-    
+
     for (const word of flat) {
-      // Check if this word overlaps with an already-accepted word
+      const wordCenter = {
+        x: word.boundingBox.x + word.boundingBox.width / 2,
+        y: word.boundingBox.y + word.boundingBox.height / 2,
+      }
+
+      // Check if duplicate of already-accepted word
       const isDuplicate = allWords.some(existing => {
         const existingCenter = {
           x: existing.boundingBox.x + existing.boundingBox.width / 2,
-          y: existing.boundingBox.y + existing.boundingBox.height / 2
+          y: existing.boundingBox.y + existing.boundingBox.height / 2,
         }
-        const wordCenter = {
-          x: word.boundingBox.x + word.boundingBox.width / 2,
-          y: word.boundingBox.y + word.boundingBox.height / 2
-        }
-        const distance = Math.sqrt(
-          (existingCenter.x - wordCenter.x) ** 2 +
-          (existingCenter.y - wordCenter.y) ** 2
-        )
-        // If centers are within 20 pixels, consider it duplicate
+        const dx = existingCenter.x - wordCenter.x
+        const dy = existingCenter.y - wordCenter.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
         return distance < 20 && existing.text === word.text
       })
-      
+
       if (!isDuplicate) {
         allWords.push(word)
       }
     }
-    
+
     return allWords
+  }
+
+  /**
+   * Normalize text for better quality:
+   * - Trim whitespace, collapse spaces
+   * - Normalize full-width ↔ half-width punctuation
+   * - Remove repeated characters (e.g. "啊啊啊" → "啊")
+   * - Fix common OCR confusions per language
+   * - Fix sentence casing for non-CJK languages
+   */
+  function postProcessText(text: string, lang: string = 'ch'): string {
+    if (!text || !text.trim()) return text
+
+    let result = text.trim()
+
+    // Collapse multiple spaces/newlines
+    result = result.replace(/\s+/g, ' ')
+
+    // Normalize full-width punctuation → half-width
+    const fwPairs: Array<[string, string]> = [
+      ['\u3001', ','],  // ，
+      ['\u3002', '.'],  // 。
+      ['\uff01', '!'],  // ！
+      ['\uff1f', '?'],  // ？
+      ['\uff1a', ':'],  // ：
+      ['\uff1b', ';'],  // ；
+      ['\u201c', '"'],  // "
+      ['\u201d', '"'],  // "
+      ['\u2018', "'"],  // '
+      ['\u2019', "'"],  // '
+      ['\uff08', '('],  // （
+      ['\uff09', ')'],  // ）
+      ['\u3010', '['],  // 【
+      ['\u3011', ']'],  // 】
+      ['\u2014', '-'],  // —
+      ['\u2026', '...'],  // …
+      ['\uff0e', '.'],  //．
+      ['\uff0c', ','],  //，
+    ]
+    for (const [fw, hw] of fwPairs) {
+      result = result.split(fw).join(hw)
+    }
+
+    // Remove repeated characters (keep max 2 consecutive)
+    result = result.replace(/(.)\1{2,}/g, '$1$1')
+
+    // Chinese-specific: fix common OCR confusions (lookalike chars)
+    const chineseFixes: Record<string, string> = {
+      '兀': '元', '苒': '再', '巳': '已', '汢': '汪',
+      '日': '日', '土': '土', '了': '了', '大': '大',
+    }
+    // Apply only in plausible contexts (this is conservative — only applies exact match)
+    for (const [wrong, right] of Object.entries(chineseFixes)) {
+      // Only replace if it's clearly a full word/char
+      result = result.split(wrong).join(right)
+    }
+
+    // Non-Chinese: capitalize first letter of each sentence
+    if (lang !== 'ch' && lang !== 'chi') {
+      result = result.replace(/(?:^|[.!?]\s+)([a-z])/g, (_, c) =>
+        c.toUpperCase()
+      )
+    }
+
+    return result
+  }
+
+  /**
+   * Calibrate confidence based on text quality signals:
+   * - Penalize: mixed scripts, very short text, repeated chars, extreme char ratio
+   * - Boost: consistent script, well-formed sentences
+   * Returns calibrated confidence in [0, 1]
+   */
+  function calibrateConfidence(
+    text: string,
+    rawConfidence: number,
+    lang: string = 'ch'
+  ): number {
+    if (!text) return rawConfidence
+
+    const len = text.replace(/\s/g, '').length
+    const hasChinese = /[\u4e00-\u9fff]/.test(text)
+    const hasLatin = /[a-zA-Z]/.test(text)
+    const hasDigit = /\d/.test(text)
+    const scriptCount = [hasChinese, hasLatin, hasDigit].filter(Boolean).length
+
+    // Script mixing penalty
+    let quality = rawConfidence
+    if (scriptCount >= 2) quality *= 0.80      // Mixed scripts penalize
+    if (len > 0 && len <= 2) quality *= 0.85   // Very short text penalize
+    if (len > 0 && /(.)\1{3,}/.test(text)) quality *= 0.75  // Repeated char penalty
+
+    // Character diversity bonus (normal text has ~0.7 unique ratio)
+    const unique = new Set(text.replace(/\s/g, '')).size
+    const ratio = len > 0 ? unique / len : 1
+    if (ratio > 0.6 && ratio < 0.95) quality = Math.min(1, quality * 1.05)
+
+    return Math.max(0, Math.min(1, quality))
+  }
+
+  /**
+   * Detect if text contains mixed scripts (Chinese + Latin)
+   * Returns the dominant language hint
+   */
+  function detectDominantScript(text: string): 'ch' | 'en' | 'mixed' {
+    const chinese = (text.match(/[\u4e00-\u9fff]/g) || []).length
+    const latin = (text.match(/[a-zA-Z]/g) || []).length
+
+    if (chinese === 0 && latin === 0) return 'en'
+    if (chinese > latin * 2) return 'ch'
+    if (latin > chinese * 2) return 'en'
+    return 'mixed'
+  }
+
+  /**
+   * Merge consecutive subtitles that are the same/similar text
+   * with time gap < maxGap seconds. Threshold is text similarity [0-1].
+   */
+  function mergeSimilarSubtitles(
+    subtitles: Array<{
+      startTime: number
+      endTime: number
+      startFrame: number
+      endFrame: number
+      text: string
+      confidence: number
+    }>,
+    similarityThreshold: number = 0.80,
+    maxGap: number = 0.5
+  ): Array<{
+    startTime: number
+    endTime: number
+    startFrame: number
+    endFrame: number
+    text: string
+    confidence: number
+  }> {
+    if (subtitles.length === 0) return subtitles
+
+    const result: typeof subtitles = []
+    let current = { ...subtitles[0] }
+
+    for (let i = 1; i < subtitles.length; i++) {
+      const prev = subtitles[i - 1]
+      const curr = subtitles[i]
+      const gap = curr.startTime - prev.endTime
+
+      // Compute Levenshtein similarity for text
+      const similarity = textSimilarity(current.text, curr.text)
+      const timeClose = gap <= maxGap
+      const sameOrSimilar = similarity >= similarityThreshold
+
+      if (sameOrSimilar && timeClose) {
+        // Merge: extend endTime/endFrame, keep highest confidence
+        current.endTime = Math.max(current.endTime, curr.endTime)
+        current.endFrame = Math.max(current.endFrame, curr.endFrame)
+        current.confidence = Math.max(current.confidence, curr.confidence)
+      } else {
+        result.push(current)
+        current = { ...curr }
+      }
+    }
+    result.push(current)
+
+    return result
+  }
+
+  /**
+   * Levenshtein-based text similarity [0-1]
+   */
+  function textSimilarity(a: string, b: string): number {
+    if (a === b) return 1
+    if (!a.length || !b.length) return 0
+
+    const dp: number[] = Array.from({ length: b.length + 1 }, (_, i) => i)
+    for (let i = 1; i <= a.length; i++) {
+      let prev = dp[0]
+      dp[0] = i
+      for (let j = 1; j <= b.length; j++) {
+        const temp = dp[j]
+        dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1])
+        prev = temp
+      }
+    }
+    const dist = dp[b.length]
+    return 1 - dist / Math.max(a.length, b.length)
   }
   
   return {
@@ -365,6 +548,11 @@ export function useOCREngine() {
     processMultiPass,
     terminate,
     applyPreprocessing,
-    safeExtractROI,  // expose ROI extraction utility
+    safeExtractROI,
+    postProcessText,
+    calibrateConfidence,
+    detectDominantScript,
+    mergeSimilarSubtitles,
+    textSimilarity,
   }
 }

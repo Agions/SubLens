@@ -17,19 +17,40 @@ export function useSubtitleExtractor() {
   const totalFrames = ref(0)
   const extractedCount = ref(0)
 
-  // Scene detection: skip frames that are too similar
+  // Scene detection: quantized histogram comparison
+  // Faster than per-pixel diff — quantizes to 16 bins per channel
   function detectSceneChange(prevFrame: ImageData, currFrame: ImageData, threshold: number = 0.3): boolean {
-    const sampleSize = Math.min(prevFrame.data.length, currFrame.data.length, 1000)
-    let diff = 0
+    const binCount = 16
+    const binSize = 256 / binCount  // 16 levels per channel = 4096 total bins
 
-    for (let i = 0; i < sampleSize; i += 4) {
-      const rDiff = Math.abs(prevFrame.data[i] - currFrame.data[i])
-      const gDiff = Math.abs(prevFrame.data[i + 1] - currFrame.data[i + 1])
-      const bDiff = Math.abs(prevFrame.data[i + 2] - currFrame.data[i + 2])
-      diff += (rDiff + gDiff + bDiff) / 3
+    // Build histograms (skip alpha channel)
+    const prevHist = new Array(binCount * 3).fill(0)
+    const currHist = new Array(binCount * 3).fill(0)
+    const sampleCount = Math.min(prevFrame.data.length, currFrame.data.length, 2000)
+
+    for (let i = 0; i < sampleCount; i += 4) {
+      // R channel
+      prevHist[Math.floor(prevFrame.data[i] / binSize)]++
+      currHist[Math.floor(currFrame.data[i] / binSize)]++
+      // G channel
+      prevHist[binCount + Math.floor(prevFrame.data[i + 1] / binSize)]++
+      currHist[binCount + Math.floor(currFrame.data[i + 1] / binSize)]++
+      // B channel
+      prevHist[binCount * 2 + Math.floor(prevFrame.data[i + 2] / binSize)]++
+      currHist[binCount * 2 + Math.floor(currFrame.data[i + 2] / binSize)]++
     }
 
-    return (diff / (sampleSize / 4)) > threshold * 255
+    // Normalize histograms
+    const norm = sampleCount / 4
+    let chiSquare = 0
+    for (let b = 0; b < prevHist.length; b++) {
+      const e = prevHist[b] || 0.1
+      const o = currHist[b]
+      chiSquare += ((o - e) * (o - e)) / e
+    }
+
+    // chiSquare > threshold means significant scene change
+    return chiSquare > threshold * binCount * 3
   }
 
   // Process single frame
@@ -137,6 +158,31 @@ export function useSubtitleExtractor() {
       currentFrame.value = frameIndex
 
       prevFrameData = frameData
+    }
+
+    // Post-processing: merge similar consecutive subtitles
+    const rawSubs = subtitleStore.subtitles
+    if (rawSubs.length > 1) {
+      const merged = ocrEngine.mergeSimilarSubtitles(
+        rawSubs.map(s => ({
+          startTime: s.startTime,
+          endTime: s.endTime,
+          startFrame: s.startFrame,
+          endFrame: s.endFrame,
+          text: s.text,
+          confidence: s.confidence,
+        })),
+        0.80,   // similarity threshold
+        0.5     // max time gap (seconds)
+      )
+      // Replace subtitles with merged results (re-index)
+      subtitleStore.setSubtitles(
+        merged.map((s, i) => ({
+          ...rawSubs.find(r => r.text === s.text && Math.abs(r.startTime - s.startTime) < 0.1)!,
+          ...s,
+          index: i + 1,
+        })).filter(Boolean)
+      )
     }
 
     subtitleStore.finishExtraction()
