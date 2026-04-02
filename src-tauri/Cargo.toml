@@ -3,6 +3,7 @@ name = "visionsub"
 version = "3.0.0"
 description = "Professional Video OCR Subtitle Extraction Tool"
 authors = ["Agions"]
+authors = ["Agions"]
 license = "MIT"
 repository = "https://github.com/Agions/VisionSub"
 edition = "2021"

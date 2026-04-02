@@ -12,7 +12,9 @@
     "lint": "eslint src --ext .vue,.ts,.tsx",
     "lint:fix": "eslint src --ext .vue,.ts,.tsx --fix",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "visionsub-cli": "node cli/dist/extract.js",
+    "visionsub:cli:build": "cd cli && npm run build"
   },
   "keywords": [
     "video",
