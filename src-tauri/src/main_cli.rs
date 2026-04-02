@@ -12,8 +12,8 @@ use std::process::Command;
 #[derive(Parser)]
 #[command(
     name = "visionsub-cli",
-    version = "3.0.0",
-    about = "VisionSub - Professional Video Subtitle Extraction Tool"
+    version = "3.1.1",
+    about = "VisionSub v3.1.1 - Professional Video Subtitle Extraction Tool"
 )]
 struct Cli {
     #[command(subcommand)]

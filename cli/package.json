@@ -1,0 +1,26 @@
+{
+  "name": "visionsub-cli",
+  "version": "3.1.1",
+  "description": "VisionSub CLI - Professional Video Subtitle Extraction Tool",
+  "type": "module",
+  "bin": {
+    "visionsub-cli": "./dist/extract.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "extract": "node ./dist/extract.js"
+  },
+  "dependencies": {
+    "tesseract.js": "^5.0.0",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/yargs": "^17.0.32",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
