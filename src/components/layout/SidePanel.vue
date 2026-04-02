@@ -21,10 +21,21 @@ function openExport() {
 type TabKey = 'files' | 'progress' | 'roi' | 'ocr' | 'export'
 const activeTab = ref<TabKey>('files')
 
-const ocrEngines: { id: OCREngine; name: string; desc: string; recommended: boolean }[] = [
-  { id: 'paddle', name: 'PaddleOCR', desc: '速度最快·精度高', recommended: true },
-  { id: 'easyocr', name: 'EasyOCR', desc: '多语言支持', recommended: false },
-  { id: 'tesseract', name: 'Tesseract.js', desc: 'WASM 无需后端', recommended: false },
+// OCR Engine definitions with detailed stats
+const ocrEngines: {
+  id: OCREngine
+  name: string
+  shortName: string
+  desc: string
+  accuracy: number    // 1-5 stars
+  speed: number       // 1-5 stars
+  langCount: number
+  recommended: boolean
+  tech: string        // tech badge
+}[] = [
+  { id: 'paddle', name: 'PaddleOCR', shortName: 'PP', desc: '百度开源·深度学习', accuracy: 5, speed: 4, langCount: 80, recommended: true, tech: 'PP-OCRv5' },
+  { id: 'easyocr', name: 'EasyOCR', shortName: 'EO', desc: 'PyTorch·多语言', accuracy: 4, speed: 3, langCount: 80, recommended: false, tech: 'deep learning' },
+  { id: 'tesseract', name: 'Tesseract.js', shortName: 'TS', desc: 'WASM·无需后端', accuracy: 3, speed: 5, langCount: 100, recommended: false, tech: 'LSTM+WASM' },
 ]
 
 const languages = [
@@ -36,6 +47,13 @@ const languages = [
 
 const selectedLanguages = ref<string[]>(['ch'])
 const confidenceThreshold = ref(70)
+const multiPassEnabled = ref(true)
+const mergeEnabled = ref(true)
+const mergeThreshold = ref(80)
+const postProcessEnabled = ref(true)
+const sceneSensitivity = ref(30)
+const frameInterval = ref(1)
+const showAdvanced = ref(false)
 const isExtracting = computed(() => subtitleStore.isExtracting)
 const extractStartTime = ref<number>(0)
 
@@ -45,6 +63,58 @@ const extractSpeed = computed(() => {
   if (elapsed <= 0) return 0
   return Math.round(subtitleStore.currentExtractFrame / elapsed)
 })
+
+// Estimated extraction accuracy based on current settings
+const estimatedAccuracy = computed(() => {
+  const engine = projectStore.extractOptions.ocrEngine
+  const baseAccuracy: Record<OCREngine, number> = {
+    paddle: 95,
+    easyocr: 88,
+    tesseract: 78,
+  }
+  let score = baseAccuracy[engine] ?? 80
+
+  // Multi-pass bonus
+  if (multiPassEnabled.value) score += 4
+  // Post-processing bonus
+  if (postProcessEnabled.value) score += 3
+  // Merge bonus
+  if (mergeEnabled.value) score += 2
+  // Language mixing penalty
+  if (selectedLanguages.value.length > 1) score -= 2
+
+  return Math.min(100, score)
+})
+
+// Language families for grouped display
+const languageFamilies = [
+  {
+    name: 'CJK',
+    langs: [
+      { id: 'ch', name: '中文', flag: '🇨🇳' },
+      { id: 'ja', name: '日文', flag: '🇯🇵' },
+      { id: 'ko', name: '韩文', flag: '🇰🇷' },
+    ]
+  },
+  {
+    name: '欧洲',
+    langs: [
+      { id: 'en', name: '英文', flag: '🇬🇧' },
+      { id: 'fr', name: '法文', flag: '🇫🇷' },
+      { id: 'de', name: '德文', flag: '🇩🇪' },
+      { id: 'es', name: '西班牙', flag: '🇪🇸' },
+    ]
+  },
+  {
+    name: '其他',
+    langs: [
+      { id: 'ru', name: '俄文', flag: '🇷🇺' },
+      { id: 'ar', name: '阿拉伯', flag: '🇸🇦' },
+      { id: 'vi', name: '越南', flag: '🇻🇳' },
+      { id: 'th', name: '泰文', flag: '🇹🇭' },
+    ]
+  },
+]
 
 function toggleLanguage(id: string) {
   const idx = selectedLanguages.value.indexOf(id)
@@ -330,7 +400,32 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
     </div>
 
     <!-- ── OCR Tab ───────────────────────────────────────── -->
-    <div v-if="activeTab === 'ocr'" class="tab-content">
+    <div v-if="activeTab === 'ocr'" class="tab-content ocr-tab">
+
+      <!-- Accuracy Meter -->
+      <div class="accuracy-meter">
+        <div class="meter-label">
+          <svg viewBox="0 0 16 16" fill="none" class="meter-icon">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>预估准确率</span>
+        </div>
+        <div class="meter-track">
+          <div
+            class="meter-fill"
+            :style="{ width: estimatedAccuracy + '%' }"
+            :class="{
+              'meter-high': estimatedAccuracy >= 90,
+              'meter-mid': estimatedAccuracy >= 70 && estimatedAccuracy < 90,
+              'meter-low': estimatedAccuracy < 70,
+            }"
+          />
+        </div>
+        <span class="meter-value">{{ estimatedAccuracy }}%</span>
+      </div>
+
+      <!-- Engine Selection -->
       <div class="section">
         <div class="section-header">
           <span class="section-title">OCR 引擎</span>
@@ -342,60 +437,224 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
             :class="['engine-card', { active: projectStore.extractOptions.ocrEngine === engine.id }]"
             @click="projectStore.setOCREngine(engine.id)"
           >
-            <div class="engine-info">
-              <span class="engine-name">{{ engine.name }}</span>
-              <span class="engine-desc">{{ engine.desc }}</span>
-            </div>
-            <div class="engine-right">
-              <span v-if="engine.recommended" class="rec-badge">推荐</span>
+            <div class="engine-header">
+              <div class="engine-avatar" :class="'avatar-' + engine.id">
+                <span class="avatar-text">{{ engine.shortName }}</span>
+              </div>
+              <div class="engine-info">
+                <div class="engine-name-row">
+                  <span class="engine-name">{{ engine.name }}</span>
+                  <span v-if="engine.recommended" class="rec-chip">推荐</span>
+                </div>
+                <span class="engine-tech">{{ engine.tech }}</span>
+              </div>
               <div class="engine-check">
                 <svg v-if="projectStore.extractOptions.ocrEngine === engine.id" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="6" fill="currentColor" opacity="0.15"/>
+                  <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
             </div>
+
+            <!-- Engine Stats -->
+            <div class="engine-stats">
+              <div class="stat-item">
+                <svg viewBox="0 0 10 10" fill="none">
+                  <path d="M1 7l3-3 2 2 3-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="star-row">
+                  <div
+                    v-for="n in 5"
+                    :key="n"
+                    :class="['star', { filled: n <= engine.accuracy }]"
+                  />
+                </div>
+              </div>
+              <div class="stat-item">
+                <svg viewBox="0 0 10 10" fill="none">
+                  <path d="M1 8h8M2 6l2-2 2 2 2-2 2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="star-row">
+                  <div
+                    v-for="n in 5"
+                    :key="n"
+                    :class="['star', { filled: n <= engine.speed }]"
+                  />
+                </div>
+              </div>
+              <div class="stat-item stat-lang">
+                <svg viewBox="0 0 10 10" fill="none">
+                  <circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M2 5h6M5 1c-1.5 2-1.5 6 0 8M5 1c1.5 2 1.5 6 0 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                <span>{{ engine.langCount }}+</span>
+              </div>
+            </div>
+
+            <div class="engine-desc-text">{{ engine.desc }}</div>
           </button>
         </div>
       </div>
 
+      <!-- Language Selection -->
       <div class="section">
         <div class="section-header">
           <span class="section-title">识别语言</span>
           <span class="lang-count">{{ selectedLanguages.length }} 种</span>
         </div>
-        <div class="lang-chips">
-          <button
-            v-for="lang in languages"
-            :key="lang.id"
-            :class="['lang-chip', { active: selectedLanguages.includes(lang.id) }]"
-            @click="toggleLanguage(lang.id)"
-          >
-            {{ lang.name }}
-          </button>
+
+        <div
+          v-for="family in languageFamilies"
+          :key="family.name"
+          class="lang-family"
+        >
+          <span class="family-label">{{ family.name }}</span>
+          <div class="lang-chips">
+            <button
+              v-for="lang in family.langs"
+              :key="lang.id"
+              :class="['lang-chip', { active: selectedLanguages.includes(lang.id) }]"
+              @click="toggleLanguage(lang.id)"
+            >
+              <span class="lang-flag">{{ lang.flag }}</span>
+              <span>{{ lang.name }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
+      <!-- Advanced Settings -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">高级选项</span>
+          <button
+            class="toggle-btn"
+            :class="{ active: showAdvanced }"
+            @click="showAdvanced = !showAdvanced"
+          >
+            {{ showAdvanced ? '收起' : '展开' }}
+            <svg :class="['toggle-arrow', { open: showAdvanced }]" viewBox="0 0 10 6" fill="none">
+              <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <transition name="slide-down">
+          <div v-if="showAdvanced" class="advanced-panel">
+            <!-- Multi-pass OCR -->
+            <div class="option-row">
+              <div class="option-info">
+                <span class="option-name">多通道 OCR</span>
+                <span class="option-hint">多次识别取最优结果，提升准确率</span>
+              </div>
+              <button
+                :class="['toggle-switch', { on: multiPassEnabled }]"
+                @click="multiPassEnabled = !multiPassEnabled"
+              >
+                <span class="toggle-thumb"/>
+              </button>
+            </div>
+
+            <!-- Text Post-processing -->
+            <div class="option-row">
+              <div class="option-info">
+                <span class="option-name">文字后处理</span>
+                <span class="option-hint">自动修正标点、繁简转换</span>
+              </div>
+              <button
+                :class="['toggle-switch', { on: postProcessEnabled }]"
+                @click="postProcessEnabled = !postProcessEnabled"
+              >
+                <span class="toggle-thumb"/>
+              </button>
+            </div>
+
+            <!-- Merge Similar Subtitles -->
+            <div class="option-row">
+              <div class="option-info">
+                <span class="option-name">字幕合并</span>
+                <span class="option-hint">自动合并相似相邻字幕</span>
+              </div>
+              <button
+                :class="['toggle-switch', { on: mergeEnabled }]"
+                @click="mergeEnabled = !mergeEnabled"
+              >
+                <span class="toggle-thumb"/>
+              </button>
+            </div>
+
+            <!-- Merge Threshold -->
+            <div v-if="mergeEnabled" class="option-sub-row">
+              <span class="sub-label">相似度阈值</span>
+              <div class="slider-track small">
+                <div class="slider-fill" :style="{ width: mergeThreshold + '%' }"/>
+                <input type="range" v-model.number="mergeThreshold" min="50" max="100" class="slider"/>
+              </div>
+              <span class="sub-value">{{ mergeThreshold }}%</span>
+            </div>
+
+            <!-- Scene Detection Sensitivity -->
+            <div class="option-row">
+              <div class="option-info">
+                <span class="option-name">场景检测灵敏度</span>
+                <span class="option-hint">越高越敏感，跳过更多相似帧</span>
+              </div>
+              <span class="sensitivity-val">{{ sceneSensitivity }}%</span>
+            </div>
+            <div class="slider-track">
+              <div class="slider-fill" :style="{ width: sceneSensitivity + '%' }"/>
+              <input type="range" v-model.number="sceneSensitivity" min="0" max="100" class="slider"/>
+            </div>
+            <div class="slider-labels">
+              <span>低（保留更多帧）</span>
+              <span>高（跳过更多帧）</span>
+            </div>
+
+            <!-- Frame Interval -->
+            <div class="option-row" style="margin-top: 12px">
+              <div class="option-info">
+                <span class="option-name">帧采样间隔</span>
+                <span class="option-hint">每隔 N 帧处理一次（1=全部）</span>
+              </div>
+              <div class="stepper">
+                <button class="stepper-btn" @click="frameInterval = Math.max(1, frameInterval - 1)">
+                  <svg viewBox="0 0 10 10" fill="none"><path d="M2 5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+                <span class="stepper-val">{{ frameInterval }}</span>
+                <button class="stepper-btn" @click="frameInterval = Math.min(10, frameInterval + 1)">
+                  <svg viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+
+      <!-- Confidence Threshold -->
       <div class="section">
         <div class="section-header">
           <span class="section-title">置信度阈值</span>
           <span class="threshold-value">{{ confidenceThreshold }}%</span>
         </div>
         <div class="slider-track">
-          <div class="slider-fill" :style="{ width: confidenceThreshold + '%' }"/>
-          <input
-            type="range"
-            v-model="confidenceThreshold"
-            min="0"
-            max="100"
-            class="slider"
+          <div
+            class="slider-fill"
+            :style="{ width: confidenceThreshold + '%' }"
+            :class="{
+              'fill-green': confidenceThreshold >= 80,
+              'fill-yellow': confidenceThreshold >= 50 && confidenceThreshold < 80,
+              'fill-red': confidenceThreshold < 50,
+            }"
           />
+          <input type="range" v-model.number="confidenceThreshold" min="0" max="100" class="slider"/>
         </div>
         <div class="slider-labels">
-          <span>0%</span>
+          <span>0%（接受全部）</span>
           <span>50%</span>
-          <span>100%</span>
+          <span>100%（仅高置信度）</span>
         </div>
       </div>
+
     </div>
 
     <!-- ── Export Tab ────────────────────────────────────── -->
@@ -864,6 +1123,7 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
 }
 
 // ── Engine List ─────────────────────────────────────────────
+
 .engine-list {
   display: flex;
   flex-direction: column;
@@ -875,75 +1135,144 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
   border: 1.5px solid $border;
   border-radius: $radius-lg;
   padding: $space-3;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   transition: all $transition-base;
   animation: card-enter 0.3s ease-out both;
+  cursor: pointer;
 
   &:hover {
     border-color: $border-light;
   }
 
   &.active {
-    border-color: $primary;
+    border-color: rgba($primary, 0.5);
     background: rgba($primary, 0.04);
+    box-shadow: 0 0 16px rgba($primary, 0.1);
   }
+}
+
+.engine-header {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-bottom: $space-3;
+}
+
+.engine-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+
+  &.avatar-paddle { background: linear-gradient(135deg, #00A0FF, #0066FF); color: #fff; }
+  &.avatar-easyocr { background: linear-gradient(135deg, #FF6B35, #FF9F1C); color: #fff; }
+  &.avatar-tesseract { background: linear-gradient(135deg, #5C5C61, #3A3A40); color: #fff; }
 }
 
 .engine-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  .engine-name {
-    font-size: $text-sm;
-    font-weight: 600;
-    color: $text-primary;
-  }
-
-  .engine-desc {
-    font-size: 10px;
-    color: $text-muted;
-  }
+  flex: 1;
+  min-width: 0;
 }
 
-.engine-right {
+.engine-name-row {
   display: flex;
   align-items: center;
   gap: $space-2;
+  margin-bottom: 2px;
 }
 
-.rec-badge {
-  font-size: 10px;
+.engine-name {
+  font-size: $text-sm;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.rec-chip {
+  font-size: 9px;
   font-weight: 700;
   background: rgba($success, 0.12);
   color: $success;
   padding: 2px 6px;
-  border-radius: $radius-sm;
+  border-radius: $radius-full;
   border: 1px solid rgba($success, 0.2);
+  letter-spacing: 0.02em;
+}
+
+.engine-tech {
+  font-size: 10px;
+  color: $text-muted;
+  font-family: $font-display;
 }
 
 .engine-check {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 1.5px solid $border;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: all $transition-fast;
 
-  svg {
-    width: 12px;
-    height: 12px;
-    color: #fff;
-  }
+  svg { width: 14px; height: 14px; }
 
   .engine-card.active & {
     background: $primary;
     border-color: $primary;
+    svg { color: #fff; }
   }
+}
+
+.engine-stats {
+  display: flex;
+  gap: $space-4;
+  margin-bottom: $space-2;
+  padding: $space-2 0;
+  border-top: 1px solid $border;
+  border-bottom: 1px solid $border;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: $text-muted;
+
+  svg { width: 10px; height: 10px; }
+
+  &.stat-lang {
+    margin-left: auto;
+    font-weight: 600;
+    font-family: $font-display;
+    color: $text-secondary;
+  }
+}
+
+.star-row {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $bg-overlay;
+  transition: background $transition-fast;
+
+  &.filled { background: $warning; }
+}
+
+.engine-desc-text {
+  font-size: 10px;
+  color: $text-muted;
 }
 
 // ── Language Chips ───────────────────────────────────────────
@@ -955,6 +1284,20 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
   border-radius: $radius-full;
 }
 
+.lang-family {
+  margin-bottom: $space-3;
+}
+
+.family-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: $space-2;
+}
+
 .lang-chips {
   display: flex;
   flex-wrap: wrap;
@@ -962,14 +1305,19 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
 }
 
 .lang-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: $space-1 $space-3;
   background: $bg-elevated;
   border: 1.5px solid $border;
   border-radius: $radius-full;
-  font-size: $text-sm;
+  font-size: 12px;
   font-weight: 500;
   color: $text-secondary;
   transition: all $transition-base;
+
+  .lang-flag { font-size: 12px; }
 
   &:hover {
     border-color: $border-light;
@@ -981,6 +1329,227 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
     background: rgba($primary, 0.1);
     color: $primary;
   }
+}
+
+// ── Accuracy Meter ───────────────────────────────────────────
+.accuracy-meter {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  background: rgba($primary, 0.04);
+  border: 1px solid rgba($primary, 0.15);
+  border-radius: $radius-xl;
+  margin-bottom: $space-4;
+  animation: fade-up 0.3s ease-out both;
+}
+
+.meter-icon {
+  width: 16px;
+  height: 16px;
+  color: $primary;
+  flex-shrink: 0;
+}
+
+.meter-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $text-secondary;
+  white-space: nowrap;
+}
+
+.meter-track {
+  flex: 1;
+  height: 6px;
+  background: $bg-overlay;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+
+  &.meter-high { background: linear-gradient(90deg, $success, lighten($success, 10%)); }
+  &.meter-mid { background: linear-gradient(90deg, $warning, lighten($warning, 10%)); }
+  &.meter-low { background: linear-gradient(90deg, $error, lighten($error, 10%)); }
+}
+
+.meter-value {
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-weight: 800;
+  min-width: 36px;
+  text-align: right;
+  color: $primary;
+}
+
+// ── Advanced Panel ───────────────────────────────────────────
+.toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  padding: 3px 8px;
+  border-radius: $radius-sm;
+  background: $bg-overlay;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover { color: $text-secondary; background: $border; }
+  &.active { color: $primary; }
+}
+
+.toggle-arrow {
+  width: 10px;
+  height: 6px;
+  transition: transform $transition-base;
+
+  &.open { transform: rotate(180deg); }
+}
+
+.advanced-panel {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-3;
+  background: rgba($bg-overlay, 0.5);
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  margin-top: $space-2;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.option-sub-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding-left: $space-2;
+  margin-top: -$space-1;
+  margin-bottom: $space-1;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.option-name {
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+.option-hint {
+  font-size: 10px;
+  color: $text-muted;
+}
+
+.sensitivity-val {
+  font-family: $font-display;
+  font-size: $text-xs;
+  font-weight: 700;
+  color: $primary;
+  min-width: 32px;
+  text-align: right;
+}
+
+.sub-label {
+  font-size: 10px;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.sub-value {
+  font-family: $font-display;
+  font-size: 10px;
+  font-weight: 700;
+  color: $primary;
+  min-width: 28px;
+  text-align: right;
+}
+
+// ── Toggle Switch ────────────────────────────────────────────
+.toggle-switch {
+  width: 36px;
+  height: 20px;
+  background: $bg-overlay;
+  border: 1.5px solid $border;
+  border-radius: $radius-full;
+  padding: 2px;
+  cursor: pointer;
+  transition: all $transition-base;
+  flex-shrink: 0;
+
+  &.on {
+    background: $primary;
+    border-color: $primary;
+  }
+}
+
+.toggle-thumb {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform $transition-base;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+
+  .toggle-switch.on & { transform: translateX(16px); }
+}
+
+// ── Stepper ─────────────────────────────────────────────────
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  background: $bg-elevated;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  padding: 2px;
+}
+
+.stepper-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  svg { width: 10px; height: 10px; }
+  &:hover { background: $bg-overlay; color: $text-primary; }
+}
+
+.stepper-val {
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-weight: 700;
+  color: $text-primary;
+  min-width: 20px;
+  text-align: center;
 }
 
 // ── Slider ────────────────────────────────────────────────────
@@ -998,6 +1567,8 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
   border-radius: $radius-full;
   margin-bottom: $space-2;
 
+  &.small { height: 4px; margin-bottom: 0; }
+
   .slider-fill {
     position: absolute;
     top: 0;
@@ -1007,6 +1578,10 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
     border-radius: $radius-full;
     pointer-events: none;
     transition: width 0.1s;
+
+    &.fill-green { background: linear-gradient(90deg, $success, lighten($success, 8%)); }
+    &.fill-yellow { background: linear-gradient(90deg, $warning, lighten($warning, 8%)); }
+    &.fill-red { background: linear-gradient(90deg, $error, lighten($error, 8%)); }
   }
 
   .slider {
@@ -1025,6 +1600,8 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
   font-size: 10px;
   color: $text-muted;
 }
+
+// ── Export ───────────────────────────────────────────────────
 
 // ── Export ───────────────────────────────────────────────────
 .export-list {
