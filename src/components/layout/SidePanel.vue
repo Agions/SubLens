@@ -67,6 +67,11 @@ const extractSpeed = computed(() => {
   return Math.round(subtitleStore.currentExtractFrame / elapsed)
 })
 
+// How many already-extracted subtitles fall below the current threshold
+const belowThresholdCount = computed(() =>
+  subtitleStore.subtitles.filter(s => s.confidence < confidenceThreshold.value / 100).length
+)
+
 // Estimated extraction accuracy based on current settings
 const estimatedAccuracy = computed(() => {
   const engine = projectStore.extractOptions.ocrEngine
@@ -670,6 +675,12 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
           <span>0%（接受全部）</span>
           <span>50%</span>
           <span>100%（仅高置信度）</span>
+        </div>
+        <div v-if="subtitleStore.totalCount > 0" class="threshold-hint">
+          当前设置下，将排除 <strong>{{ belowThresholdCount }}</strong> 条低于 {{ confidenceThreshold }}% 的字幕
+          <span v-if="belowThresholdCount > 0" class="threshold-action" @click="subtitleStore.setConfidenceFilter('low')">
+            → 查看低置信度字幕
+          </span>
         </div>
       </div>
 
@@ -1576,6 +1587,30 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
   font-size: $text-sm;
   font-weight: 700;
   color: $primary;
+}
+
+.threshold-hint {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: 10px;
+  color: $text-muted;
+  margin-top: $space-1;
+  flex-wrap: wrap;
+
+  strong {
+    color: $warning;
+    font-weight: 700;
+  }
+}
+
+.threshold-action {
+  color: $primary;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity $transition-fast;
+
+  &:hover { opacity: 0.75; }
 }
 
 .slider-track {
