@@ -43,6 +43,8 @@ pub fn run() {
             commands::ocr_engine::get_ocr_engine_info,
             commands::ocr_engine::ocr_image_tesseract,
             commands::ocr_engine::ocr_base64_image,
+            commands::ocr_engine::process_paddle_ocr,
+            commands::ocr_engine::check_paddle_ocr_available,
             commands::system::check_system_dependencies,
             commands::system::get_tesseract_languages,
         ])
