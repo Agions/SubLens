@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
 import type { ExportFormats } from '@/types/subtitle'
+import { getConfidenceLevel } from '@/types/video'
 
 const subtitleStore = useSubtitleStore()
 const projectStore = useProjectStore()
@@ -86,11 +87,7 @@ function parseTime(timeStr: string): number {
   return parseInt(hrs) * 3600 + parseInt(mins) * 60 + parseInt(secs) + parseInt(ms) / 1000
 }
 
-function getConfidenceClass(confidence: number): string {
-  if (confidence >= 0.9) return 'high'
-  if (confidence >= 0.7) return 'mid'
-  return 'low'
-}
+// getConfidenceLevel is imported from @/types/video
 
 const selectedCount = computed(() =>
   subtitleStore.selectedId ? 1 : 0
@@ -228,7 +225,7 @@ const selectedCount = computed(() =>
             </div>
             <div class="card-right">
               <!-- Confidence pill -->
-              <span :class="['conf-pill', `conf-${getConfidenceClass(sub.confidence)}`]">
+              <span :class="['conf-pill', `conf-${getConfidenceLevel(sub.confidence)}`]">
                 {{ Math.round(sub.confidence * 100) }}%
               </span>
               <!-- Frame range -->

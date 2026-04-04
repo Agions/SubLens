@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, EditableField, EditableValue, ExportFormats } from '@/types/subtitle'
 import { formatSRT, formatWebVTT, formatASS, formatSSA, formatJSON, formatLRC, formatSBV, formatCSV } from '@/types/subtitle'
+import { CONFIDENCE_HIGH, CONFIDENCE_MID } from '@/types/video'
 
 export const useSubtitleStore = defineStore('subtitle', () => {
   // State
@@ -41,9 +42,9 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     // Apply confidence filter
     if (confidenceFilter.value !== 'all') {
       result = result.filter(sub => {
-        if (confidenceFilter.value === 'low') return sub.confidence < 0.60
-        if (confidenceFilter.value === 'mid') return sub.confidence >= 0.60 && sub.confidence < 0.85
-        if (confidenceFilter.value === 'high') return sub.confidence >= 0.85
+        if (confidenceFilter.value === 'low') return sub.confidence < CONFIDENCE_MID
+        if (confidenceFilter.value === 'mid') return sub.confidence >= CONFIDENCE_MID && sub.confidence < CONFIDENCE_HIGH
+        if (confidenceFilter.value === 'high') return sub.confidence >= CONFIDENCE_HIGH
         return true
       })
     }
@@ -59,15 +60,15 @@ export const useSubtitleStore = defineStore('subtitle', () => {
 
   // Confidence level statistics
   const confidenceStats = computed(() => ({
-    low: subtitles.value.filter(s => s.confidence < 0.60).length,
-    mid: subtitles.value.filter(s => s.confidence >= 0.60 && s.confidence < 0.85).length,
-    high: subtitles.value.filter(s => s.confidence >= 0.85).length,
+    low: subtitles.value.filter(s => s.confidence < CONFIDENCE_MID).length,
+    mid: subtitles.value.filter(s => s.confidence >= CONFIDENCE_MID && s.confidence < CONFIDENCE_HIGH).length,
+    high: subtitles.value.filter(s => s.confidence >= CONFIDENCE_HIGH).length,
     total: subtitles.value.length,
   }))
 
   // Low-confidence subtitles for batch operations
   const lowConfidenceSubtitles = computed(() =>
-    subtitles.value.filter(s => s.confidence < 0.60)
+    subtitles.value.filter(s => s.confidence < CONFIDENCE_MID)
   )
   
   const selectedSubtitle = computed(() => 

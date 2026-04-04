@@ -67,3 +67,20 @@ export interface OCRConfig {
   language: string[]
   confidenceThreshold: number
 }
+
+/**
+ * Confidence level thresholds (unified across UI and filter).
+ * High: ≥ 85% — reliable, auto-accepted
+ * Mid:  60–85% — needs review
+ * Low:  < 60% — likely OCR error, batch-delete candidate
+ */
+export const CONFIDENCE_HIGH = 0.85
+export const CONFIDENCE_MID = 0.60
+
+export type ConfidenceLevel = 'high' | 'mid' | 'low'
+
+export function getConfidenceLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= CONFIDENCE_HIGH) return 'high'
+  if (confidence >= CONFIDENCE_MID) return 'mid'
+  return 'low'
+}
