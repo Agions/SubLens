@@ -103,7 +103,20 @@ const selectedCount = computed(() =>
     <div class="panel-header">
       <div class="header-left">
         <h3 class="panel-title">字幕列表</h3>
-        <span class="subtitle-badge">{{ subtitleStore.totalCount }} 条</span>
+        <span class="subtitle-badge">
+          {{ subtitleStore.confidenceFilter !== 'all'
+            ? `${subtitleStore.filteredSubtitles.length} / ${subtitleStore.totalCount}`
+            : subtitleStore.totalCount }} 条
+        </span>
+        <!-- Low-confidence count alert -->
+        <span
+          v-if="subtitleStore.confidenceStats.low > 0"
+          class="conf-alert-badge"
+          :title="`${subtitleStore.confidenceStats.low} 条低置信度字幕需要检查`"
+          @click="subtitleStore.setConfidenceFilter('low')"
+        >
+          ⚠️ {{ subtitleStore.confidenceStats.low }} 低置信度
+        </span>
       </div>
       <div class="header-actions">
         <button
@@ -143,6 +156,33 @@ const selectedCount = computed(() =>
         placeholder="搜索字幕内容..."
         class="search-input"
       />
+      <span v-if="subtitleStore.searchQuery" class="search-count">
+        {{ subtitleStore.filteredSubtitles.length }} 条结果
+      </span>
+    </div>
+
+    <!-- Confidence Filter Bar -->
+    <div class="conf-filter-bar" v-if="subtitleStore.totalCount > 0">
+      <span class="filter-label">质量筛选</span>
+      <div class="filter-chips">
+        <button
+          v-for="level in (['all', 'high', 'mid', 'low'] as const)"
+          :key="level"
+          :class="['filter-chip', `chip-${level}`, { active: subtitleStore.confidenceFilter === level }]"
+          @click="subtitleStore.setConfidenceFilter(level)"
+        >
+          <span class="chip-dot"/>
+          <span class="chip-text">
+            {{ level === 'all' ? '全部' : level === 'high' ? '高' : level === 'mid' ? '中' : '低' }}
+          </span>
+          <span class="chip-count">
+            {{ level === 'all' ? subtitleStore.confidenceStats.total
+              : level === 'high' ? subtitleStore.confidenceStats.high
+              : level === 'mid' ? subtitleStore.confidenceStats.mid
+              : subtitleStore.confidenceStats.low }}
+          </span>
+        </button>
+      </div>
     </div>
 
     <!-- Subtitle List -->
@@ -265,6 +305,38 @@ const selectedCount = computed(() =>
 
     <!-- Footer -->
     <div class="panel-footer">
+      <!-- Low-confidence batch action bar -->
+      <transition name="slide-down">
+        <div v-if="subtitleStore.confidenceFilter === 'low'" class="batch-action-bar">
+          <div class="batch-info">
+            <svg viewBox="0 0 16 16" fill="none" class="batch-icon">
+              <path d="M8 3v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>共有 <strong>{{ subtitleStore.confidenceStats.low }}</strong> 条低置信度字幕待检查</span>
+          </div>
+          <div class="batch-actions">
+            <button
+              class="batch-btn batch-btn--danger"
+              @click="subtitleStore.batchDeleteLowConfidence()"
+              title="删除全部低置信度字幕"
+            >
+              <svg viewBox="0 0 16 16" fill="none" class="batch-btn-icon">
+                <path d="M3 5h10M6 5V3h4v2M5 5v7h6V5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              删除全部低置信度
+            </button>
+            <button
+              class="batch-btn batch-btn--ghost"
+              @click="subtitleStore.setConfidenceFilter('all')"
+              title="取消筛选"
+            >
+              清除筛选
+            </button>
+          </div>
+        </div>
+      </transition>
+
       <div class="footer-top">
         <!-- Export format toggles -->
         <div class="format-toggles">
@@ -336,6 +408,28 @@ const selectedCount = computed(() =>
   border: 1px solid rgba($primary, 0.2);
 }
 
+.conf-alert-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba($warning, 0.12);
+  color: $warning;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  border: 1px solid rgba($warning, 0.25);
+  cursor: pointer;
+  transition: all $transition-fast;
+  animation: pulse-warn 2s ease-in-out infinite;
+
+  &:hover {
+    background: rgba($warning, 0.2);
+  }
+}
+
+@keyframes pulse-warn {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .header-actions {
   display: flex;
   gap: $space-1;
@@ -394,6 +488,98 @@ const selectedCount = computed(() =>
 
   &::placeholder { color: $text-muted; }
   &:focus { outline: none; }
+}
+
+.search-count {
+  font-size: 10px;
+  color: $text-muted;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// ── Confidence Filter Bar ────────────────────────────────────
+.conf-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  background: $bg-overlay;
+  border-bottom: 1px solid $border;
+  animation: fade-up 0.2s ease-out both;
+}
+
+.filter-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.filter-chips {
+  display: flex;
+  gap: $space-1;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &.chip-all {
+    color: $text-secondary;
+    background: $bg-elevated;
+    border-color: $border;
+    &:hover { border-color: $border-light; }
+    &.active { border-color: $text-secondary; background: $bg-overlay; }
+  }
+
+  &.chip-high {
+    color: $success;
+    background: rgba($success, 0.08);
+    border-color: rgba($success, 0.2);
+    &:hover { background: rgba($success, 0.14); }
+    &.active { background: rgba($success, 0.18); border-color: $success; box-shadow: 0 0 0 1px rgba($success, 0.2); }
+  }
+
+  &.chip-mid {
+    color: $warning;
+    background: rgba($warning, 0.08);
+    border-color: rgba($warning, 0.2);
+    &:hover { background: rgba($warning, 0.14); }
+    &.active { background: rgba($warning, 0.18); border-color: $warning; box-shadow: 0 0 0 1px rgba($warning, 0.2); }
+  }
+
+  &.chip-low {
+    color: $error;
+    background: rgba($error, 0.08);
+    border-color: rgba($error, 0.2);
+    &:hover { background: rgba($error, 0.14); }
+    &.active { background: rgba($error, 0.18); border-color: $error; box-shadow: 0 0 0 1px rgba($error, 0.2); }
+  }
+
+  .chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .chip-text { line-height: 1; }
+
+  .chip-count {
+    font-family: $font-display;
+    font-size: 10px;
+    opacity: 0.75;
+  }
 }
 
 // ── Subtitle List ────────────────────────────────────────────
@@ -749,12 +935,89 @@ const selectedCount = computed(() =>
   padding: $space-3 $space-4;
   border-top: 1px solid $border;
   animation: fade-up 0.3s 0.1s ease-out both;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
 }
 
 .footer-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+// ── Batch Action Bar ─────────────────────────────────────────
+.batch-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-2 $space-3;
+  background: rgba($warning, 0.06);
+  border: 1px solid rgba($warning, 0.2);
+  border-radius: $radius-md;
+}
+
+.batch-info {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-xs;
+  color: $text-secondary;
+
+  strong { color: $warning; font-weight: 700; }
+
+  .batch-icon {
+    width: 14px;
+    height: 14px;
+    color: $warning;
+    flex-shrink: 0;
+  }
+}
+
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.batch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: $radius-md;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-fast;
+  border: none;
+
+  &--danger {
+    background: rgba($error, 0.12);
+    color: $error;
+    border: 1px solid rgba($error, 0.25);
+
+    &:hover {
+      background: rgba($error, 0.2);
+      border-color: rgba($error, 0.4);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $text-muted;
+
+    &:hover {
+      background: $bg-overlay;
+      color: $text-secondary;
+    }
+  }
+
+  .batch-btn-icon {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .format-toggles {

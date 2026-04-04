@@ -13,6 +13,9 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   
   // Search
   const searchQuery = ref('')
+
+  // Confidence filter: 'all' | 'low' (<60%) | 'mid' (60-85%) | 'high' (≥85%)
+  const confidenceFilter = ref<'all' | 'low' | 'mid' | 'high'>('all')
   
   // Export Options
   const exportFormats = ref<ExportFormats>({
@@ -33,12 +36,39 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   
   // Computed
   const filteredSubtitles = computed(() => {
-    if (!searchQuery.value) return subtitles.value
-    const query = searchQuery.value.toLowerCase()
-    return subtitles.value.filter(sub => 
-      sub.text.toLowerCase().includes(query)
-    )
+    let result = subtitles.value
+
+    // Apply confidence filter
+    if (confidenceFilter.value !== 'all') {
+      result = result.filter(sub => {
+        if (confidenceFilter.value === 'low') return sub.confidence < 0.60
+        if (confidenceFilter.value === 'mid') return sub.confidence >= 0.60 && sub.confidence < 0.85
+        if (confidenceFilter.value === 'high') return sub.confidence >= 0.85
+        return true
+      })
+    }
+
+    // Apply search filter
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      result = result.filter(sub => sub.text.toLowerCase().includes(query))
+    }
+
+    return result
   })
+
+  // Confidence level statistics
+  const confidenceStats = computed(() => ({
+    low: subtitles.value.filter(s => s.confidence < 0.60).length,
+    mid: subtitles.value.filter(s => s.confidence >= 0.60 && s.confidence < 0.85).length,
+    high: subtitles.value.filter(s => s.confidence >= 0.85).length,
+    total: subtitles.value.length,
+  }))
+
+  // Low-confidence subtitles for batch operations
+  const lowConfidenceSubtitles = computed(() =>
+    subtitles.value.filter(s => s.confidence < 0.60)
+  )
   
   const selectedSubtitle = computed(() => 
     subtitles.value.find(sub => sub.id === selectedId.value) ?? null
@@ -169,10 +199,23 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     return EXPORTERS[format]?.() ?? ''
   }
   
+  function setConfidenceFilter(filter: 'all' | 'low' | 'mid' | 'high') {
+    confidenceFilter.value = filter
+  }
+
+  function batchDeleteLowConfidence() {
+    const lowIds = new Set(lowConfidenceSubtitles.value.map(s => s.id))
+    subtitles.value = subtitles.value.filter(s => !lowIds.has(s.id))
+    // Re-index
+    subtitles.value.forEach((s, i) => { s.index = i + 1 })
+    if (lowIds.has(selectedId.value ?? '')) selectedId.value = null
+  }
+
   function clearAll() {
     subtitles.value = []
     selectedId.value = null
     searchQuery.value = ''
+    confidenceFilter.value = 'all'
     editHistory.value = []
     historyIndex.value = -1
   }
@@ -185,6 +228,7 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     extractProgress,
     currentExtractFrame,
     searchQuery,
+    confidenceFilter,
     exportFormats,
     
     // Computed
@@ -193,6 +237,8 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     totalCount,
     canUndo,
     canRedo,
+    confidenceStats,
+    lowConfidenceSubtitles,
     
     // Actions
     setSubtitles,
@@ -207,6 +253,8 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     undo,
     redo,
     exportToFormat,
-    clearAll
+    clearAll,
+    setConfidenceFilter,
+    batchDeleteLowConfidence
   }
 })
