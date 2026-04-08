@@ -154,7 +154,7 @@ export function useOCREngine() {
         // Set recognition mode for better accuracy
         // OEM (OCR Engine Mode): 3 = LSTM neural network (best for accuracy)
         // PSM (Page Segmentation Mode): auto-adaptive
-        await worker.value.setParameters({
+        await worker.value?.setParameters({
           tessedit_pageseg_mode: '3', // Fully automatic page segmentation, but no OSD
           preserve_interword_spaces: '1',
         })
