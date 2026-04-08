@@ -25,12 +25,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 8
 
       - name: Add pnpm to PATH
         run: echo "$HOME/setup-pnpm/node_modules/.bin" >> $GITHUB_PATH
@@ -91,7 +90,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 8
 
       - name: Add pnpm to PATH
         run: |
@@ -143,18 +142,18 @@ jobs:
             Professional video subtitle extraction tool.
 
             ### Features
-            - 🎬 Video subtitle extraction via OCR
-            - 🔍 Tesseract.js powered OCR
-            - 📋 Multiple export formats (SRT, VTT, ASS, JSON, TXT)
-            - ⌨️ Keyboard shortcuts
-            - 🌈 Theme switching
-            - 📦 Desktop + CLI dual mode
+            - - Video subtitle extraction via OCR
+            - - Tesseract.js powered OCR
+            - - Multiple export formats (SRT, VTT, ASS, JSON, TXT)
+            - - Keyboard shortcuts
+            - - Theme switching
+            - - Desktop + CLI dual mode
 
             ### Downloads
             - macOS (Apple Silicon)
-            - macOS (Intel)
-            - Linux
-            - Windows
+              - macOS (Intel)
+              - Linux
+              - Windows
 
           artifacts: |
             .vite/dist
