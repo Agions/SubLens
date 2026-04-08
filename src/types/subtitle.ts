@@ -70,7 +70,7 @@ export function formatWebVTT(subtitles: SubtitleItem[]): string {
 // ASS Format (Advanced SubStation Alpha)
 export function formatASS(subtitles: SubtitleItem[]): string {
   const header = `[Script Info]
-Title: VisionSub Export
+Title: HardSubX Export
 ScriptType: v4.00+
 Collisions: Normal
 PlayDepth: 0
@@ -109,7 +109,7 @@ export function formatJSON(subtitles: SubtitleItem[]): string {
   return JSON.stringify({
     version: '3.0',
     generatedAt: new Date().toISOString(),
-    tool: 'VisionSub',
+    tool: 'HardSubX',
     subtitles: subtitles.map(sub => ({
       id: sub.id,
       index: sub.index,
@@ -128,12 +128,12 @@ export function formatJSON(subtitles: SubtitleItem[]): string {
 
 // LRC Format (Lyrics)
 export function formatLRC(subtitles: SubtitleItem[]): string {
-  const header = `[ti:VisionSub Export]
-[ar:VisionSub]
+  const header = `[ti:HardSubX Export]
+[ar:HardSubX]
 [al:Subtitle Export]
-[by:VisionSub v3.0]
+[by:HardSubX v3.0]
 [offset:0]
-[re:VisionSub]
+[re:HardSubX]
 
 `
   const content = subtitles.map(sub => {
@@ -159,7 +159,7 @@ export function formatSBV(subtitles: SubtitleItem[]): string {
 // SSA Format (SubStation Alpha - older version)
 export function formatSSA(subtitles: SubtitleItem[]): string {
   const header = `[Script Info]
-Title:VisionSub Export
+Title:HardSubX Export
 ScriptType:v4.00+
 Collisions:Normal
 PlayDepth:0
@@ -194,7 +194,7 @@ export function formatCSV(subtitles: SubtitleItem[]): string {
 // STL Format (Spruce Subtitle Format)
 export function formatSTL(subtitles: SubtitleItem[]): string {
   // Simple text-based representation for STL
-  const header = `FORMAT1|00:00:00:00|00:00:00:00|E|VisionSub Export|
+  const header = `FORMAT1|00:00:00:00|00:00:00:00|E|HardSubX Export|
 `
   const content = subtitles.map((sub, i) => {
     const start = formatTimestampSTL(sub.startTime)
@@ -210,7 +210,7 @@ export function formatTTML(subtitles: SubtitleItem[]): string {
 <tt xmlns="http://www.w3.org/ns/ttml" xml:lang="zh-CN">
 <head>
   <metadata>
-    <title>VisionSub Export</title>
+    <title>HardSubX Export</title>
   </metadata>
   <styling>
     <style id="default" tts:fontFamily="Arial" tts:fontSize="20" tts:color="white"/>

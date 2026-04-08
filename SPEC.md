@@ -1,4 +1,4 @@
-# VisionSub v3.2 - 专业视频字幕提取工具
+# HardSubX v3.2 - 专业视频字幕提取工具
 
 > ⚠️ **文档状态**: 本文档描述的是 v3.0 版本的完整设计规范和架构。
 > 
@@ -138,9 +138,9 @@ $radius-xl: 16px;
 ### CLI 模式布局
 
 ```
-$ visionsub-cli extract video.mp4 --output ./subs --format srt,vtt
+$ hardsubx-cli extract video.mp4 --output ./subs --format srt,vtt
 
- VisionSub CLI v3.0
+ HardSubX CLI v3.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
  📁 输入文件: video.mp4
@@ -218,26 +218,26 @@ $ visionsub-cli extract video.mp4 --output ./subs --format srt,vtt
 
 ```bash
 # 基本用法
-visionsub-cli extract <video_file>
+hardsubx-cli extract <video_file>
 
 # 指定输出
-visionsub-cli extract video.mp4 -o ./subs
+hardsubx-cli extract video.mp4 -o ./subs
 
 # 指定格式
-visionsub-cli extract video.mp4 --format srt,vtt,json
+hardsubx-cli extract video.mp4 --format srt,vtt,json
 
 # 指定ROI
-visionsub-cli extract video.mp4 --roi bottom
+hardsubx-cli extract video.mp4 --roi bottom
 
 # 自定义OCR
-visionsub-cli extract video.mp4 --ocr paddleocr --lang ch,en
+hardsubx-cli extract video.mp4 --ocr paddleocr --lang ch,en
 
 # 仅预览（不保存）
-visionsub-cli preview video.mp4 --frame 1500
+hardsubx-cli preview video.mp4 --frame 1500
 
 # 获取帮助
-visionsub-cli --help
-visionsub-cli extract --help
+hardsubx-cli --help
+hardsubx-cli extract --help
 ```
 
 ### 4.3 交互细节
@@ -311,7 +311,7 @@ visionsub-cli extract --help
 ### 6.2 项目结构
 
 ```
-visionsub/
+hardsubx/
 ├── src/                          # Vue 前端源码
 │   ├── assets/                  # 静态资源
 │   │   ├── icons/              # SVG 图标
@@ -478,7 +478,7 @@ async fn export_subtitles(subtitles: Vec<SubtitleItem>, format: ExportFormat, ou
 ### 7.1 命令结构
 
 ```
-visionsub-cli
+hardsubx-cli
 ├── extract     # 提取字幕
 ├── preview    # 预览帧
 ├── info       # 视频信息
@@ -490,7 +490,7 @@ visionsub-cli
 ```toml
 # src-tauri/Cargo.toml
 [[bin]]
-name = "visionsub-cli"
+name = "hardsubx-cli"
 path = "cli/src/main.rs"
 
 [dependencies]
@@ -506,7 +506,7 @@ anyhow = "1.0"         # 错误处理
 - [x] 项目初始化（Tauri + Vue + TypeScript）
 - [x] 样式系统搭建（SCSS + CSS Variables）
 - [x] 基础布局组件 (ToolBar, SidePanel, VideoPreview, SubtitleList, StatusBar)
-- [x] CLI 脚手架 (visionsub-cli)
+- [x] CLI 脚手架 (hardsubx-cli)
 - [x] Pinia 状态管理 (project, subtitle, settings stores)
 - [x] TypeScript 类型定义 (video, subtitle types)
 

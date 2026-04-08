@@ -1,5 +1,5 @@
 {
-  "name": "visionsub",
+  "name": "hardsubx",
   "version": "3.2.0",
   "description": "Professional Video OCR Subtitle Extraction Tool",
   "type": "module",
@@ -13,8 +13,8 @@
     "lint:fix": "eslint src --ext .vue,.ts,.tsx --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "visionsub-cli": "node cli/dist/extract.js",
-    "visionsub:cli:build": "cd cli && npm run build"
+    "hardsubx-cli": "node cli/dist/extract.js",
+    "hardsubx:cli:build": "cd cli && npm run build"
   },
   "keywords": [
     "video",
@@ -28,10 +28,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Agions/VisionSub"
+    "url": "https://github.com/Agions/HardSubX"
   },
   "bugs": {
-    "url": "https://github.com/Agions/VisionSub/issues"
+    "url": "https://github.com/Agions/HardSubX/issues"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

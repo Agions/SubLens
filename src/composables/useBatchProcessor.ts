@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useOCREngine } from './useOCREngine'
-import { ROI_PRESETS } from '@/types/video'
+import { ROI_PRESETS, type OCREngine } from '@/types/video'
 
 export interface BatchJob {
   id: string
@@ -18,7 +18,7 @@ export interface BatchOptions {
   outputDir: string
   formats: ('srt' | 'vtt' | 'ass' | 'json' | 'txt')[]
   roiPreset: string
-  ocrEngine: string
+  ocrEngine: OCREngine
   languages: string[]
   sceneThreshold: number
   confidenceThreshold: number
@@ -154,7 +154,7 @@ export function useBatchProcessor() {
       const langs = langMap[options.languages[0]] || ['eng']
       
       const ocr = useOCREngine()
-      await ocr.init(options.ocrEngine as any, langs)
+      await ocr.init(options.ocrEngine, langs)
       
       // 3. Extract frames and process OCR
       // Note: This is a simplified version - full implementation would

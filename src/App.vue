@@ -33,7 +33,7 @@ const shortcutsHelpRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(
 const exportDialogRef = ref<InstanceType<typeof ExportDialog> | null>(null)
 
 onMounted(() => {
-  console.log('[VisionSub] Application mounted')
+  console.log('[HardSubX] Application mounted')
   setupShortcuts()
   
   // Set up export shortcut callback

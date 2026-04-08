@@ -132,8 +132,8 @@ describe('Subtitle Formatting', () => {
       const subtitles = [createSubtitle()]
       const result = formatLRC(subtitles)
 
-      expect(result).toContain('[ti:VisionSub Export]')
-      expect(result).toContain('[ar:VisionSub]')
+      expect(result).toContain('[ti:HardSubX Export]')
+      expect(result).toContain('[ar:HardSubX]')
     })
 
     it('should format timestamp correctly', () => {

@@ -35,12 +35,12 @@ function close() {
 </script>
 
 <template>
-  <Modal :open="open" title="关于 VisionSub" size="md" @close="close">
+  <Modal :open="open" title="关于 HardSubX" size="md" @close="close">
     <div class="about-content">
       <div class="about-header">
         <div class="app-icon">🎬</div>
         <div class="app-info">
-          <h2 class="app-name">VisionSub</h2>
+          <h2 class="app-name">HardSubX</h2>
           <p class="app-version">版本 {{ version }}</p>
           <p class="app-date">构建于 {{ buildDate }}</p>
         </div>
@@ -70,15 +70,15 @@ function close() {
       </div>
 
       <div class="links-section">
-        <a href="https://github.com/Agions/VisionSub" target="_blank" class="link-item">
+        <a href="https://github.com/Agions/HardSubX" target="_blank" class="link-item">
           <span class="link-icon">🐛</span>
           <span class="link-text">问题反馈</span>
         </a>
-        <a href="https://github.com/Agions/VisionSub/releases" target="_blank" class="link-item">
+        <a href="https://github.com/Agions/HardSubX/releases" target="_blank" class="link-item">
           <span class="link-icon">📦</span>
           <span class="link-text">发布版本</span>
         </a>
-        <a href="https://github.com/Agions/VisionSub/discussions" target="_blank" class="link-item">
+        <a href="https://github.com/Agions/HardSubX/discussions" target="_blank" class="link-item">
           <span class="link-icon">💬</span>
           <span class="link-text">讨论区</span>
         </a>

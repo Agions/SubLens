@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * VisionSub CLI v3.1.1
+ * HardSubX CLI v3.1.1
  * Video Subtitle Extraction Tool
  */
 
@@ -85,7 +85,7 @@ type Argv = Record<string, unknown>
 
 function parseArgs(): Argv {
   return yargs(hideBin(process.argv))
-    .scriptName('visionsub-cli')
+    .scriptName('hardsubx-cli')
     .version('3.1.1')
     .command('extract <video>', 'Extract subtitles from video', yargs => yargs
       .positional('video', { type: 'string', demandOption: true })
@@ -115,7 +115,7 @@ function parseArgs(): Argv {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  const tmpDir = '/tmp/visionsub-cli'
+  const tmpDir = '/tmp/hardsubx-cli'
   mkdirSync(tmpDir, { recursive: true })
 
   try {
@@ -127,7 +127,7 @@ async function main() {
       if (!existsSync(videoPath)) { console.error('❌ Video not found'); process.exit(1) }
       const info = getVideoInfo(videoPath)
       console.log(`
-🔍 VisionSub CLI v3.1.1 — Video Info
+🔍 HardSubX CLI v3.1.1 — Video Info
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📁 File:   ${videoPath}
 📐 Size:   ${info.width}×${info.height}

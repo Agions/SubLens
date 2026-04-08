@@ -66,7 +66,7 @@ export function formatWebVTT(subs: SubtitleItem[]): string {
 
 export function formatASS(subs: SubtitleItem[]): string {
   const header = `[Script Info]
-Title: VisionSub Export
+Title: HardSubX Export
 ScriptType: v4.00+
 Collisions: Normal
 PlayDepth: 0
@@ -93,7 +93,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
 export function formatSSA(subs: SubtitleItem[]): string {
   const header = `[Script Info]
-Title: VisionSub Export
+Title: HardSubX Export
 ScriptType: v4.00
 Collisions: Normal
 

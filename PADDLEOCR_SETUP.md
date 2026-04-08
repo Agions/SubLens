@@ -63,7 +63,7 @@ python src-tauri/scripts/paddle_ocr.py --image /path/to/test.png --lang ch --gpu
 pip install paddlepaddle-gpu
 ```
 
-然后在 VisionSub UI 中切换到 PaddleOCR 引擎即可自动使用 GPU。
+然后在 HardSubX UI 中切换到 PaddleOCR 引擎即可自动使用 GPU。
 
 ## 常见问题
 

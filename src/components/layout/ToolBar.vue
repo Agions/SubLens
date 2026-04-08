@@ -70,7 +70,7 @@ async function handleSave() {
     }))
     
     // Save as JSON project file
-    const filePath = await fileOps.saveFileDialog('保存项目', `${projectName.value}.visionsub.json`)
+    const filePath = await fileOps.saveFileDialog('保存项目', `${projectName.value}.hardsubx.json`)
     if (!filePath) return
     
     isLoading.value = true
@@ -112,7 +112,7 @@ function openAbout() {
             </linearGradient>
           </defs>
         </svg>
-        <span class="logo-text">VisionSub</span>
+        <span class="logo-text">HardSubX</span>
       </div>
       <div class="divider"></div>
       <span class="project-name">{{ projectName }}</span>

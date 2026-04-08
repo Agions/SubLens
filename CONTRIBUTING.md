@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢您对 VisionSub 的关注！我们欢迎各种形式的贡献。
+感谢您对 HardSubX 的关注！我们欢迎各种形式的贡献。
 
 ## 如何贡献
 
@@ -8,7 +8,7 @@
 
 如果您发现 bug 或有新功能建议，请：
 
-1. 在 [GitHub Issues](https://github.com/Agions/VisionSub/issues) 中搜索是否已有类似问题
+1. 在 [GitHub Issues](https://github.com/Agions/HardSubX/issues) 中搜索是否已有类似问题
 2. 如果没有，创建新的 Issue 并选择合适的模板
 3. 提供详细的复现步骤和环境信息
 
@@ -94,8 +94,8 @@ Closes #123
 
 ```bash
 # 克隆并安装依赖
-git clone https://github.com/Agions/VisionSub.git
-cd VisionSub
+git clone https://github.com/Agions/HardSubX.git
+cd HardSubX
 pnpm install
 
 # 启动开发服务器
@@ -130,7 +130,7 @@ pnpm tauri build
 ## 项目结构
 
 ```
-VisionSub/
+HardSubX/
 ├── src/                    # Vue 前端
 │   ├── components/        # UI 组件
 │   ├── composables/       # Vue Composables

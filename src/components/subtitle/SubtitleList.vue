@@ -341,7 +341,7 @@ const selectedCount = computed(() =>
             <input
               type="checkbox"
               :checked="subtitleStore.exportFormats[key]"
-              @change="(subtitleStore.exportFormats as any)[key] = !subtitleStore.exportFormats[key]"
+              @change="(subtitleStore.exportFormats as Record<string, boolean>)[key] = !subtitleStore.exportFormats[key]"
             />
             <span class="fmt-label">{{ key.toUpperCase() }}</span>
           </label>

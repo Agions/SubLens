@@ -1,10 +1,10 @@
 {
-  "name": "visionsub-cli",
-  "version": "3.1.1",
-  "description": "VisionSub CLI - Professional Video Subtitle Extraction Tool",
+  "name": "hardsubx-cli",
+  "version": "3.2.0",
+  "description": "HardSubX CLI - Professional Video Subtitle Extraction Tool",
   "type": "module",
   "bin": {
-    "visionsub-cli": "./dist/extract.js"
+    "hardsubx-cli": "./dist/extract.js"
   },
   "scripts": {
     "build": "tsc",

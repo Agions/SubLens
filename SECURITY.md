@@ -14,7 +14,7 @@
 
 ### 方式 1: GitHub Security Advisories
 
-请使用 [GitHub Security Advisories](https://github.com/Agions/VisionSub/security/advisories/new) 报告。
+请使用 [GitHub Security Advisories](https://github.com/Agions/HardSubX/security/advisories/new) 报告。
 
 这种方式允许我们私下讨论和修复问题，直到准备好公开披露。
 
@@ -48,8 +48,8 @@
 
 ## 已知问题
 
-如需查看已披露的安全问题列表，请访问 [Security Advisories](https://github.com/Agions/VisionSub/security/advisories)。
+如需查看已披露的安全问题列表，请访问 [Security Advisories](https://github.com/Agions/HardSubX/security/advisories)。
 
 ---
 
-感谢您帮助我们保持 VisionSub 的安全！
+感谢您帮助我们保持 HardSubX 的安全！

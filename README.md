@@ -1,14 +1,14 @@
-# VisionSub v3.2.0
+# HardSubX v3.2.0
 
 > 专业的视频硬字幕提取工具 — 提取字幕与画面帧一一对应，支持高准确度 OCR 后处理
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Agions/VisionSub/pulls)
-[![Stars](https://img.shields.io/github/stars/Agions/VisionSub?style=social)](https://github.com/Agions/VisionSub/stargazers)
-[![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue.svg)](https://github.com/Agions/VisionSub/actions)
-[![Version](https://img.shields.io/badge/version-3.1.1-blue.svg)](https://github.com/Agions/VisionSub/releases)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Agions/HardSubX/pulls)
+[![Stars](https://img.shields.io/github/stars/Agions/HardSubX?style=social)](https://github.com/Agions/HardSubX/stargazers)
+[![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue.svg)](https://github.com/Agions/HardSubX/actions)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/Agions/HardSubX/releases)
 
 </div>
 
@@ -49,26 +49,26 @@
 | `Ctrl + Y` | 重做 |
 | `?` | 快捷键帮助 |
 
-### ⌨️ 命令行工具 (visionsub-cli)
+### ⌨️ 命令行工具 (hardsubx-cli)
 ```bash
 # 提取字幕 (多格式)
-visionsub-cli extract video.mp4 --output ./subs --format srt,vtt,json
+hardsubx-cli extract video.mp4 --output ./subs --format srt,vtt,json
 
 # 指定 ROI 区域 + OCR 引擎
-visionsub-cli extract video.mp4 --roi bottom --ocr paddle --lang ch,en
+hardsubx-cli extract video.mp4 --roi bottom --ocr paddle --lang ch,en
 
 # 自定义置信度阈值
-visionsub-cli extract video.mp4 --confidence 80
+hardsubx-cli extract video.mp4 --confidence 80
 
 # 预览帧
-visionsub-cli preview video.mp4 --frame 1500
+hardsubx-cli preview video.mp4 --frame 1500
 
 # 查看视频信息
-visionsub-cli info video.mp4
+hardsubx-cli info video.mp4
 
 # 显示帮助
-visionsub-cli --help
-visionsub-cli extract --help
+hardsubx-cli --help
+hardsubx-cli extract --help
 ```
 
 ## 🚀 快速开始
@@ -82,8 +82,8 @@ visionsub-cli extract --help
 
 ```bash
 # 克隆项目
-git clone https://github.com/Agions/VisionSub.git
-cd VisionSub
+git clone https://github.com/Agions/HardSubX.git
+cd HardSubX
 
 # 安装前端依赖
 pnpm install
@@ -102,7 +102,7 @@ pnpm tauri build
 cargo install --path src-tauri
 
 # 或使用 npx
-npx visionsub-cli --help
+npx hardsubx-cli --help
 ```
 
 ## 🎯 支持格式
@@ -144,7 +144,7 @@ npx visionsub-cli --help
 ## 📂 项目结构
 
 ```
-VisionSub/
+HardSubX/
 ├── src/                          # Vue 前端源码
 │   ├── assets/                  # 静态资源 (SCSS)
 │   ├── components/              # Vue 组件
@@ -187,7 +187,7 @@ VisionSub/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  VisionSub  │  未命名项目  │  打开  │  保存  │  ☀ 主题  │  ℹ️  │
+│  HardSubX  │  未命名项目  │  打开  │  保存  │  ☀ 主题  │  ℹ️  │
 ├──────────────┬───────────────────────────────────┬─────────────┤
 │              │                                   │             │
 │  文件列表    │        视频预览区域               │  字幕列表   │

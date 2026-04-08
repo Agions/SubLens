@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "VisionSub",
+  "productName": "HardSubX",
   "version": "3.2.0",
-  "identifier": "com.visionsub.app",
+  "identifier": "com.hardsubx.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "VisionSub - 专业视频字幕提取工具",
+        "title": "HardSubX - 专业视频字幕提取工具",
         "width": 1400,
         "height": 900,
         "minWidth": 1200,

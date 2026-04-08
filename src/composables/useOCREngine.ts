@@ -27,7 +27,29 @@ export interface OCRProcessingOptions {
 }
 
 // 模块缓存，避免重复加载
-let cachedTesseractModule: any = null
+interface TesseractModule {
+  createWorker: (langs: string, workerNum?: number, options?: Record<string, unknown>) => Promise<TesseractWorker>
+}
+interface TesseractWorker {
+  recognize: (image: string | HTMLCanvasElement | HTMLImageElement) => Promise<RecognizeResult>
+  setParameters: (params: Record<string, string>) => Promise<void>
+  terminate: () => Promise<void>
+}
+interface RecognizeResult {
+  data: {
+    words: TesseractWord[]
+  }
+}
+interface TesseractWord {
+  text: string
+  confidence: number
+  bbox: { x0: number; y0: number; x1: number; y1: number }
+}
+interface TesseractLoggerMessage {
+  status: string
+  progress: number
+}
+let cachedTesseractModule: TesseractModule | null = null
 
 export function useOCREngine() {
   const isReady = ref(false)
@@ -37,7 +59,7 @@ export function useOCREngine() {
   const preprocessor = useImagePreprocessor()
   
   // Tesseract worker (lazy loaded)
-  const worker = shallowRef<any>(null)
+  const worker = shallowRef<TesseractWorker | null>(null)
   
   /**
    * 安全地提取ROI，处理边界情况
@@ -119,7 +141,7 @@ export function useOCREngine() {
         
         // Create worker with optimized settings
         worker.value = await Tesseract.createWorker(langs.join('+'), workerNum, {
-          logger: (m: any) => {
+          logger: (m: TesseractLoggerMessage) => {
             if (m.status === 'recognizing text') {
               progress.value = Math.round(m.progress * 100)
             }
@@ -185,7 +207,7 @@ export function useOCREngine() {
       
       progress.value = 100
       
-      return result.data.words.map((word: any) => ({
+      return result.data.words.map((word: TesseractWord) => ({
         text: word.text,
         confidence: word.confidence / 100,
         boundingBox: {

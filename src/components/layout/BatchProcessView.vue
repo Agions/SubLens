@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { ExportFormat } from '@/types/subtitle'
 import { useBatchProcessor, type BatchJob, type BatchOptions } from '@/composables/useBatchProcessor'
 
 const {
@@ -37,7 +38,7 @@ function handleFileDrop(e: DragEvent) {
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     if (file.type.startsWith('video/')) {
-      paths.push((file as any).path || file.name)
+      paths.push((file as File & { path?: string }).path || file.name)
     }
   }
   if (paths.length > 0) selectedFiles.value = [...selectedFiles.value, ...paths]
@@ -53,7 +54,7 @@ function handleFileSelect() {
     if (!files) return
     const paths: string[] = []
     for (let i = 0; i < files.length; i++) {
-      paths.push((files[i] as any).path || files[i].name)
+      paths.push((files[i] as File & { path?: string }).path || files[i].name)
     }
     if (paths.length > 0) selectedFiles.value = [...selectedFiles.value, ...paths]
   }
@@ -228,7 +229,7 @@ const s = computed(() => stats())
           <div class="option-item">
             <label class="option-label">导出格式</label>
             <div class="format-chips">
-              <label v-for="fmt in ['srt','vtt','ass','json']" :key="fmt" :class="['chip', { active: options.formats.includes(fmt as any) }]">
+              <label v-for="fmt in ['srt','vtt','ass','json']" :key="fmt" :class="['chip', { active: options.formats.includes(fmt as ExportFormat) }]">
                 <input type="checkbox" :value="fmt" v-model="options.formats" />
                 {{ fmt.toUpperCase() }}
               </label>

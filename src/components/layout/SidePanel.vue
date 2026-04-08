@@ -11,7 +11,7 @@ const subtitleStore = useSubtitleStore()
 
 const openExportDialog = inject<() => void>('openExportDialog')
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const subtitleExtractor = inject<any>('subtitleExtractor')!
+const subtitleExtractor = inject<(() => void) | null>('subtitleExtractor')
 
 function handleExport(format: keyof ExportFormats) {
   subtitleStore.exportFormats[format] = !subtitleStore.exportFormats[format]
