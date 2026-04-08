@@ -3,14 +3,14 @@
 ## Installation
 
 ```bash
-# Option 1: Use npx (no install)
+# Option 1: npx (no install required)
 npx hardsubx-cli extract video.mp4 --output ./subs
 
-# Option 2: Build and install locally
+# Option 2: Build and run locally
 cd cli && pnpm install && pnpm build
-# Then run with: node dist/extract.js
+node dist/extract.js
 
-# Option 3: Install via Cargo (full CLI with Rust backend)
+# Option 3: Install via Cargo (full Rust backend)
 cargo install --path src-tauri
 hardsubx-cli extract video.mp4 --output ./subs
 ```
@@ -36,13 +36,13 @@ hardsubx-cli extract video.mp4 --output ./subs
 hardsubx-cli extract <video> [options]
 ```
 
-**Arguments:**
+**Arguments**
 
 | Argument | Description |
 |:---|:---|
 | `<video>` | Path to input video file |
 
-**Options:**
+**Options**
 
 | Option | Short | Type | Default | Description |
 |:---|:---:|:---:|:---:|:---|
@@ -59,13 +59,13 @@ hardsubx-cli extract <video> [options]
 
 **Supported formats:** `srt`, `vtt`, `ass`, `ssa`, `json`, `txt`, `lrc`, `sbv`, `csv`
 
-**Examples:**
+**Examples**
 
 ```bash
-# Basic: extract SRT from video
+# Basic extraction to SRT
 hardsubx-cli extract video.mp4 --output ./subs
 
-# Multi-format export
+# Multi-format output
 hardsubx-cli extract video.mp4 --format srt,vtt,json --output ./subs
 
 # Chinese + English, PaddleOCR engine
@@ -74,38 +74,35 @@ hardsubx-cli extract video.mp4 --ocr paddle --lang ch,en --roi bottom
 # Custom ROI coordinates (x,y,width,height in percent)
 hardsubx-cli extract video.mp4 --roi 0,85,100,15
 
-# High confidence threshold for clean subtitles
+# High confidence threshold
 hardsubx-cli extract video.mp4 --confidence 85
 
 # Process every 2 frames (faster, lower accuracy)
 hardsubx-cli extract video.mp4 --frame-interval 2
 ```
 
-**Output:**
+**Sample output**
 
 ```
-$ hardsubx-cli extract video.mp4 --output ./subs --format srt,json
+HardSubX CLI v3.2.0 — Video Info
+================================
+File: video.mp4
+Resolution: 1920x1080
+Duration: 00:05:23
+FPS: 30.00
+Total frames: 9688
 
-🔍 HardSubX CLI v3.2.0 — Video Info
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📹 File: video.mp4
-📐 Resolution: 1920×1080
-⏱️ Duration: 00:05:23
-🎬 FPS: 30.00
-📊 Total frames: 9688
+OCR Engine: tesseract (langs: eng+chi_sim)
+ROI: bottom (0, 85, 100, 15)%
+Frame interval: 1
 
-⚙️ OCR Engine: tesseract (langs: eng+chi_sim)
-🎯 ROI: bottom (0, 85, 100, 15)%
-🔢 Frame interval: 1
+Processing: 29% [2812/9688 frames]  ETA: 42s
 
-Processing: 29%|█████████░░░░░░░░░░ 2812/9688 frames
-⏱️ ETA: 42s
-
-✅ Done! 47 subtitles extracted
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 Output: ./subs/
-   ✓ video.srt       (47 entries)
-   ✓ video.json      (47 entries + frame mapping)
+Done. 47 subtitles extracted.
+================================
+Output: ./subs/
+  video.srt  (47 entries)
+  video.json (47 entries + frame mapping)
 ```
 
 ---
@@ -116,7 +113,7 @@ Processing: 29%|█████████░░░░░░░░░░ 2812/9
 hardsubx-cli preview <video> [options]
 ```
 
-**Options:**
+**Options**
 
 | Option | Short | Type | Default | Description |
 |:---|:---:|:---:|:---:|:---|
@@ -124,7 +121,7 @@ hardsubx-cli preview <video> [options]
 | `--roi` | — | string | — | Draw ROI rectangle on output |
 | `--output` | `-o` | path | stdout | Save preview image |
 
-**Example:**
+**Example**
 
 ```bash
 hardsubx-cli preview video.mp4 --frame 1500 --roi bottom
@@ -138,17 +135,17 @@ hardsubx-cli preview video.mp4 --frame 1500 --roi bottom
 hardsubx-cli info <video>
 ```
 
-**Output:**
+**Sample output**
 
 ```
-📹 video.mp4
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📐 Resolution: 1920×1080
-⏱️ Duration: 00:05:23.45
-🎬 FPS: 30.00
-📊 Total frames: 9688
-🎵 Audio: AAC 48kHz stereo
-📦 Codec: H.264 / AVC
+video.mp4
+========================
+Resolution: 1920x1080
+Duration: 00:05:23.45
+FPS: 30.00
+Total frames: 9688
+Audio: AAC 48kHz stereo
+Codec: H.264 / AVC
 ```
 
 ---

@@ -1,12 +1,12 @@
 # HardSubX v3.2.0 - 专业视频字幕提取工具
 > 
 > **最新更新 (2026-03-22)**:
-> - ✅ 修复 ASS 导出格式 (完整的 ASS/SSA 格式支持)
-> - ✅ 增强 Rust 后端 ffprobe 集成以获取真实视频元数据
-> - ✅ 实现 ffmpeg 场景检测
-> - ✅ 添加 Tauri 桌面应用构建到 CI/CD
-> - ✅ 修复组件导出路径错误
-> - ✅ 增强 Toolbar 文件操作集成
+> -  修复 ASS 导出格式 (完整的 ASS/SSA 格式支持)
+> -  增强 Rust 后端 ffprobe 集成以获取真实视频元数据
+> -  实现 ffmpeg 场景检测
+> -  添加 Tauri 桌面应用构建到 CI/CD
+> -  修复组件导出路径错误
+> -  增强 Toolbar 文件操作集成
 
 ## 1. Concept & Vision
 
@@ -120,14 +120,14 @@ $radius-xl: 16px;
 │  左侧边栏      │    中央视频预览区            │   右侧字幕面板    │
 │  (280px)       │    (flex-grow)             │   (320px)         │
 │                │                            │                   │
-│  📁 文件列表   │    ┌──────────────────┐   │   📝 字幕列表      │
-│  📊 处理进度   │    │                  │   │   ⏱️ 时间轴        │
-│  🎯 ROI预设   │    │   视频画面       │   │   🔍 帧详情        │
-│  ⚙️ OCR设置   │    │   + 字幕叠加    │   │                   │
+│  文件列表   │    ┌──────────────────┐   │   字幕列表      │
+│  处理进度   │    │                  │   │   时间轴        │
+│  ROI预设   │    │   视频画面       │   │   帧详情        │
+│  OCR设置   │    │   + 字幕叠加    │   │                   │
 │                │    │                  │   │                   │
 │                │    └──────────────────┘   │                   │
 │                │                            │                   │
-│                │    [◀][▶][⏸] 00:03/02:30│                   │
+│                │    [][][] 00:03/02:30│                   │
 ├────────────────┴────────────────────────────┴───────────────────┤
 │  底部状态栏 (28px) - 帧号 | FPS | 分辨率 | OCR引擎 | 内存使用  │
 └─────────────────────────────────────────────────────────────────┘
@@ -141,9 +141,9 @@ $ hardsubx-cli extract video.mp4 --output ./subs --format srt,vtt
  HardSubX CLI v3.0
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
- 📁 输入文件: video.mp4
- 🎯 处理模式: 智能字幕提取
- 🔧 OCR引擎: PaddleOCR (GPU)
+ 输入文件: video.mp4
+ 处理模式: 智能字幕提取
+  OCR引擎: PaddleOCR (GPU)
 
  ⏳ 正在分析视频...
     ├─ 帧数: 4,500
@@ -151,14 +151,14 @@ $ hardsubx-cli extract video.mp4 --output ./subs --format srt,vtt
     ├─ 分辨率: 1920x1080
     └─ FPS: 30
 
- 🔍 正在提取字幕...
+ 正在提取字幕...
     ├─ [████████░░░░░░░░] 45% (2,025/4,500帧)
     ├─ 已检测字幕: 127 条
     └─ 当前帧: #2025 @ 01:07.5
 
- ⏱️ 预计剩余时间: 01:23
+ 预计剩余时间: 01:23
 
- ✅ 提取完成！
+  提取完成！
     ├─ SRT: ./subs/video.srt (127 条字幕)
     ├─ VTT: ./subs/video.vtt
     └─ JSON: ./subs/video.json (含帧对应数据)
@@ -206,11 +206,11 @@ $ hardsubx-cli extract video.mp4 --output ./subs --format srt,vtt
 | WebVTT | Web视频字幕 | ❌ |
 | ASS | Advanced SubStation Alpha | ❌ |
 | SSA | SubStation Alpha | ❌ |
-| JSON | 结构化数据（完整帧对应） | ✅ |
+| JSON | 结构化数据（完整帧对应） |  |
 | TXT | 纯文本 | ❌ |
 | LRC | 歌词格式 | ❌ |
 | SBV | YouTube字幕 | ❌ |
-| CSV | Excel表格 | ✅ |
+| CSV | Excel表格 |  |
 
 ### 4.2 CLI 模式
 
@@ -500,7 +500,7 @@ anyhow = "1.0"         # 错误处理
 
 ## 8. Implementation Status
 
-### ✅ Phase 1: 基础框架 (已完成)
+###  Phase 1: 基础框架 (已完成)
 - [x] 项目初始化（Tauri + Vue + TypeScript）
 - [x] 样式系统搭建（SCSS + CSS Variables）
 - [x] 基础布局组件 (ToolBar, SidePanel, VideoPreview, SubtitleList, StatusBar)
@@ -508,7 +508,7 @@ anyhow = "1.0"         # 错误处理
 - [x] Pinia 状态管理 (project, subtitle, settings stores)
 - [x] TypeScript 类型定义 (video, subtitle types)
 
-### ✅ Phase 2: 核心功能 (已完成)
+###  Phase 2: 核心功能 (已完成)
 - [x] 视频导入与播放 (useVideoPlayer composable)
 - [x] ROI 可视化选择器 (ROISelector component)
 - [x] Tesseract.js OCR 集成 (useOCREngine composable)
@@ -517,7 +517,7 @@ anyhow = "1.0"         # 错误处理
 - [x] 文件导出功能 (useFileOperations composable)
 - [x] Rust 文件操作命令
 
-### ✅ Phase 3: 高级功能 (已完成)
+###  Phase 3: 高级功能 (已完成)
 - [x] 场景检测优化 (跳过相似帧)
 - [x] 批处理支持 (useBatchProcessor composable)
 - [x] 字幕提取器 (useSubtitleExtractor composable)
@@ -542,21 +542,21 @@ anyhow = "1.0"         # 错误处理
 ## 9. Changelog
 
 ### v3.0.0 (2026-03-21/22)
-- 🔥 完全重构，从 Python PyQt 迁移到 Tauri + Vue + TypeScript
-- ✨ 全新的深色科技风格 UI 设计
-- ⚡ 添加 CLI 工具支持
+-  完全重构，从 Python PyQt 迁移到 Tauri + Vue + TypeScript
+-  全新的深色科技风格 UI 设计
+-  添加 CLI 工具支持
 - 📦 支持客户端和命令行两种使用方式
 - 🌈 支持 dark/light 主题切换
 - ⌨️ 完整的键盘快捷键支持
 - 📋 批量处理功能
-- 🎬 时间轴组件和帧导航
-- 🔧 增强 ffprobe 集成获取真实视频元数据
-- 🎯 实现 ffmpeg 场景检测
+-  时间轴组件和帧导航
+-  增强 ffprobe 集成获取真实视频元数据
+- 实现 ffmpeg 场景检测
 - 📄 修复 ASS 导出格式支持
 
 ### v3.0.1 (2026-03-22)
-- 🐛 修复组件导出路径错误 (SubtitleList)
-- 🔧 增强 Rust 后端 ffprobe 集成
-- 🎬 添加 Tauri 桌面应用构建到 CI/CD
-- ⚡ 改进 Toolbar 文件操作集成
-- 🎯 添加 `extract_frame_at_time` Tauri 命令
+-  修复组件导出路径错误 (SubtitleList)
+-  增强 Rust 后端 ffprobe 集成
+-  添加 Tauri 桌面应用构建到 CI/CD
+-  改进 Toolbar 文件操作集成
+- 添加 `extract_frame_at_time` Tauri 命令

@@ -1,77 +1,75 @@
-# PaddleOCR 环境配置指南
+# PaddleOCR Setup Guide
 
-## 前提要求
+## Prerequisites
 
 - Python 3.8+
 - pip
 
-## 安装步骤
+## Installation
 
-### 1. 安装 PaddlePaddle (CPU 版本)
+### 1. Install PaddlePaddle (CPU version)
 
 ```bash
 pip install paddlepaddle
 ```
 
-### 2. 安装 PaddleOCR
+### 2. Install PaddleOCR
 
 ```bash
 pip install paddleocr
 ```
 
-### 3. 验证安装
-
-在项目目录下运行：
+### 3. Verify installation
 
 ```bash
 python src-tauri/scripts/paddle_ocr.py --check
 ```
 
-预期输出：
+Expected output:
+
 ```json
 {"available": true, "paddle_version": "...", "ocr_version": "...", "message": "PaddleOCR is ready"}
 ```
 
-### 4. 测试 OCR
+### 4. Test OCR
 
 ```bash
-# 用任意图片测试
 python src-tauri/scripts/paddle_ocr.py --image /path/to/test.png --lang ch --gpu false
 ```
 
-## 支持的语言
+## Supported Languages
 
 | Code | Language |
-|------|----------|
-| ch | 中文（简体）|
-| en | 英语 |
-| ja | 日语 |
-| ko | 韩语 |
-| fr | 法语 |
-| de | 德语 |
-| es | 西班牙语 |
-| pt | 葡萄牙语 |
-| it | 意大利语 |
-| ru | 俄语 |
-| ar | 阿拉伯语 |
+|:---|:---|
+| `ch` | Simplified Chinese |
+| `en` | English |
+| `ja` | Japanese |
+| `ko` | Korean |
+| `fr` | French |
+| `de` | German |
+| `es` | Spanish |
+| `pt` | Portuguese |
+| `it` | Italian |
+| `ru` | Russian |
+| `ar` | Arabic |
 
-## GPU 加速（可选）
+## GPU Acceleration (Optional)
 
-如果你有 NVIDIA GPU：
+For NVIDIA GPU acceleration:
 
 ```bash
 pip install paddlepaddle-gpu
 ```
 
-然后在 HardSubX UI 中切换到 PaddleOCR 引擎即可自动使用 GPU。
+The HardSubX UI will automatically use the GPU when the PaddleOCR engine is selected.
 
-## 常见问题
+## FAQ
 
-**Q: `paddle_ocr.py --check` 返回 available=false**
-- 确认 `python3 --version` 能运行
-- 确认 `pip show paddlepaddle` 和 `pip show paddleocr` 有输出
-- 如果在虚拟环境中，确保在同一个环境运行
+**Q: `paddle_ocr.py --check` returns `available: false`**
+- Verify `python3 --version` works
+- Verify `pip show paddlepaddle` and `pip show paddleocr` return output
+- If using a virtual environment, ensure both are installed in the same environment
 
-**Q: 启动慢**
-- PaddleOCR 首次运行会下载模型（约 150MB）
-- 后续运行会缓存模型到 `~/.paddleocr/`
+**Q: Slow startup**
+- PaddleOCR downloads models on first run (~150MB)
+- Subsequent runs use cached models in `~/.paddleocr/`

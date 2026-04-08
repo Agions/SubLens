@@ -2,37 +2,36 @@
 
 ## Overview
 
-HardSubX is a Tauri 2.x desktop application with a Vue 3 frontend and Rust backend. The application extracts hardcoded (burned-in) subtitles from video files using OCR, producing frame-accurate subtitle outputs.
+HardSubX is a Tauri 2.x desktop application with a Vue 3 frontend and Rust backend. It extracts hardcoded (burned-in) subtitles from video files using OCR and produces frame-accurate subtitle outputs.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Desktop Shell (Tauri 2.x)             │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │               Vue 3 + TypeScript Frontend        │    │
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────────────┐ │    │
-│  │  │  Pinia   │ │Composables│ │  Vue Components │ │    │
-│  │  │  Stores  │ │  (OCR,   │ │  (ROI, Timeline │ │    │
-│  │  │          │ │  Video,  │ │   Export)       │ │    │
-│  │  │          │ │  Extract)│ │                 │ │    │
-│  │  └──────────┘ └──────────┘ └──────────────────┘ │    │
-│  └───────────────────────┬─────────────────────────┘    │
-│                          │ Tauri IPC (invoke)           │
-│  ┌───────────────────────┴─────────────────────────┐    │
-│  │              Rust Backend Commands              │    │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │    │
-│  │  │ video  │ │   ocr  │ │ export  │ │  file  │ │    │
-│  │  └────────┘ └────────┘ └────────┘ └────────┘ │    │
-│  └─────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────┘
-                          │
-         ┌────────────────┴───────────────┐
-         ▼                                 ▼
-┌─────────────────┐            ┌─────────────────┐
-│  OCR Engines    │            │  FFmpeg (CLI)   │
-│  - Tesseract.js │            │  Frame extract  │
-│  - PaddleOCR    │            │  Metadata probe  │
-│  - EasyOCR      │            └─────────────────┘
-└─────────────────┘
++-------------------------------------------------------------+
+|                    Desktop Shell (Tauri 2.x)                |
+|  +-------------------------------------------------------+  |
+|  |                  Vue 3 + TypeScript                    |  |
+|  |  +----------+  +------------+  +--------------------+ |  |
+|  |  |  Pinia   |  | Composables |  |  Vue Components   | |  |
+|  |  |  Stores  |  | (OCR, Video,|  | (ROI, Timeline,   | |  |
+|  |  |          |  |  Extract)   |  |  Export)          | |  |
+|  |  +----------+  +------------+  +--------------------+ |  |
+|  +------------------------+------------------------------+  |
+|                           | Tauri IPC (invoke)             |
+|  +------------------------+------------------------------+  |
+|  |                   Rust Backend Commands                |  |
+|  |  +--------+  +--------+  +--------+  +--------+       |  |
+|  |  | video  |  |  ocr   |  | export |  |  file  |       |  |
+|  |  +--------+  +--------+  +--------+  +--------+       |  |
+|  +-------------------------------------------------------+  |
++-------------------------------------------------------------+
+                          |                  |
+          +---------------+                  +----------------+
+          v                                   v
++-------------------+               +------------------------+
+|   OCR Engines     |               |    FFmpeg (CLI)        |
+|  Tesseract.js     |               |  Frame extraction      |
+|  PaddleOCR        |               |  Metadata probe         |
+|  EasyOCR          |               +------------------------+
++-------------------+
 ```
 
 ---
@@ -41,60 +40,58 @@ HardSubX is a Tauri 2.x desktop application with a Vue 3 frontend and Rust backe
 
 ```
 HardSubX/
-├── src/                           # Vue 3 frontend
+├── src/                          # Vue 3 frontend
 │   ├── components/
-│   │   ├── common/               # Button, Modal, Tooltip, Loading
-│   │   ├── layout/               # ToolBar, SidePanel, StatusBar
-│   │   │   ├── VideoPreview.vue   # Video player + ROI overlay
-│   │   │   ├── ROISelector.vue    # Subtitle region selection
-│   │   │   ├── Timeline.vue       # Frame-accurate scrubber
+│   │   ├── common/              # Button, Modal, Tooltip, Loading
+│   │   ├── layout/               # ToolBar, SidePanel, VideoPreview
 │   │   │   ├── BatchProcessView.vue
 │   │   │   └── SettingsView.vue
 │   │   ├── subtitle/
-│   │   │   ├── SubtitleList.vue   # Editable subtitle list
-│   │   │   └── ExportDialog.vue   # Multi-format export
+│   │   │   ├── SubtitleList.vue  # Editable subtitle list
+│   │   │   └── ExportDialog.vue  # Multi-format export
 │   │   └── video/
-│   │       ├── Timeline.vue
-│   │       └── ROISelector.vue
+│   │       ├── Timeline.vue      # Frame-accurate scrubber
+│   │       └── ROISelector.vue   # Subtitle region selection
 │   ├── composables/
-│   │   ├── useOCREngine.ts        # OCR engine abstraction + post-processing
-│   │   ├── useImagePreprocessor.ts # Grayscale, threshold, deskew, scale
-│   │   ├── useSubtitleExtractor.ts # Extraction loop + frame iteration
-│   │   ├── useBatchProcessor.ts    # Queue + concurrency management
-│   │   ├── useVideoPlayer.ts      # Tauri video bridge
-│   │   └── useVideoMetadata.ts    # FFmpeg metadata via Rust backend
+│   │   ├── useOCREngine.ts       # OCR engine abstraction + post-processing
+│   │   ├── useImagePreprocessor.ts
+│   │   ├── useSubtitleExtractor.ts
+│   │   ├── useBatchProcessor.ts
+│   │   ├── useVideoPlayer.ts
+│   │   └── useVideoMetadata.ts
 │   ├── stores/
-│   │   ├── subtitle.ts            # Subtitle list + export
-│   │   ├── project.ts             # Project file state
-│   │   └── settings.ts            # Theme, language, OCR prefs
+│   │   ├── subtitle.ts           # Subtitle list + export
+│   │   ├── project.ts            # Project file state
+│   │   └── settings.ts           # Theme, language, OCR prefs
 │   └── types/
-│       ├── subtitle.ts            # SubtitleItem, ExportFormat, formatters
-│       └── video.ts               # ROI, OCREngine, ExtractOptions
+│       ├── subtitle.ts           # SubtitleItem, ExportFormat, formatters
+│       └── video.ts              # ROI, OCREngine, ExtractOptions
 │
-├── src-tauri/                     # Rust backend
+├── src-tauri/                    # Rust backend
+│   └── src/
+│       ├── commands/
+│       │   ├── video.rs          # Frame extraction, metadata
+│       │   ├── ocr.rs            # OCR engine management
+│       │   ├── ocr_engine.rs     # OCR engine integration
+│       │   ├── export.rs        # Format writers
+│       │   ├── file.rs           # File dialogs, save
+│       │   └── scene.rs          # Scene detection
+│       ├── main.rs               # Tauri app entry
+│       ├── main_cli.rs           # Standalone CLI entry
+│       └── lib.rs                # Library root
+│
+├── cli/                          # Node.js CLI tool
 │   ├── src/
-│   │   ├── commands/
-│   │   │   ├── video.rs           # Frame extraction, metadata
-│   │   │   ├── ocr.rs             # OCR engine management
-│   │   │   ├── export.rs          # Format writers
-│   │   │   ├── file.rs            # File dialogs, save
-│   │   │   └── scene.rs           # Scene detection
-│   │   ├── main.rs                # Tauri app entry
-│   │   └── main_cli.rs            # Standalone CLI entry
-│   └── tauri.conf.json            # Tauri configuration
+│   │   ├── extract.ts            # extract command
+│   │   ├── formats.ts            # Format-specific output
+│   │   └── index.ts              # CLI entry
+│   └── dist/                     # Compiled output
 │
-├── cli/                           # Node.js CLI tool
-│   ├── src/
-│   │   ├── extract.ts             # extract command
-│   │   ├── formats.ts             # Format-specific output
-│   │   └── index.ts               # CLI entry
-│   └── dist/                      # Compiled output
-│
-└── docs/                          # Documentation
-    ├── index.md                   # Docs landing
-    ├── getting-started.md         # Quick start
-    ├── cli.md                     # CLI reference
-    └── architecture.md            # This file
+└── docs/                         # Documentation
+    ├── index.md
+    ├── getting-started.md
+    ├── cli.md
+    └── architecture.md           # This file
 ```
 
 ---
@@ -105,71 +102,73 @@ Every OCR result passes through a multi-stage refinement pipeline:
 
 ```
 Raw OCR Text
-     │
-     ▼
-┌──────────────────┐
-│ 1. Text cleanup  │  trim, collapse spaces, normalize unicode
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ 2. Punctuation   │  Full-width → half-width conversion
-│    Normalization │  Chinese/Japanese punctuation rules
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ 3. Repeat filter │  Remove 3+ consecutive identical chars
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ 4. Confidence    │  Penalize: mixed scripts, short text, repeated chars
-│    Calibration   │  Boost: consistent script, good diversity ratio
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ 5. Subtitle      │  Levenshtein similarity merge (default 80%)
-│    Merging       │  Bridging split subtitles (gap ≤ 1.5s)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ 6. Jitter filter │  Remove: <0.3s duration + same text as neighbor
-└────────┬─────────┘
-         │
-         ▼
-  Clean Subtitle Text
+      |
+      v
++---------------+
+| 1. Cleanup     | trim, collapse spaces, normalize unicode
++---------------+
+      |
+      v
++---------------+
+| 2. Punctuation | Full-width -> half-width conversion
+|    Normalize   | Chinese/Japanese punctuation rules
++---------------+
+      |
+      v
++---------------+
+| 3. Repeat      | Remove 3+ consecutive identical chars
+|    Filter      |
++---------------+
+      |
+      v
++---------------+
+| 4. Confidence  | Penalize: mixed scripts, short text, repeated chars
+|    Calibration | Boost: consistent script, good diversity ratio
++---------------+
+      |
+      v
++---------------+
+| 5. Subtitle    | Levenshtein similarity merge (default 80%)
+|    Merging     | Bridge split subtitles (gap <= 1.5s)
++---------------+
+      |
+      v
++---------------+
+| 6. Jitter      | Remove: <0.3s duration + same text as neighbor
+|    Filter      |
++---------------+
+      |
+      v
+ Clean Subtitle Text
 ```
 
 ---
 
 ## Export Format Architecture
 
-Each format is implemented as a pure function in `src/types/subtitle.ts`:
+Each format is a pure function in `src/types/subtitle.ts`:
 
 ```
-SubtitleItem[] ──► formatSRT() ──► .srt file
-                ├── formatWebVTT() ──► .vtt file
-                ├── formatASS() ──► .ass file
-                ├── formatJSON() ──► .json (frame-mapped)
-                ├── formatCSV() ──► .csv (frame-mapped)
-                └── ... (LRC, SBV, SSA, TXT, TTML)
+SubtitleItem[] --> formatSRT()     --> .srt
+               +-> formatWebVTT()  --> .vtt
+               +-> formatASS()     --> .ass
+               +-> formatJSON()    --> .json (frame-mapped)
+               +-> formatCSV()     --> .csv (frame-mapped)
+               +-> ... (LRC, SBV, SSA, TXT)
 ```
 
-The `SubtitleItem` type is the canonical format:
+`SubtitleItem` is the canonical internal type:
 
 ```typescript
 interface SubtitleItem {
   id: string
   index: number
-  startTime: number       // seconds
-  endTime: number         // seconds
-  startFrame: number      // exact frame
-  endFrame: number        // exact frame
+  startTime: number    // seconds
+  endTime: number      // seconds
+  startFrame: number   // exact frame
+  endFrame: number     // exact frame
   text: string
-  confidence: number       // 0–1
+  confidence: number   // 0-1
   language?: string
   roi: ROI
   thumbnailUrls: string[]

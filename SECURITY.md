@@ -1,55 +1,47 @@
-# 安全策略
+# Security Policy
 
-## 支持的版本
+## Supported Versions
 
-| 版本 | 支持状态 |
+| Version | Status |
 |:---|:---|
-| v3.0.x | ✅ 活跃支持 |
-| v2.x.x | 🔒 安全更新 |
-| v1.x.x | ❌ 不支持 |
+| v3.x.x | Actively supported |
+| v2.x.x | Security updates only |
+| v1.x.x | Unsupported |
 
-## 报告安全漏洞
+## Reporting a Vulnerability
 
-如果您发现了安全漏洞，请通过以下方式报告：
+If you discover a security vulnerability, please report it through one of the methods below.
 
-### 方式 1: GitHub Security Advisories
+### Method 1: GitHub Security Advisories
 
-请使用 [GitHub Security Advisories](https://github.com/Agions/HardSubX/security/advisories/new) 报告。
+Use [GitHub Security Advisories](https://github.com/Agions/HardSubX/security/advisories/new) to report privately.
 
-这种方式允许我们私下讨论和修复问题，直到准备好公开披露。
+This allows us to discuss and fix the issue before public disclosure.
 
-### 方式 2: 邮件
+### Method 2: Email
 
-发送邮件至 `agions@qq.com`，主题注明 `[SECURITY]`
+Send an email to `agions@qq.com` with `[SECURITY]` in the subject line.
 
-### 报告内容
+### What to Include
 
-请包含以下信息：
-
-1. **问题描述**: 简要说明安全漏洞
-2. **影响**: 说明该漏洞的影响
-3. **复现步骤**: 如何复现该问题
-4. **建议修复**: 如有可能，建议如何修复
-
-### 响应时间
-
-- 🕐 **初步响应**: 24-48 小时内
-- 🔧 **修复计划**: 72 小时内
-- ✅ **修复发布**: 根据问题严重程度
-
-### 严重程度
-
-| 级别 | 描述 | 响应时间 |
-|:---|:---|:---|
-| **Critical** | 远程代码执行、数据泄露 | 立即响应 |
-| **High** | 权限提升、拒绝服务 | 24 小时内 |
-| **Medium** | 信息泄露、绕过限制 | 48 小时内 |
-| **Low** | 轻微问题 | 72 小时内 |
-
-## 已知问题
-
-如需查看已披露的安全问题列表，请访问 [Security Advisories](https://github.com/Agions/HardSubX/security/advisories)。
+1. **Description** — Brief explanation of the vulnerability
+2. **Impact** — How the vulnerability could be exploited
+3. **Steps to reproduce** — How to reproduce the issue
+4. **Suggested fix** — How you would fix it (if applicable)
 
 ---
 
-感谢您帮助我们保持 HardSubX 的安全！
+## Response Timeline
+
+| Severity | Response | Fix |
+|:---|:---|:---|
+| **Critical** | Immediate | Patched as soon as possible |
+| **High** | Within 24 hours | Patched within 7 days |
+| **Medium** | Within 48 hours | Patched within 30 days |
+| **Low** | Within 72 hours | Patched in next release |
+
+For all reported vulnerabilities, we will provide a timeline and keep you updated on our progress.
+
+---
+
+For a list of disclosed security issues, see [Security Advisories](https://github.com/Agions/HardSubX/security/advisories).
