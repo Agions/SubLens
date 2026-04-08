@@ -167,11 +167,11 @@ async function handleStartExtraction() {
     frameInterval: frameInterval.value,
   })
   // Start extraction (reads all options from store)
-  await subtitleExtractor.startExtraction()
+  await subtitleExtractor!.startExtraction()
 }
 
 function handleStopExtraction() {
-  subtitleExtractor.stopExtraction()
+  subtitleExtractor!.stopExtraction()
 }
 
 // SVG progress ring constants
