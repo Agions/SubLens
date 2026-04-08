@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="HardSubX Logo">
+  <title>HardSubX</title>
+  <desc>Professional video hard subtitle extraction tool</desc>
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D1117"/>
+      <stop offset="100%" stop-color="#161B22"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4D9BFF"/>
+      <stop offset="100%" stop-color="#0A84FF"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00D4AA"/>
+      <stop offset="100%" stop-color="#00FFD0"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowCyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="128" height="128" rx="24" fill="url(#bgGrad)"/>
+  <rect x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="#0A84FF" stroke-width="0.5" stroke-opacity="0.3"/>
+  <rect x="22" y="18" width="14" height="72" rx="4" fill="url(#blueGrad)" filter="url(#glow)"/>
+  <rect x="52" y="18" width="14" height="72" rx="4" fill="url(#blueGrad)" filter="url(#glow)"/>
+  <rect x="36" y="46" width="30" height="14" rx="3" fill="#1C1C21"/>
+  <rect x="30" y="68" width="42" height="4" rx="2" fill="url(#cyanGrad)" filter="url(#glowCyan)" opacity="0.95"/>
+  <rect x="34" y="76" width="30" height="3" rx="1.5" fill="url(#cyanGrad)" opacity="0.7"/>
+  <rect x="36" y="83" width="24" height="3" rx="1.5" fill="url(#cyanGrad)" opacity="0.45"/>
+  <line x1="38" y1="22" x2="64" y2="44" stroke="#00D4AA" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <line x1="64" y1="22" x2="38" y2="44" stroke="#00D4AA" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="51" cy="33" r="5" fill="none" stroke="#00D4AA" stroke-width="1.5" opacity="0.8"/>
+  <circle cx="51" cy="33" r="1.5" fill="#00FFD0"/>
+  <rect x="86" y="14" width="28" height="20" rx="3" fill="none" stroke="#4D9BFF" stroke-width="1.5" stroke-opacity="0.5"/>
+  <rect x="86" y="14" width="8" height="6" rx="1" fill="#0D1117"/>
+  <rect x="106" y="14" width="8" height="6" rx="1" fill="#0D1117"/>
+  <rect x="93" y="19" width="3" height="10" rx="1" fill="#4D9BFF" opacity="0.7"/>
+  <rect x="99" y="19" width="3" height="10" rx="1" fill="#4D9BFF" opacity="0.7"/>
+  <rect x="96" y="23" width="6" height="2.5" rx="0.5" fill="#1C1C21"/>
+  <text x="64" y="116" font-family="'JetBrains Mono','SF Mono','Consolas',monospace" font-size="11" font-weight="600" letter-spacing="3" fill="#4D9BFF" text-anchor="middle" opacity="0.85">HARDSUBX</text>
+  <line x1="0" y1="64" x2="128" y2="64" stroke="#0A84FF" stroke-width="0.3" opacity="0.15"/>
+</svg>
