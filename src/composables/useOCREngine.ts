@@ -129,8 +129,7 @@ export function useOCREngine() {
         if (!cachedTesseractModule) {
           cachedTesseractModule = await import('tesseract.js')
         }
-        const Tesseract = cachedTesseractModule!
-        // @ts-expect-error — Tesseract is guaranteed non-null here after dynamic import
+        const Tesseract = cachedTesseractModule
         
         // Terminate existing worker first
         if (worker.value) {
