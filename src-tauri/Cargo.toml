@@ -1,15 +1,15 @@
 [package]
-name = "visionsub"
+name = "hardsubx"
 version = "3.0.0"
 description = "Professional Video OCR Subtitle Extraction Tool"
 authors = ["Agions"]
 authors = ["Agions"]
 license = "MIT"
-repository = "https://github.com/Agions/VisionSub"
+repository = "https://github.com/Agions/HardSubX"
 edition = "2021"
 
 [lib]
-name = "visionsub_lib"
+name = "hardsubx_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[test]]
@@ -17,7 +17,7 @@ name = "unit_tests"
 path = "tests/unit_tests.rs"
 
 [[bin]]
-name = "visionsub-cli"
+name = "hardsubx-cli"
 path = "src/main_cli.rs"
 
 [build-dependencies]

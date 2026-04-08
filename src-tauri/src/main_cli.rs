@@ -1,9 +1,9 @@
-//! VisionSub CLI - Command Line Interface
+//! HardSubX CLI - Command Line Interface
 //! 
 //! Usage:
-//!   visionsub-cli extract <video_file> [options]
-//!   visionsub-cli preview <video_file> --frame <frame_number>
-//!   visionsub-cli info <video_file>
+//!   hardsubx-cli extract <video_file> [options]
+//!   hardsubx-cli preview <video_file> --frame <frame_number>
+//!   hardsubx-cli info <video_file>
 
 use clap::{Parser, Subcommand};
 use std::path::Path;
@@ -11,9 +11,9 @@ use std::process::Command;
 
 #[derive(Parser)]
 #[command(
-    name = "visionsub-cli",
+    name = "hardsubx-cli",
     version = "3.1.1",
-    about = "VisionSub v3.1.1 - Professional Video Subtitle Extraction Tool"
+    about = "HardSubX v3.1.1 - Professional Video Subtitle Extraction Tool"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -80,7 +80,7 @@ fn main() {
         Commands::Extract { 
             video, output, format, roi, ocr, lang, threshold 
         } => {
-            println!("🎬 VisionSub CLI v3.0.0");
+            println!("🎬 HardSubX CLI v3.0.0");
             println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             println!("📁 Input: {}", video);
             println!("📂 Output: {}", output);
@@ -226,7 +226,7 @@ fn extract_frame_ffmpeg(path: &str, frame_num: u64) -> Result<(), String> {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-    let temp_path = std::env::temp_dir().join(format!("visionsub_preview_{}.png", now));
+    let temp_path = std::env::temp_dir().join(format!("hardsubx_preview_{}.png", now));
     
     // Get video FPS to calculate timestamp
     let fps = match get_video_info_ffprobe(path) {

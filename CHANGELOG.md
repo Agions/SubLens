@@ -1,5 +1,18 @@
 # 更新日志
 
+## [3.2.1] - 2026-04-08
+
+### 重构
+
+- 🔧 **项目全面重命名**：VisionSub → HardSubX，仓库/文档/代码/本地目录全部统一
+- 🔧 **TypeScript Strict Mode**：消除所有 `any` 类型违规（7个文件，10+处），替换为严格类型定义
+- 🔧 **GitHub 品牌化**：新增18个专业 Topics，英文 SEO Description，专业 Logo 设计（SVG矢量）
+
+### 文档
+
+- 📝 **在线文档重建**： 目录新建4页专业文档（index/getting-started/cli/architecture）
+- 📝 **README 更新**：版本 Badge 修复（3.1.1→3.2.0），Logo 嵌入顶部
+
 ## [3.2.0] - 2026-04-04
 
 ### 新增

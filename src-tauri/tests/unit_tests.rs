@@ -1,4 +1,4 @@
-//! Unit tests for VisionSub Tauri backend
+//! Unit tests for HardSubX Tauri backend
 
 #[cfg(test)]
 mod tests {

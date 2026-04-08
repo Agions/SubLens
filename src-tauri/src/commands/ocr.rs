@@ -95,11 +95,11 @@ fn save_frame_to_temp_png(frame_data: &[u8], width: u32, height: u32) -> Result<
     
     // Generate unique temp filename
     let uuid = uuid_v4();
-    let output_path = std::env::temp_dir().join(format!("visionsub_ocr_{}.png", uuid));
+    let output_path = std::env::temp_dir().join(format!("hardsubx_ocr_{}.png", uuid));
     
     // Create a simple PPM file first, then convert with ffmpeg or use raw2png
     // For simplicity, we'll use ffmpeg if available, otherwise create PPM
-    let ppm_path = std::env::temp_dir().join(format!("visionsub_ocr_{}.ppm", uuid));
+    let ppm_path = std::env::temp_dir().join(format!("hardsubx_ocr_{}.ppm", uuid));
     
     // Write PPM (P6 binary PPM format - simpler than PNG)
     let mut ppm_data = format!("P6\n{} {}\n255\n", width, height).into_bytes();

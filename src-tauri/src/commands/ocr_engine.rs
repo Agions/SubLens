@@ -371,7 +371,7 @@ pub async fn process_paddle_ocr(
 
     // Write image data to a temp PNG file
     let temp_dir = std::env::temp_dir();
-    let image_path = temp_dir.join(format!("visionsub_paddle_{}.png", uuid_v4()));
+    let image_path = temp_dir.join(format!("hardsubx_paddle_{}.png", uuid_v4()));
 
     {
         let mut file = std::fs::File::create(&image_path)
@@ -603,7 +603,7 @@ fn find_paddle_ocr_script() -> Result<PathBuf, String> {
         // Development path
         std::path::PathBuf::from("src-tauri/scripts/paddle_ocr.py"),
         // Absolute development path for Agions' machine
-        std::path::PathBuf::from("/root/.openclaw/workspace/VisionSub/src-tauri/scripts/paddle_ocr.py"),
+        std::path::PathBuf::from("/root/.openclaw/workspace/HardSubX/src-tauri/scripts/paddle_ocr.py"),
         // $HOME/... path
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
@@ -656,7 +656,7 @@ pub async fn ocr_base64_image(
     
     // Write to temp file
     let temp_path = std::env::temp_dir().join(format!(
-        "visionsub_ocr_{}.png",
+        "hardsubx_ocr_{}.png",
         uuid_v4()
     ));
     

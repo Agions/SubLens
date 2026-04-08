@@ -136,9 +136,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'VisionSub ${{ github.ref_name }}'
+          releaseName: 'HardSubX ${{ github.ref_name }}'
           releaseBody: |
-            ## VisionSub ${{ github.ref_name }}
+            ## HardSubX ${{ github.ref_name }}
 
             Professional video subtitle extraction tool.
 
