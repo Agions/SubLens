@@ -98,31 +98,77 @@ function openAbout() {
     <!-- ── Left: Logo + Project ─────────────────── -->
     <div class="toolbar-left">
       <div class="logo">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
-          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M9 9l6 3-6 3V9z" fill="currentColor"/>
+        <svg
+          class="logo-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <rect
+            x="2"
+            y="5"
+            width="20"
+            height="14"
+            rx="2"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M9 9l6 3-6 3V9z"
+            fill="currentColor"
+          />
         </svg>
         <span class="logo-text">HardSubX</span>
       </div>
 
-      <div class="divider"/>
+      <div class="divider" />
 
       <span class="project-name">{{ projectName }}</span>
     </div>
 
     <!-- ── Center: Actions ────────────────────────── -->
     <div class="toolbar-center">
-      <button class="toolbar-btn" @click="handleOpenFile">
-        <svg class="btn-icon" viewBox="0 0 20 20" fill="none">
-          <path d="M3 7v9a1 1 0 001 1h12a1 1 0 001-1V7M8 3v10m0-10L4 7m4-4l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <button
+        class="toolbar-btn"
+        @click="handleOpenFile"
+      >
+        <svg
+          class="btn-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <path
+            d="M3 7v9a1 1 0 001 1h12a1 1 0 001-1V7M8 3v10m0-10L4 7m4-4l4 4"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
         <span class="btn-text">打开</span>
       </button>
 
-      <button class="toolbar-btn" @click="handleSave">
-        <svg class="btn-icon" viewBox="0 0 20 20" fill="none">
-          <path d="M5 3v14a1 1 0 001 1h8a1 1 0 001-1V7l-4-4H6a1 1 0 00-1 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M7 15v2m4-2v2m4-2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <button
+        class="toolbar-btn"
+        @click="handleSave"
+      >
+        <svg
+          class="btn-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <path
+            d="M5 3v14a1 1 0 001 1h8a1 1 0 001-1V7l-4-4H6a1 1 0 00-1 1z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M7 15v2m4-2v2m4-2v2"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
         </svg>
         <span class="btn-text">保存</span>
       </button>
@@ -136,20 +182,66 @@ function openAbout() {
         @click="toggleTheme"
       >
         <!-- Sun icon (show when dark) -->
-        <svg v-if="currentTheme === 'dark'" class="btn-icon" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <svg
+          v-if="currentTheme === 'dark'"
+          class="btn-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <circle
+            cx="10"
+            cy="10"
+            r="4"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
         </svg>
         <!-- Moon icon (show when light) -->
-        <svg v-else class="btn-icon" viewBox="0 0 20 20" fill="none">
-          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          v-else
+          class="btn-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <path
+            d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
 
-      <button class="toolbar-btn icon-only" title="关于" @click="openAbout">
-        <svg class="btn-icon" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M10 14v-4M10 7h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <button
+        class="toolbar-btn icon-only"
+        title="关于"
+        @click="openAbout"
+      >
+        <svg
+          class="btn-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+        >
+          <circle
+            cx="10"
+            cy="10"
+            r="8"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M10 14v-4M10 7h.01"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
     </div>

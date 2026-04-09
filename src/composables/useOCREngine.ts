@@ -41,7 +41,7 @@ export function useOCREngine() {
   const preprocessor = useImagePreprocessor()
   
   // Tesseract worker (lazy loaded)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const worker = shallowRef<any>(null)
   
   /**
@@ -190,7 +190,7 @@ export function useOCREngine() {
       
       progress.value = 100
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       return result.data.words.map((word: any) => ({
         text: word.text,
         confidence: word.confidence / 100,

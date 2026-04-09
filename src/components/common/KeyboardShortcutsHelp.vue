@@ -25,12 +25,27 @@ defineExpose({ open, close })
 </script>
 
 <template>
-  <Modal :open="isOpen" title="键盘快捷键" size="md" @close="close">
+  <Modal
+    :open="isOpen"
+    title="键盘快捷键"
+    size="md"
+    @close="close"
+  >
     <div class="shortcuts-content">
-      <div v-for="group in shortcutGroups" :key="group.name" class="shortcut-group">
-        <h4 class="group-title">{{ group.name }}</h4>
+      <div
+        v-for="group in shortcutGroups"
+        :key="group.name"
+        class="shortcut-group"
+      >
+        <h4 class="group-title">
+          {{ group.name }}
+        </h4>
         <div class="shortcut-list">
-          <div v-for="shortcut in group.shortcuts" :key="shortcut.key" class="shortcut-item">
+          <div
+            v-for="shortcut in group.shortcuts"
+            :key="shortcut.key"
+            class="shortcut-item"
+          >
             <kbd class="shortcut-key">{{ getShortcutText(shortcut) }}</kbd>
             <span class="shortcut-desc">{{ shortcut.description }}</span>
           </div>
