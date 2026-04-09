@@ -6,9 +6,14 @@
 // ── Color Palette (OKLCH for perceptual uniformity) ────────────────
 // Primary: Electric Cyan-Blue (distinctive, not generic AI purple)
 $primary: #0A84FF;
+$primary-dim: rgba($primary, 0.2);
 // In OKLCH (approx): oklch(0.65 0.20 250)
+// Secondary: Teal (for contrast and status)
+$secondary: #00D4AA;
+$secondary-dim: rgba($secondary, 0.2);
 // Accent: Warm Amber for contrast (not purple)
 $accent: #FF9F0A;
+$accent-dim: rgba($accent, 0.2);
 
 // Neutral palette - Cool Gray with blue tint (not pure gray)
 $gray-950: #09090B;   // deepest bg
@@ -131,6 +136,12 @@ $duration-fast:     100ms;
 $duration-normal:   200ms;
 $duration-slow:     350ms;
 $duration-slower:   500ms;
+
+// Alias for transition convenience
+$transition-base:   $duration-normal;
+$transition-fast:   $duration-fast;
+$transition-normal: $duration-normal;
+$transition-slow:   $duration-slow;
 
 // Reduced motion: disable all transforms
 @media (prefers-reduced-motion: reduce) {
