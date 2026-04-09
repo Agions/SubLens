@@ -240,7 +240,7 @@ export function useOCREngine() {
     // Apply language-aware post-processing + confidence calibration
     const lang = config.language?.[0] ?? 'ch'
     const processedText = postProcessText(rawText, lang)
-    const finalConfidence = calibrateConfidence(processedText, rawConfidence, lang)
+    const finalConfidence = calibrateConfidence(processedText, rawConfidence)
 
     return {
       text: processedText,
@@ -429,9 +429,7 @@ export function useOCREngine() {
    */
   function calibrateConfidence(
     text: string,
-    rawConfidence: number,
-    // @ts-expect-error — lang is forwarded to calibrateConfidenceEnhanced, unused here
-    lang: string = 'ch'
+    rawConfidence: number
   ): number {
     if (!text) return rawConfidence
 
@@ -682,7 +680,7 @@ export function useOCREngine() {
     const len = trimmed.length
 
     // Start with base calibration
-    let quality = calibrateConfidence(trimmed, rawConfidence, _lang)
+    let quality = calibrateConfidence(trimmed, rawConfidence)
 
     // === Language-specific checks ===
 

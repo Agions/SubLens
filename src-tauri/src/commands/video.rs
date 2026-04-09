@@ -32,6 +32,12 @@ pub struct ROI {
     pub width: u32,
     pub height: u32,
     pub enabled: bool,
+    #[serde(default = "default_unit")]
+    pub unit: String,
+}
+
+fn default_unit() -> String {
+    "percent".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -315,15 +321,10 @@ pub async fn extract_frames(
     let metadata = match get_video_metadata_ffprobe(&path) {
         Ok(m) => m,
         Err(e) => {
-            tracing::warn!("Failed to get video metadata: {}, using defaults", e);
-            // Return a minimal frame list with estimated data
-            return Ok(vec![Frame {
-                index: 0,
-                timestamp: 0.0,
-                width: 1920,
-                height: 1080,
-                data: vec![],
-            }]);
+            tracing::error!("Failed to get video metadata: {}", e);
+            return Err(format!(
+                "Failed to get video metadata: {}. Is ffprobe installed?", e
+            ));
         }
     };
     
@@ -529,24 +530,9 @@ fn extract_frame_at_time_impl(
     Ok(format!("data:image/png;base64,{}", base64_str))
 }
 
-/// Generate a simple UUID v4 using random bytes
+/// Generate a proper UUID v4 using the uuid crate
 fn uuid_v4() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-    
-    let random_part = (now.as_nanos() ^ (std::process::id() as u128 * 0x5deece66d)) % 0xfffffffffffff;
-    
-    format!(
-        "{:012x}-{:04x}-4{:03x}-{:04}-{:012x}",
-        (random_part >> 80) & 0xffffffffffff,
-        (random_part >> 64) & 0xffff,
-        (random_part >> 60) & 0xfff,
-        ((random_part >> 48) & 0x3fff) | 0x8000,
-        random_part & 0xffffffffffff
-    )
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[tauri::command]
