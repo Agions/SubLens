@@ -35,12 +35,12 @@ const statusText = computed(() => {
         <span class="label">帧:</span>
         <span class="value mono">#{{ projectStore.currentFrame }}</span>
       </span>
-      <span class="divider"></span>
+      <span class="divider" />
       <span class="status-item">
         <span class="label">FPS:</span>
         <span class="value mono">{{ fps }}</span>
       </span>
-      <span class="divider"></span>
+      <span class="divider" />
       <span class="status-item">
         <span class="label">分辨率:</span>
         <span class="value">{{ resolution }}</span>
@@ -48,7 +48,10 @@ const statusText = computed(() => {
     </div>
     
     <div class="status-center">
-      <span class="status-badge" :class="{ active: subtitleStore.isExtracting }">
+      <span
+        class="status-badge"
+        :class="{ active: subtitleStore.isExtracting }"
+      >
         {{ statusText }}
       </span>
     </div>
@@ -58,12 +61,12 @@ const statusText = computed(() => {
         <span class="label">字幕:</span>
         <span class="value">{{ subtitleStore.totalCount }} 条</span>
       </span>
-      <span class="divider"></span>
+      <span class="divider" />
       <span class="status-item">
         <span class="label">OCR:</span>
         <span class="value accent">{{ ocrEngine }}</span>
       </span>
-      <span class="divider"></span>
+      <span class="divider" />
       <span class="status-item">
         <span class="label">内存:</span>
         <span class="value">{{ memoryUsage }}</span>

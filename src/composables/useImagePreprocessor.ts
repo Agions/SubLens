@@ -259,7 +259,7 @@ function detectSkewAngle(imageData: ImageData): number {
   const { data, width, height } = imageData
   
   // Convert to binary first
-  let binary: boolean[][] = []
+  const binary: boolean[][] = []
   for (let y = 0; y < height; y++) {
     binary[y] = []
     for (let x = 0; x < width; x++) {

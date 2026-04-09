@@ -60,7 +60,7 @@ async function handleExport() {
 
       
       exportResults.value.push(`✅ ${format.toUpperCase()}: ${fileName}`)
-    } catch (e) {
+    } catch {
       exportResults.value.push(`❌ ${format.toUpperCase()}: 导出失败`)
     }
   }
