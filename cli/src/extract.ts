@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * HardSubX CLI v3.1.1
+ * HardSubX CLI v3.2.0
  * Video Subtitle Extraction Tool
  */
 
@@ -86,7 +86,7 @@ type Argv = Record<string, unknown>
 function parseArgs(): Argv {
   return yargs(hideBin(process.argv))
     .scriptName('hardsubx-cli')
-    .version('3.1.1')
+    .version('3.2.0')
     .command('extract <video>', 'Extract subtitles from video', yargs => yargs
       .positional('video', { type: 'string', demandOption: true })
       .option('output',    { alias: 'o', type: 'string', default: './subs' })
@@ -95,7 +95,7 @@ function parseArgs(): Argv {
       .option('lang',      { alias: 'l', type: 'string', default: 'chi_sim+eng' })
       .option('confidence',{ alias: 'c', type: 'number', default: 70 })
       .option('interval', { alias: 'i', type: 'number', default: 1 })
-      .option('scene',    { type: 'number', default: 30 })
+      .option('scene',    { type: 'number', default: 0.30 })
       .option('workers',   { alias: 'w', type: 'number', default: 2 })
       .option('no-merge', { type: 'boolean', default: false })
     )
@@ -127,7 +127,7 @@ async function main() {
       if (!existsSync(videoPath)) { console.error('❌ Video not found'); process.exit(1) }
       const info = getVideoInfo(videoPath)
       console.log(`
-🔍 HardSubX CLI v3.1.1 — Video Info
+🔍 HardSubX CLI v3.2.0 — Video Info
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📁 File:   ${videoPath}
 📐 Size:   ${info.width}×${info.height}

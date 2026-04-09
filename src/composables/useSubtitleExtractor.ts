@@ -3,7 +3,7 @@ import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useVideoPlayer } from './useVideoPlayer'
 import { useOCREngine } from './useOCREngine'
-import type { ROI, OCRConfig, SubtitleItem } from '@/types'
+import type { OCRConfig } from '@/types'
 
 export function useSubtitleExtractor() {
   const projectStore = useProjectStore()
@@ -18,7 +18,7 @@ export function useSubtitleExtractor() {
   const extractedCount = ref(0)
 
   // Scene detection: quantized histogram comparison
-  // Faster than per-pixel diff — quantizes to 16 bins per channel
+  // Faster than per-pixel diff - quantizes to 16 bins per channel
   function detectSceneChange(prevFrame: ImageData, currFrame: ImageData, threshold: number = 0.3): boolean {
     const binCount = 16
     const binSize = 256 / binCount  // 16 levels per channel = 4096 total bins
@@ -26,22 +26,25 @@ export function useSubtitleExtractor() {
     // Build histograms (skip alpha channel)
     const prevHist = new Array(binCount * 3).fill(0)
     const currHist = new Array(binCount * 3).fill(0)
-    const sampleCount = Math.min(prevFrame.data.length, currFrame.data.length, 2000)
 
-    for (let i = 0; i < sampleCount; i += 4) {
-      // R channel
+    // Sample ~500 pixels across the full frame for reliable chi-square statistic
+    const pixelCount = Math.floor(Math.min(prevFrame.data.length, currFrame.data.length) / 4)
+    const sampleStep = Math.max(1, Math.floor(pixelCount / 500))
+
+    for (let p = 0; p < pixelCount; p += sampleStep) {
+      const i = p * 4
+      // R channel bin
       prevHist[Math.floor(prevFrame.data[i] / binSize)]++
       currHist[Math.floor(currFrame.data[i] / binSize)]++
-      // G channel
+      // G channel bin (use data[i+1], not data[i])
       prevHist[binCount + Math.floor(prevFrame.data[i + 1] / binSize)]++
       currHist[binCount + Math.floor(currFrame.data[i + 1] / binSize)]++
-      // B channel
+      // B channel bin (use data[i+2], not data[i])
       prevHist[binCount * 2 + Math.floor(prevFrame.data[i + 2] / binSize)]++
       currHist[binCount * 2 + Math.floor(currFrame.data[i + 2] / binSize)]++
     }
 
-    // Normalize histograms
-    const norm = sampleCount / 4
+    // chi-square comparison of histograms
     let chiSquare = 0
     for (let b = 0; b < prevHist.length; b++) {
       const e = prevHist[b] || 0.1
@@ -51,47 +54,6 @@ export function useSubtitleExtractor() {
 
     // chiSquare > threshold means significant scene change
     return chiSquare > threshold * binCount * 3
-  }
-
-  // Process single frame
-  async function processFrame(
-    frame: ImageData,
-    frameIndex: number,
-    roi: ROI,
-    ocrConfig: OCRConfig
-  ): Promise<SubtitleItem | null> {
-    // Delegate ROI extraction to OCREngine (avoids duplicate implementation)
-    const roiData = ocrEngine.safeExtractROI(
-      frame,
-      roi.x, roi.y, roi.width, roi.height
-    )
-    const result = await ocrEngine.processROI(roiData, roi, ocrConfig)
-    
-    if (result.text.trim().length === 0) {
-      return null
-    }
-    
-    if (result.confidence < ocrConfig.confidenceThreshold) {
-      return null
-    }
-    
-    const fps = projectStore.videoMeta?.fps ?? 30
-    const timestamp = frameIndex / fps
-    
-    return {
-      id: `sub-${frameIndex}-${Date.now()}`,
-      index: extractedCount.value + 1,
-      startTime: timestamp,
-      endTime: timestamp + 2, // Default 2 second duration
-      startFrame: frameIndex,
-      endFrame: frameIndex,
-      text: result.text.trim(),
-      confidence: result.confidence,
-      language: ocrConfig.language[0],
-      roi: roi,
-      thumbnailUrls: [],
-      edited: false
-    }
   }
 
   // Main extraction loop — reads all options from projectStore.extractOptions
@@ -145,7 +107,7 @@ export function useSubtitleExtractor() {
         continue
       }
 
-      // Process OCR — optionally multi-pass for higher accuracy
+      // Process OCR - optionally multi-pass for higher accuracy
       try {
         let result: { text: string; confidence: number } | null = null
 
@@ -167,7 +129,6 @@ export function useSubtitleExtractor() {
           const calibrated = ocrEngine.calibrateConfidenceEnhanced(processed, avgConf, opts.languages[0])
 
           if (processed.trim().length > 0 && calibrated >= opts.confidenceThreshold) {
-            const fps = projectStore.videoMeta.fps
             result = { text: processed, confidence: calibrated }
           }
         } else {
@@ -184,13 +145,13 @@ export function useSubtitleExtractor() {
         }
 
         if (result) {
-          const fps = projectStore.videoMeta.fps
+          const fps = projectStore.videoMeta?.fps ?? 30
           const timestamp = frameIndex / fps
           subtitleStore.addSubtitle({
             id: `sub-${frameIndex}-${Date.now()}`,
             index: extractedCount.value + 1,
             startTime: timestamp,
-            endTime: timestamp + 2,
+            endTime: 0,
             startFrame: frameIndex,
             endFrame: frameIndex,
             text: result.text,
@@ -235,14 +196,21 @@ export function useSubtitleExtractor() {
       // Stage 3: Merge similar consecutive subtitles (Levenshtein-based)
       processed = ocrEngine.mergeSimilarSubtitles(processed, opts.mergeThreshold, 0.5)
 
-      // Reconstruct subtitle items preserving full data, updating text/conf/duration
+      // Reconstruct subtitle items - endTime computed from next subtitle for accurate duration
       subtitleStore.setSubtitles(
         processed.map((s, i) => {
           const match = rawSubs.find(r =>
             Math.abs(r.startTime - s.startTime) < 0.1 &&
             r.text === s.text
           )
-          return match ? { ...match, ...s, index: i + 1 } : null
+          if (!match) return null
+          const next = processed[i + 1]
+          return {
+            ...match,
+            ...s,
+            index: i + 1,
+            endTime: next ? next.startTime : (s.startTime + 2),
+          }
         }).filter(Boolean) as typeof rawSubs
       )
     }

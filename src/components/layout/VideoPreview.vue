@@ -14,12 +14,9 @@ const {
   error,
   initVideo,
   loadVideo,
-  play,
-  pause,
   togglePlay,
   seekToFrame,
   seekRelative,
-  captureFrame,
   handleKeydown
 } = useVideoPlayer()
 

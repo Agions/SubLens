@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
 import type { ExportFormats } from '@/types/subtitle'
@@ -87,11 +87,6 @@ function parseTime(timeStr: string): number {
   return parseInt(hrs) * 3600 + parseInt(mins) * 60 + parseInt(secs) + parseInt(ms) / 1000
 }
 
-// getConfidenceLevel is imported from @/types/video
-
-const selectedCount = computed(() =>
-  subtitleStore.selectedId ? 1 : 0
-)
 </script>
 
 <template>

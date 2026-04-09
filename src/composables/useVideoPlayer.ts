@@ -1,4 +1,4 @@
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
 
 export function useVideoPlayer() {

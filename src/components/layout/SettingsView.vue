@@ -6,12 +6,11 @@ import { useSystemCheck } from '@/composables/useSystemCheck'
 
 const settingsStore = useSettingsStore()
 const { setTheme } = useTheme()
-const { 
-  checkDependencies, 
-  lastResult, 
-  isChecking, 
+const {
+  checkDependencies,
+  lastResult,
+  isChecking,
   getStatusMessage,
-  isDependencyInstalled 
 } = useSystemCheck()
 
 const localSettings = ref({ ...settingsStore.settings })

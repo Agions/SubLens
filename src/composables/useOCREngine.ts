@@ -27,30 +27,11 @@ export interface OCRProcessingOptions {
   useGpu?: boolean
 }
 
-interface TesseractModule {
-  createWorker: (langs: string, workerNum?: number, options?: Record<string, unknown>) => Promise<TesseractWorker>
-}
-interface TesseractWorker {
-  recognize: (image: string | HTMLCanvasElement | HTMLImageElement) => Promise<RecognizeResult>
-  setParameters: (params: Record<string, string>) => Promise<void>
-  terminate: () => Promise<void>
-}
-interface RecognizeResult {
-  data: {
-    words: TesseractWord[]
-  }
-}
-interface TesseractWord {
-  text: string
-  confidence: number
-  bbox: { x0: number; y0: number; x1: number; y1: number }
-}
 interface TesseractLoggerMessage {
   status: string
   progress: number
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let cachedTesseractModule: any = null
+let cachedTesseractModule: typeof import('tesseract.js') | null = null
 
 export function useOCREngine() {
   const isReady = ref(false)
@@ -60,7 +41,8 @@ export function useOCREngine() {
   const preprocessor = useImagePreprocessor()
   
   // Tesseract worker (lazy loaded)
-  const worker = shallowRef<TesseractWorker | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const worker = shallowRef<any>(null)
   
   /**
    * Safely extract ROI from image data, handling boundary cases.
@@ -129,8 +111,8 @@ export function useOCREngine() {
         if (!cachedTesseractModule) {
           cachedTesseractModule = await import('tesseract.js')
         }
-        const Tesseract = cachedTesseractModule
-        
+        const Tesseract = cachedTesseractModule!
+
         // Terminate existing worker first
         if (worker.value) {
           await worker.value.terminate()
@@ -170,7 +152,7 @@ export function useOCREngine() {
   // Process image data with optional preprocessing
   async function processImageData(
     imageData: ImageData,
-    config: OCRConfig,
+    _config: OCRConfig,
     options: OCRProcessingOptions = {}
   ): Promise<OCRResult[]> {
     if (!isReady.value || !worker.value) {
@@ -208,7 +190,8 @@ export function useOCREngine() {
       
       progress.value = 100
       
-      return result.data.words.map((word: TesseractWord) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return result.data.words.map((word: any) => ({
         text: word.text,
         confidence: word.confidence / 100,
         boundingBox: {
@@ -289,7 +272,7 @@ export function useOCREngine() {
     config: OCRConfig,
     options: OCRProcessingOptions = {}
   ): Promise<OCRResult[]> {
-    const { multiPass = true, preprocessMode = 'subtitle' } = options
+    const { multiPass = true } = options
     
     if (!multiPass) {
       return processImageData(imageData, config, options)
@@ -447,6 +430,7 @@ export function useOCREngine() {
   function calibrateConfidence(
     text: string,
     rawConfidence: number,
+    // @ts-expect-error — lang is forwarded to calibrateConfidenceEnhanced, unused here
     lang: string = 'ch'
   ): number {
     if (!text) return rawConfidence
@@ -690,7 +674,7 @@ export function useOCREngine() {
   function calibrateConfidenceEnhanced(
     text: string,
     rawConfidence: number,
-    lang: string = 'ch'
+    _lang: string = 'ch'
   ): number {
     if (!text) return rawConfidence
 
@@ -698,19 +682,17 @@ export function useOCREngine() {
     const len = trimmed.length
 
     // Start with base calibration
-    let quality = calibrateConfidence(trimmed, rawConfidence, lang)
+    let quality = calibrateConfidence(trimmed, rawConfidence, _lang)
 
     // === Language-specific checks ===
 
-    if (lang === 'ch' || lang === 'chi' || lang === 'ja' || lang === 'ko') {
+    if (_lang === 'ch' || _lang === 'chi' || _lang === 'ja' || _lang === 'ko') {
       // Chinese/Japanese/Korean checks
       // Penalize: orphaned CJK radicals or single CJK chars surrounded by spaces
       if (/ [\u4e00-\u9fff] /.test(text) || / [\u3040-\u30ff] /.test(text)) {
         quality *= 0.80
       }
       // Penalize: unbalanced Chinese quotes
-      const openQuotes = (text.match(/["']/g) || []).length
-      // Note: Chinese quotes are「」『』— rough check
       const hasUnbalancedQuotes =
         (text.includes('"') && text.split('"').length % 2 === 0) ||
         (text.includes("'") && text.split("'").length % 2 === 0)

@@ -162,7 +162,7 @@ export function formatLRC(subtitles: SubtitleItem[]): string {
 
 // SBV Format (YouTube captions)
 export function formatSBV(subtitles: SubtitleItem[]): string {
-  return subtitles.map((sub, i) => {
+  return subtitles.map((sub) => {
     const start = formatTimestampSBV(sub.startTime)
     const end = formatTimestampSBV(sub.endTime)
     return `${start},${end}\n${sub.text}\n`

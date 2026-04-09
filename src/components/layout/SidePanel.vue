@@ -17,7 +17,6 @@ import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { ROI_PRESETS, type OCREngine } from '@/types/video'
 import type { ExportFormats } from '@/types/subtitle'
-import type { useSubtitleExtractor } from '@/composables/useSubtitleExtractor'
 
 const projectStore = useProjectStore()
 const subtitleStore = useSubtitleStore()
@@ -52,13 +51,6 @@ const ocrEngines: {
   { id: 'paddle', name: 'PaddleOCR', shortName: 'PP', desc: '百度开源·深度学习', accuracy: 5, speed: 4, langCount: 80, recommended: true, tech: 'PP-OCRv5' },
   { id: 'easyocr', name: 'EasyOCR', shortName: 'EO', desc: 'PyTorch·多语言', accuracy: 4, speed: 3, langCount: 80, recommended: false, tech: 'deep learning' },
   { id: 'tesseract', name: 'Tesseract.js', shortName: 'TS', desc: 'WASM·无需后端', accuracy: 3, speed: 5, langCount: 100, recommended: false, tech: 'LSTM+WASM' },
-]
-
-const languages = [
-  { id: 'ch', name: '中文', selected: true },
-  { id: 'en', name: '英文', selected: false },
-  { id: 'ja', name: '日文', selected: false },
-  { id: 'ko', name: '韩文', selected: false },
 ]
 
 const selectedLanguages = ref<string[]>(['ch'])
