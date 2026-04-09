@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 
@@ -14,15 +14,8 @@ const emit = defineEmits<{
 // Timeline zoom level (frames per pixel)
 const zoomLevel = ref(1)
 
-// Timeline scroll position
-const scrollLeft = ref(0)
-
-// Thumbnails cache
-const thumbnails = ref<Map<number, string>>(new Map())
-
 // Computed
 const totalFrames = computed(() => projectStore.videoMeta?.totalFrames ?? 0)
-const duration = computed(() => projectStore.videoMeta?.duration ?? 0)
 const fps = computed(() => projectStore.videoMeta?.fps ?? 30)
 
 // Frame markers for subtitles

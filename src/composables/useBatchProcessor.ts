@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useOCREngine } from './useOCREngine'
-import { ROI_PRESETS, type OCREngine } from '@/types/video'
+import { type OCREngine } from '@/types/video'
 
 export interface BatchJob {
   id: string
@@ -174,20 +174,17 @@ export function useBatchProcessor() {
       
       job.progress = 60
       
-      // Get ROI from preset
-      const roi = ROI_PRESETS.find(p => p.id === options.roiPreset)?.rect || ROI_PRESETS[0].rect
-      
       // Process each detected scene
       const totalScenes = sceneChanges.length || 1
       for (let i = 0; i < totalScenes; i++) {
         if (job.status === 'cancelled') {
           throw new Error('Job cancelled')
         }
-        
+
         const timestamp = sceneChanges[i] / videoMeta.fps
-        
-        // Extract frame at this timestamp
-        const frameData = await invoke<string>('extract_frame_at_time', {
+
+        // Extract frame at this timestamp (result used for OCR in full implementation)
+        await invoke<string>('extract_frame_at_time', {
           path: job.inputPath,
           timestampSecs: timestamp
         })

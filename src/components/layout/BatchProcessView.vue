@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { ExportFormat } from '@/types/subtitle'
 import { useBatchProcessor, type BatchJob, type BatchOptions } from '@/composables/useBatchProcessor'
 
 const {
   jobs,
-  currentJob,
   isProcessing,
   addToQueue,
   startBatch,

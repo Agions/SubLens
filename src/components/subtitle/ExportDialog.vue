@@ -16,10 +16,6 @@ const emit = defineEmits<{
 
 const isOpen = ref(false)
 
-function open() {
-  isOpen.value = true
-}
-
 function close() {
   isOpen.value = false
   emit('close')
@@ -57,7 +53,8 @@ async function handleExport() {
 
   for (const format of selectedFormats.value) {
     try {
-      const content = subtitleStore.exportToFormat(format as ExportFormat)
+      // File write implementation pending Tauri file API
+      subtitleStore.exportToFormat(format as ExportFormat)
       const ext = format === 'ssa' ? 'ssa' : format === 'sbv' ? 'sbv' : format
       const fileName = `${baseName}.${ext}`
 

@@ -144,9 +144,9 @@ function boxBlur(imageData: ImageData, radius: number = 1): ImageData {
  * Converts to binary-like image for better OCR
  */
 function adaptiveThreshold(imageData: ImageData, blockSize: number = 11, C: number = 2): ImageData {
-  const { data, width, height } = imageData
+  const { width, height } = imageData
   const result = new ImageData(width, height)
-  
+
   // First apply Gaussian blur to reduce noise
   const blurred = boxBlur(imageData, Math.floor(blockSize / 3))
   const blurredData = blurred.data
@@ -290,19 +290,17 @@ function evaluateProjection(binary: boolean[][], angle: number): number {
   
   // Rotate points and project onto horizontal axis
   const radians = angle * Math.PI / 180
-  const cos = Math.cos(radians)
-  const sin = Math.sin(radians)
-  
+  const cosVal = Math.cos(radians)
+  const sinVal = Math.sin(radians)
+
   let totalVariance = 0
   const projections: number[] = new Array(height).fill(0)
-  
+
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (binary[y][x]) {
-        // Rotate point
-        const rx = Math.round(x * cos - y * sin)
-        const ry = Math.round(x * sin + y * cos)
-        
+        const ry = Math.round(x * sinVal + y * cosVal)
+
         if (ry >= 0 && ry < height) {
           projections[ry]++
         }
@@ -572,7 +570,8 @@ function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = imageData.width
   canvas.height = imageData.height
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Failed to get 2D canvas context')
   ctx.putImageData(imageData, 0, 0)
   return canvas
 }
