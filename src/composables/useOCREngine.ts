@@ -322,39 +322,41 @@ export function useOCREngine() {
   }
   
   /**
-   * Merge results from multiple OCR passes
+   * Merge results from multiple OCR passes.
+   * Uses spatial grid hash for O(n) deduplication instead of O(n²) nested loop.
    */
   function mergeOCRResults(resultsList: OCRResult[][]): OCRResult[] {
-    // Flatten and deduplicate by position proximity + text similarity
-    const allWords: OCRResult[] = []
-
-    // Sort by confidence descending
+    // Sort by confidence descending (highest confidence first)
     const flat = resultsList.flat().sort((a, b) => b.confidence - a.confidence)
 
+    // Spatial grid: bucket size of 20px, O(n) insertion/lookup
+    const cellSize = 20
+    const grid = new Map<string, OCRResult>()
+
     for (const word of flat) {
-      const wordCenter = {
-        x: word.boundingBox.x + word.boundingBox.width / 2,
-        y: word.boundingBox.y + word.boundingBox.height / 2,
+      const cx = word.boundingBox.x + word.boundingBox.width / 2
+      const cy = word.boundingBox.y + word.boundingBox.height / 2
+      const cellKey = `${Math.floor(cx / cellSize)},${Math.floor(cy / cellSize)}`
+
+      // Check neighboring cells for existing word with same text
+      let isDuplicate = false
+      for (let dx = -1; dx <= 1 && !isDuplicate; dx++) {
+        for (let dy = -1; dy <= 1 && !isDuplicate; dy++) {
+          const neighborKey = `${Math.floor(cx / cellSize) + dx},${Math.floor(cy / cellSize) + dy}`
+          const existing = grid.get(neighborKey)
+          if (existing && existing.text === word.text) {
+            isDuplicate = true
+          }
+        }
       }
 
-      // Check if duplicate of already-accepted word
-      const isDuplicate = allWords.some(existing => {
-        const existingCenter = {
-          x: existing.boundingBox.x + existing.boundingBox.width / 2,
-          y: existing.boundingBox.y + existing.boundingBox.height / 2,
-        }
-        const dx = existingCenter.x - wordCenter.x
-        const dy = existingCenter.y - wordCenter.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        return distance < 20 && existing.text === word.text
-      })
-
       if (!isDuplicate) {
-        allWords.push(word)
+        // Round center to cell key for storage
+        grid.set(cellKey, word)
       }
     }
 
-    return allWords
+    return Array.from(grid.values())
   }
 
   /**

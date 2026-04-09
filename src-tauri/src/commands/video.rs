@@ -330,9 +330,22 @@ pub async fn extract_frames(
     
     // Calculate frame interval
     let frame_interval = if options.frame_interval == 0 { 1 } else { options.frame_interval };
-    let total_extractable = ((metadata.total_frames as f64 / frame_interval as f64).ceil() as usize).min(1000);
-    
-    tracing::info!("Extracting ~{} frames at interval {} (max 1000)", total_extractable, frame_interval);
+    let total_possible = ((metadata.total_frames as f64 / frame_interval as f64).ceil() as usize);
+    let max_frames = 1000_usize;
+    let total_extractable = total_possible.min(max_frames);
+
+    if total_possible > max_frames {
+        tracing::warn!(
+            "Frame count truncated: {} frames at interval {} would exceed limit ({}). \
+             Consider increasing frame_interval or processing in batches.",
+            total_possible, frame_interval, max_frames
+        );
+    }
+
+    tracing::info!(
+        "Extracting {} frames at interval {} (of {} total at this interval)",
+        total_extractable, frame_interval, total_possible
+    );
     
     // For ROI cropping, we use ffmpeg to extract specific regions
     // Build ffmpeg crop filter based on ROI coordinates
