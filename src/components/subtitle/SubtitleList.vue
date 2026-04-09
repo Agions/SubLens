@@ -902,8 +902,13 @@ const isFiltered = computed(() => subtitleStore.confidenceFilter !== 'all')
   padding: $space-3;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background:
+    linear-gradient(90deg,
+      var(--bg-elevated) 0%,
+      var(--bg-overlay) 40%,
+      var(--bg-elevated) 80%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 
   .skeleton-header {
     display: flex;
@@ -1111,8 +1116,11 @@ const isFiltered = computed(() => subtitleStore.confidenceFilter !== 'all')
   }
 }
 
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+// Skeleton shimmer — matches frontend-design-pro
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
+
+
 </style>

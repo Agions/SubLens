@@ -14,9 +14,8 @@ const resolution = computed(() => {
 const ocrEngine = computed(() => projectStore.extractOptions.ocrEngine)
 
 const memoryUsage = computed(() => {
-  // Estimate memory usage based on subtitles
   const subCount = subtitleStore.totalCount
-  const estimated = subCount * 10 + 50 // ~50MB base + 10KB per subtitle
+  const estimated = subCount * 10 + 50
   return `~${estimated} MB`
 })
 
@@ -46,16 +45,17 @@ const statusText = computed(() => {
         <span class="value">{{ resolution }}</span>
       </span>
     </div>
-    
+
     <div class="status-center">
       <span
         class="status-badge"
         :class="{ active: subtitleStore.isExtracting }"
       >
+        <span v-if="subtitleStore.isExtracting" class="pulse-dot"></span>
         {{ statusText }}
       </span>
     </div>
-    
+
     <div class="status-right">
       <span class="status-item">
         <span class="label">字幕:</span>
@@ -78,8 +78,8 @@ const statusText = computed(() => {
 <style lang="scss" scoped>
 .status-bar {
   height: $statusbar-height;
-  background: $bg-surface;
-  border-top: 1px solid $border;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -100,20 +100,21 @@ const statusText = computed(() => {
   display: flex;
   align-items: center;
   gap: $space-1;
-  
+
   .label {
-    color: $text-muted;
+    color: var(--text-muted);
   }
-  
+
   .value {
-    color: $text-secondary;
-    
+    color: var(--text-secondary);
+
     &.mono {
-      font-family: $font-display;
+      font-family: $font-mono;
+      font-size: 11px;
     }
-    
+
     &.accent {
-      color: $primary;
+      color: var(--primary);
       text-transform: capitalize;
     }
   }
@@ -122,25 +123,38 @@ const statusText = computed(() => {
 .divider {
   width: 1px;
   height: 12px;
-  background: $border;
+  background: var(--border);
 }
 
 .status-badge {
-  padding: 2px 8px;
-  background: $bg-overlay;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  background: var(--bg-overlay);
   border-radius: $radius-full;
   font-size: $text-xs;
-  color: $text-muted;
-  
+  color: var(--text-muted);
+  transition: all $duration-fast $ease-out-expo;
+
   &.active {
-    background: $primary-dim;
-    color: $primary;
-    animation: pulse 1.5s infinite;
+    background: rgba(#0A84FF, 0.15);
+    color: var(--primary);
+    box-shadow: 0 0 8px rgba(#0A84FF, 0.2);
   }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+  animation: statusPulse 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes statusPulse {
+  0%   { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(#0A84FF, 0.5); }
+  60%  { opacity: 0.8; transform: scale(0.9); box-shadow: 0 0 0 4px rgba(#0A84FF, 0); }
+  100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(#0A84FF, 0); }
 }
 </style>
