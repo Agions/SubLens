@@ -14,11 +14,9 @@ const emit = defineEmits<{
 // Timeline zoom level (frames per pixel)
 const zoomLevel = ref(1)
 
-// Computed
 const totalFrames = computed(() => projectStore.videoMeta?.totalFrames ?? 0)
 const fps = computed(() => projectStore.videoMeta?.fps ?? 30)
 
-// Frame markers for subtitles
 const subtitleMarkers = computed(() => {
   return subtitleStore.subtitles.map(sub => ({
     id: sub.id,
@@ -28,44 +26,39 @@ const subtitleMarkers = computed(() => {
   }))
 })
 
-// Current playhead position
 const playheadPosition = computed(() => {
   if (totalFrames.value === 0) return 0
   return (projectStore.currentFrame / totalFrames.value) * 100
 })
 
-// Format time display
 function formatTime(frame: number): string {
   const seconds = frame / fps.value
   const hrs = Math.floor(seconds / 3600)
   const mins = Math.floor((seconds % 3600) / 60)
   const secs = Math.floor(seconds % 60)
-  
+
   if (hrs > 0) {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-// Handle timeline click
 function handleTimelineClick(e: MouseEvent) {
   const target = e.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
   const x = e.clientX - rect.left
   const percent = x / rect.width
   const frame = Math.floor(percent * totalFrames.value)
-  
+
   emit('seek', Math.max(0, Math.min(frame, totalFrames.value - 1)))
 }
 
-// Handle subtitle marker click
 function handleMarkerClick(e: MouseEvent, marker: typeof subtitleMarkers.value[0]) {
   e.stopPropagation()
   emit('select', marker.id)
   emit('seek', marker.frame)
 }
 
-// Zoom controls
 function zoomIn() {
   zoomLevel.value = Math.min(zoomLevel.value * 1.5, 10)
 }
@@ -77,31 +70,54 @@ function zoomOut() {
 function resetZoom() {
   zoomLevel.value = 1
 }
+
+const currentTime = computed(() => formatTime(projectStore.currentFrame))
+const totalTime = computed(() => formatTime(totalFrames.value))
+const currentFrame = computed(() => projectStore.currentFrame)
+const subtitleCount = computed(() => subtitleStore.totalCount)
 </script>
 
 <template>
   <div class="timeline-component">
-    <!-- Timeline Header -->
+    <!-- ── Header ─────────────────────────────────── -->
     <div class="timeline-header">
-      <div class="timeline-controls">
-        <button class="ctrl-btn" @click="zoomOut" title="缩小">➖</button>
-        <span class="zoom-level">{{ Math.round(zoomLevel * 100) }}%</span>
-        <button class="ctrl-btn" @click="zoomIn" title="放大">➕</button>
-        <button class="ctrl-btn" @click="resetZoom" title="重置">🔄</button>
+      <div class="header-left">
+        <div class="zoom-controls">
+          <button class="zoom-btn" @click="zoomOut" title="缩小">
+            <svg viewBox="0 0 16 16" fill="none" class="zoom-icon">
+              <path d="M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <span class="zoom-level">{{ Math.round(zoomLevel * 100) }}%</span>
+          <button class="zoom-btn" @click="zoomIn" title="放大">
+            <svg viewBox="0 0 16 16" fill="none" class="zoom-icon">
+              <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="zoom-btn" @click="resetZoom" title="重置">
+            <svg viewBox="0 0 16 16" fill="none" class="zoom-icon">
+              <path d="M2 8a6 6 0 1011.5-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M2 5V8h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      
-      <div class="time-display">
-        <span class="current-time">{{ formatTime(projectStore.currentFrame) }}</span>
-        <span class="separator">/</span>
-        <span class="total-time">{{ formatTime(totalFrames) }}</span>
+
+      <div class="header-right">
+        <span class="time-display">
+          <span class="time-current">{{ currentTime }}</span>
+          <span class="time-sep">/</span>
+          <span class="time-total">{{ totalTime }}</span>
+        </span>
       </div>
     </div>
-    
-    <!-- Timeline Track -->
-    <div class="timeline-track-container">
+
+    <!-- ── Timeline Track ─────────────────────────── -->
+    <div class="timeline-body">
+      <!-- Ruler -->
       <div class="timeline-ruler">
-        <span 
-          v-for="i in Math.ceil(totalFrames / (fps * 10))" 
+        <span
+          v-for="i in Math.ceil(totalFrames / (fps * 10))"
           :key="i"
           class="ruler-mark"
           :style="{ left: `${(i * fps * 10 / totalFrames) * 100}%` }"
@@ -109,8 +125,9 @@ function resetZoom() {
           {{ formatTime(i * fps * 10) }}
         </span>
       </div>
-      
-      <div 
+
+      <!-- Track -->
+      <div
         class="timeline-track"
         @click="handleTimelineClick"
       >
@@ -122,42 +139,41 @@ function resetZoom() {
           :class="{ selected: subtitleStore.selectedId === marker.id }"
           :style="{
             left: `${(marker.frame / totalFrames) * 100}%`,
-            width: `${((marker.endFrame - marker.frame) / totalFrames) * 100}%`
+            width: `${Math.max(0.1, ((marker.endFrame - marker.frame) / totalFrames) * 100)}%`
           }"
           @click="handleMarkerClick($event, marker)"
           :title="marker.text"
         >
-          <span class="marker-label">{{ marker.text.slice(0, 20) }}</span>
+          <span class="marker-label">{{ marker.text.slice(0, 16) }}</span>
         </div>
-        
+
         <!-- Playhead -->
-        <div 
+        <div
           class="playhead"
           :style="{ left: `${playheadPosition}%` }"
         >
-          <div class="playhead-head"></div>
-          <div class="playhead-line"></div>
+          <div class="playhead-head"/>
+          <div class="playhead-line"/>
         </div>
       </div>
     </div>
-    
-    <!-- Frame Info -->
+
+    <!-- ── Footer ─────────────────────────────────── -->
     <div class="timeline-footer">
-      <div class="frame-info">
-        <span class="info-item">
-          <span class="label">帧:</span>
-          <span class="value">#{{ projectStore.currentFrame }}</span>
+      <div class="footer-left">
+        <span class="stat-item">
+          <span class="stat-label">帧</span>
+          <span class="stat-value">#{{ currentFrame.toLocaleString() }}</span>
         </span>
-        <span class="info-item">
-          <span class="label">FPS:</span>
-          <span class="value">{{ fps }}</span>
+        <span class="stat-item">
+          <span class="stat-label">FPS</span>
+          <span class="stat-value">{{ fps }}</span>
         </span>
       </div>
-      
-      <div class="subtitle-info">
-        <span class="info-item">
-          <span class="label">字幕:</span>
-          <span class="value">{{ subtitleStore.totalCount }} 条</span>
+      <div class="footer-right">
+        <span class="stat-item">
+          <span class="stat-label">字幕</span>
+          <span class="stat-value">{{ subtitleCount }} 条</span>
         </span>
       </div>
     </div>
@@ -166,95 +182,109 @@ function resetZoom() {
 
 <style lang="scss" scoped>
 .timeline-component {
-  background: $bg-surface;
-  border-top: 1px solid $border;
-  padding: $space-3;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
 }
 
 .timeline-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $space-3;
+  padding: $space-2 $space-3;
 }
 
-.timeline-controls {
+.header-left {
   display: flex;
   align-items: center;
-  gap: $space-2;
 }
 
-.ctrl-btn {
-  width: 24px;
-  height: 24px;
-  @include flex-center;
-  font-size: 12px;
-  background: $bg-overlay;
-  border-radius: $radius-sm;
-  transition: all $transition-fast;
-  
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+}
+
+.zoom-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  @include pressable;
+
   &:hover {
-    background: $border;
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+  }
+
+  .zoom-icon {
+    width: 14px;
+    height: 14px;
   }
 }
 
 .zoom-level {
-  font-family: $font-display;
-  font-size: $text-xs;
-  color: $text-muted;
-  min-width: 40px;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 36px;
   text-align: center;
 }
 
 .time-display {
-  font-family: $font-display;
-  font-size: $text-sm;
-  
-  .current-time {
-    color: $text-primary;
-  }
-  
-  .separator {
-    color: $text-muted;
-    margin: 0 $space-1;
-  }
-  
-  .total-time {
-    color: $text-muted;
-  }
+  font-family: $font-mono;
+  font-size: $text-xs;
+  display: flex;
+  gap: 4px;
 }
 
-.timeline-track-container {
+.time-current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.time-sep {
+  color: $gray-600;
+}
+
+.time-total {
+  color: $gray-500;
+}
+
+// ── Body ────────────────────────────────────────────────────
+.timeline-body {
   position: relative;
-  height: 48px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  @include custom-scrollbar;
+  height: 44px;
+  overflow: hidden;
 }
 
 .timeline-ruler {
   position: relative;
   height: 16px;
-  background: $bg-elevated;
-  border-radius: $radius-sm $radius-sm 0 0;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .ruler-mark {
   position: absolute;
-  font-family: $font-display;
+  font-family: $font-mono;
   font-size: 9px;
-  color: $text-muted;
+  color: $gray-600;
   transform: translateX(-50%);
   padding-top: 2px;
 }
 
 .timeline-track {
   position: relative;
-  height: 32px;
-  background: $bg-elevated;
-  border-radius: 0 0 $radius-sm $radius-sm;
+  height: 28px;
+  background: var(--bg-elevated);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   cursor: pointer;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -263,34 +293,37 @@ function resetZoom() {
       90deg,
       transparent,
       transparent 9px,
-      $border 9px,
-      $border 10px
+      var(--border) 9px,
+      var(--border) 10px
     );
-    opacity: 0.3;
+    opacity: 0.25;
   }
 }
 
 .subtitle-marker {
   position: absolute;
   top: 4px;
-  height: 24px;
+  height: 20px;
   min-width: 4px;
-  background: $secondary;
-  border-radius: $radius-sm;
-  opacity: 0.7;
+  background: rgba($secondary, 0.55);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all $transition-fast;
   overflow: hidden;
-  
+  transition: background $duration-fast $ease-out-expo,
+              opacity $duration-fast $ease-out-expo,
+              transform $duration-fast $ease-out-expo;
+  z-index: $z-raised;
+
   &:hover {
+    background: rgba($secondary, 0.8);
     opacity: 1;
-    transform: scaleY(1.1);
+    transform: scaleY(1.05);
   }
-  
+
   &.selected {
+    background: var(--primary);
     opacity: 1;
-    background: $primary;
-    box-shadow: $shadow-glow-primary;
+    box-shadow: 0 0 8px rgba($primary, 0.4);
   }
 }
 
@@ -304,8 +337,9 @@ function resetZoom() {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
-  padding: 0 4px;
+  max-width: calc(100% - 4px);
+  padding: 0 2px;
+  pointer-events: none;
 }
 
 .playhead {
@@ -314,54 +348,87 @@ function resetZoom() {
   bottom: 0;
   width: 2px;
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: $z-dropdown;
 }
 
 .playhead-head {
-  width: 12px;
-  height: 12px;
-  background: $primary;
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--primary);
   border-radius: 50%;
-  margin-left: -5px;
-  box-shadow: $shadow-glow-primary;
+  box-shadow: 0 0 8px rgba($primary, 0.5);
+  transition: transform $duration-fast $ease-out-expo;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: rgba($primary, 0.25);
+    border-radius: 50%;
+    animation: head-pulse 2s ease-in-out infinite;
+  }
 }
 
 .playhead-line {
+  position: absolute;
+  top: 8px;
+  bottom: 0;
+  left: 50%;
   width: 2px;
-  height: calc(100% - 12px);
-  background: $primary;
-  margin-left: 0;
-  box-shadow: 0 0 8px rgba($primary, 0.5);
+  transform: translateX(-50%);
+  background: var(--primary);
+  box-shadow: 0 0 6px rgba($primary, 0.4);
 }
 
+.timeline-track:hover .playhead-head {
+  transform: translateX(-50%) scale(1.2);
+}
+
+// ── Footer ─────────────────────────────────────────────────
 .timeline-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: $space-2;
-  padding-top: $space-2;
-  border-top: 1px solid $border;
+  padding: $space-1 $space-3;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elevated);
 }
 
-.frame-info,
-.subtitle-info {
+.footer-left,
+.footer-right {
   display: flex;
   gap: $space-4;
 }
 
-.info-item {
+.stat-item {
   display: flex;
   align-items: center;
-  gap: $space-1;
-  font-family: $font-display;
-  font-size: $text-xs;
-  
-  .label {
-    color: $text-muted;
+  gap: 4px;
+  font-family: $font-mono;
+  font-size: 10px;
+}
+
+.stat-label {
+  color: $gray-600;
+}
+
+.stat-value {
+  color: $gray-400;
+}
+
+// ── Animations ───────────────────────────────────────────────
+@keyframes head-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
   }
-  
-  .value {
-    color: $text-secondary;
+  50% {
+    opacity: 0.7;
+    transform: scale(1.3);
   }
 }
 </style>

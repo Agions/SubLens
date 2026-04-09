@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
 import type { ExportFormats } from '@/types/subtitle'
@@ -87,56 +87,67 @@ function parseTime(timeStr: string): number {
   return parseInt(hrs) * 3600 + parseInt(mins) * 60 + parseInt(secs) + parseInt(ms) / 1000
 }
 
+const lowConfCount = computed(() => subtitleStore.confidenceStats.low)
+const totalCount = computed(() => subtitleStore.confidenceStats.total)
+const filteredCount = computed(() => subtitleStore.filteredSubtitles.length)
+const isFiltered = computed(() => subtitleStore.confidenceFilter !== 'all')
 </script>
 
 <template>
   <aside class="subtitle-panel">
-    <!-- Header -->
-    <div class="panel-header">
+    <!-- ── Header ──────────────────────────────────── -->
+    <header class="panel-header">
       <div class="header-left">
         <h3 class="panel-title">字幕列表</h3>
-        <span class="subtitle-badge">
-          {{ subtitleStore.confidenceFilter !== 'all'
-            ? `${subtitleStore.filteredSubtitles.length} / ${subtitleStore.totalCount}`
-            : subtitleStore.totalCount }} 条
+        <span class="count-badge">
+          <template v-if="isFiltered">{{ filteredCount }} / {{ totalCount }}</template>
+          <template v-else>{{ totalCount }}</template>
+          条
         </span>
-        <!-- Low-confidence count alert -->
-        <span
-          v-if="subtitleStore.confidenceStats.low > 0"
-          class="conf-alert-badge"
-          :title="`${subtitleStore.confidenceStats.low} 条低置信度字幕需要检查`"
+        
+        <!-- Low-confidence alert -->
+        <button
+          v-if="lowConfCount > 0"
+          class="alert-badge"
+          :class="{ active: subtitleStore.confidenceFilter === 'low' }"
           @click="subtitleStore.setConfidenceFilter('low')"
+          title="查看低置信度字幕"
         >
-          ⚠️ {{ subtitleStore.confidenceStats.low }} 低置信度
-        </span>
+          <svg viewBox="0 0 12 12" fill="none" class="alert-icon">
+            <path d="M6 1L1 10h10L6 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M6 5v2M6 8.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          {{ lowConfCount }} 低置信度
+        </button>
       </div>
+
       <div class="header-actions">
         <button
-          class="hdr-btn"
+          class="icon-btn"
           :disabled="!subtitleStore.canUndo"
           @click="subtitleStore.undo()"
           title="撤销 (Ctrl+Z)"
         >
-          <svg viewBox="0 0 20 20" fill="none" class="hdr-icon">
+          <svg viewBox="0 0 20 20" fill="none" class="icon-svg">
             <path d="M4 9H14a3 3 0 010 6H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M7 6L4 9l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
         <button
-          class="hdr-btn"
+          class="icon-btn"
           :disabled="!subtitleStore.canRedo"
           @click="subtitleStore.redo()"
           title="重做 (Ctrl+Y)"
         >
-          <svg viewBox="0 0 20 20" fill="none" class="hdr-icon">
+          <svg viewBox="0 0 20 20" fill="none" class="icon-svg">
             <path d="M16 9H6a3 3 0 000 6h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M13 6l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Search -->
+    <!-- ── Search ─────────────────────────────────── -->
     <div class="search-bar">
       <svg class="search-icon" viewBox="0 0 20 20" fill="none">
         <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/>
@@ -149,26 +160,26 @@ function parseTime(timeStr: string): number {
         class="search-input"
       />
       <span v-if="subtitleStore.searchQuery" class="search-count">
-        {{ subtitleStore.filteredSubtitles.length }} 条结果
+        {{ filteredCount }} 条
       </span>
     </div>
 
-    <!-- Confidence Filter Bar -->
-    <div class="conf-filter-bar" v-if="subtitleStore.totalCount > 0">
-      <span class="filter-label">质量筛选</span>
-      <div class="filter-chips">
+    <!-- ── Confidence Filter ──────────────────────── -->
+    <div class="conf-filter" v-if="totalCount > 0">
+      <span class="filter-label">质量</span>
+      <div class="filter-group">
         <button
           v-for="level in (['all', 'high', 'mid', 'low'] as const)"
           :key="level"
-          :class="['filter-chip', `chip-${level}`, { active: subtitleStore.confidenceFilter === level }]"
+          :class="['filter-tab', `tab-${level}`, { active: subtitleStore.confidenceFilter === level }]"
           @click="subtitleStore.setConfidenceFilter(level)"
         >
-          <span class="chip-dot"/>
-          <span class="chip-text">
+          <span class="tab-dot"/>
+          <span class="tab-label">
             {{ level === 'all' ? '全部' : level === 'high' ? '高' : level === 'mid' ? '中' : '低' }}
           </span>
-          <span class="chip-count">
-            {{ level === 'all' ? subtitleStore.confidenceStats.total
+          <span class="tab-count">
+            {{ level === 'all' ? totalCount
               : level === 'high' ? subtitleStore.confidenceStats.high
               : level === 'mid' ? subtitleStore.confidenceStats.mid
               : subtitleStore.confidenceStats.low }}
@@ -177,21 +188,22 @@ function parseTime(timeStr: string): number {
       </div>
     </div>
 
-    <!-- Subtitle List -->
-    <div class="subtitle-list">
-      <!-- Group by time for skeleton -->
+    <!-- ── Subtitle List ──────────────────────────── -->
+    <div class="subtitle-list" role="list">
+      <!-- Skeleton -->
       <template v-if="subtitleStore.isExtracting">
-        <div v-for="i in 5" :key="i" class="subtitle-skeleton">
+        <div v-for="i in 5" :key="i" class="skeleton-card">
           <div class="skeleton-header">
             <div class="sk sk-index"/>
             <div class="sk sk-time"/>
             <div class="sk sk-badge"/>
           </div>
           <div class="sk sk-text"/>
-          <div class="sk sk-text sk-text-sm"/>
+          <div class="sk sk-text sk-short"/>
         </div>
       </template>
 
+      <!-- Cards -->
       <template v-else>
         <div
           v-for="(sub, idx) in subtitleStore.filteredSubtitles"
@@ -200,40 +212,41 @@ function parseTime(timeStr: string): number {
             'is-selected': subtitleStore.selectedId === sub.id,
             'is-edited': sub.edited
           }]"
+          role="listitem"
           @click="handleSubtitleClick(sub.id)"
           @dblclick="startEdit(sub.id)"
           @mouseenter="hoveredId = sub.id"
           @mouseleave="hoveredId = null"
-          :style="{ animationDelay: `${Math.min(idx * 30, 300)}ms` }"
+          :style="{ animationDelay: `${Math.min(idx * 25, 300)}ms` }"
         >
-          <!-- Card header row -->
+          <!-- Header row -->
           <div class="card-header">
-            <div class="card-left">
+            <div class="card-meta">
               <span class="card-index">{{ sub.index }}</span>
-              <div class="card-times">
-                <span class="time-start">{{ formatTimeShort(sub.startTime) }}</span>
+              <span class="card-time">
+                {{ formatTimeShort(sub.startTime) }}
                 <svg class="time-arrow" viewBox="0 0 12 6" fill="none">
                   <path d="M1 3h8M6 1l3 2-3 2" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span class="time-end">{{ formatTimeShort(sub.endTime) }}</span>
-              </div>
+                {{ formatTimeShort(sub.endTime) }}
+              </span>
             </div>
-            <div class="card-right">
-              <!-- Confidence pill -->
+            <div class="card-badges">
               <span :class="['conf-pill', `conf-${getConfidenceLevel(sub.confidence)}`]">
                 {{ Math.round(sub.confidence * 100) }}%
               </span>
-              <!-- Frame range -->
-              <span class="frame-range">#{{ sub.startFrame }}</span>
+              <span class="frame-tag">#{{ sub.startFrame }}</span>
             </div>
           </div>
 
-          <!-- Subtitle text -->
-          <p class="card-text" :class="{ 'text-italic': sub.edited }">{{ sub.text }}</p>
+          <!-- Text -->
+          <p class="card-text" :class="{ 'is-edited': sub.edited }">
+            {{ sub.text }}
+          </p>
 
-          <!-- Thumbnail preview on hover -->
-          <transition name="thumb-fade">
-            <div v-if="hoveredId === sub.id && sub.thumbnailUrls?.length" class="thumbnail-strip">
+          <!-- Thumbnail hover -->
+          <Transition name="thumb">
+            <div v-if="hoveredId === sub.id && sub.thumbnailUrls?.length" class="thumb-strip">
               <img
                 v-for="(url, ti) in sub.thumbnailUrls.slice(0, 5)"
                 :key="ti"
@@ -242,17 +255,17 @@ function parseTime(timeStr: string): number {
                 alt=""
               />
             </div>
-          </transition>
+          </Transition>
 
           <!-- Edit form -->
-          <transition name="edit-slide">
+          <Transition name="edit">
             <div v-if="editingId === sub.id" class="edit-form" @click.stop>
-              <div class="edit-time-row">
-                <input v-model="editStartTime" type="text" class="edit-input edit-time" placeholder="00:00:00,000"/>
-                <svg class="edit-arrow" viewBox="0 0 12 6" fill="none">
+              <div class="edit-time">
+                <input v-model="editStartTime" type="text" class="time-input" placeholder="00:00:00,000"/>
+                <svg class="time-arrow" viewBox="0 0 12 6" fill="none">
                   <path d="M1 3h8M6 1l3 2-3 2" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <input v-model="editEndTime" type="text" class="edit-input edit-time" placeholder="00:00:00,000"/>
+                <input v-model="editEndTime" type="text" class="time-input" placeholder="00:00:00,000"/>
               </div>
               <textarea
                 v-model="editText"
@@ -261,78 +274,79 @@ function parseTime(timeStr: string): number {
                 @keydown.esc="cancelEdit"
                 @keydown.ctrl.enter="saveEdit"
               />
-              <div class="edit-actions">
+              <div class="edit-footer">
                 <span class="edit-hint">Ctrl+Enter 保存 · Esc 取消</span>
-                <div class="edit-btns">
+                <div class="edit-actions">
                   <button class="btn btn-ghost" @click="cancelEdit">取消</button>
                   <button class="btn btn-primary" @click="saveEdit">保存</button>
                 </div>
               </div>
             </div>
-          </transition>
+          </Transition>
 
-          <!-- Selected indicator bar -->
+          <!-- Selected indicator -->
           <div class="selected-bar"/>
         </div>
       </template>
 
-      <!-- Empty State -->
-      <transition name="fade">
-        <div v-if="!subtitleStore.isExtracting && subtitleStore.filteredSubtitles.length === 0" class="empty-state">
-          <div class="empty-illustration">
-            <svg viewBox="0 0 80 60" fill="none" class="empty-svg">
-              <rect x="10" y="10" width="60" height="8" rx="4" fill="currentColor" opacity="0.15"/>
-              <rect x="10" y="24" width="40" height="6" rx="3" fill="currentColor" opacity="0.1"/>
-              <rect x="10" y="36" width="50" height="6" rx="3" fill="currentColor" opacity="0.1"/>
-              <rect x="10" y="48" width="30" height="6" rx="3" fill="currentColor" opacity="0.08"/>
-              <circle cx="58" cy="48" r="10" fill="currentColor" opacity="0.06"/>
-              <path d="M55 48l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-            </svg>
-          </div>
-          <p class="empty-title">{{ subtitleStore.searchQuery ? '没有找到匹配的字幕' : '暂无字幕数据' }}</p>
-          <p class="empty-hint">{{ subtitleStore.searchQuery ? '尝试调整搜索关键词' : '导入视频并开始提取字幕' }}</p>
+      <!-- Empty state -->
+      <Transition name="fade">
+        <div v-if="!subtitleStore.isExtracting && filteredCount === 0" class="empty-state">
+          <svg viewBox="0 0 80 60" fill="none" class="empty-svg">
+            <rect x="10" y="10" width="60" height="8" rx="4" fill="currentColor" opacity="0.12"/>
+            <rect x="10" y="24" width="40" height="6" rx="3" fill="currentColor" opacity="0.08"/>
+            <rect x="10" y="36" width="50" height="6" rx="3" fill="currentColor" opacity="0.06"/>
+            <rect x="10" y="48" width="30" height="6" rx="3" fill="currentColor" opacity="0.04"/>
+            <circle cx="60" cy="44" r="12" fill="currentColor" opacity="0.05"/>
+            <path d="M56 44h8M60 40v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+          </svg>
+          <p class="empty-title">
+            {{ subtitleStore.searchQuery ? '没有找到匹配的字幕' : '暂无字幕数据' }}
+          </p>
+          <p class="empty-hint">
+            {{ subtitleStore.searchQuery ? '尝试调整搜索关键词' : '导入视频并开始提取字幕' }}
+          </p>
         </div>
-      </transition>
+      </Transition>
     </div>
 
-    <!-- Footer -->
-    <div class="panel-footer">
-      <!-- Low-confidence batch action bar -->
-      <transition name="slide-down">
-        <div v-if="subtitleStore.confidenceFilter === 'low'" class="batch-action-bar">
-          <div class="batch-info">
+    <!-- ── Footer ─────────────────────────────────── -->
+    <footer class="panel-footer">
+      <!-- Batch action -->
+      <Transition name="slide">
+        <div v-if="subtitleStore.confidenceFilter === 'low'" class="batch-bar">
+          <span class="batch-info">
             <svg viewBox="0 0 16 16" fill="none" class="batch-icon">
-              <path d="M8 3v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 3v5l3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/>
             </svg>
-            <span>共有 <strong>{{ subtitleStore.confidenceStats.low }}</strong> 条低置信度字幕待检查</span>
-          </div>
+            <strong>{{ lowConfCount }}</strong> 条低置信度待检查
+          </span>
           <div class="batch-actions">
             <button
-              class="batch-btn batch-btn--danger"
+              class="btn btn-danger"
               @click="subtitleStore.batchDeleteLowConfidence()"
-              title="删除全部低置信度字幕"
             >
-              <svg viewBox="0 0 16 16" fill="none" class="batch-btn-icon">
-                <path d="M3 5h10M6 5V3h4v2M5 5v7h6V5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              删除全部低置信度
+              删除全部
             </button>
             <button
-              class="batch-btn batch-btn--ghost"
+              class="btn btn-ghost"
               @click="subtitleStore.setConfidenceFilter('all')"
-              title="取消筛选"
             >
-              清除筛选
+              清除
             </button>
           </div>
         </div>
-      </transition>
+      </Transition>
 
-      <div class="footer-top">
-        <!-- Export format toggles -->
-        <div class="format-toggles">
-          <label class="fmt-toggle" v-for="key in exportFormatKeys" :key="key">
+      <!-- Format toggles + delete -->
+      <div class="footer-row">
+        <div class="format-group">
+          <label
+            v-for="key in exportFormatKeys"
+            :key="key"
+            class="fmt-toggle"
+          >
             <input
               type="checkbox"
               :checked="subtitleStore.exportFormats[key]"
@@ -341,7 +355,6 @@ function parseTime(timeStr: string): number {
             <span class="fmt-label">{{ key.toUpperCase() }}</span>
           </label>
         </div>
-        <!-- Delete selected -->
         <button
           class="delete-btn"
           :disabled="!subtitleStore.selectedId"
@@ -349,33 +362,33 @@ function parseTime(timeStr: string): number {
           title="删除选中字幕"
         >
           <svg viewBox="0 0 20 20" fill="none" class="del-icon">
-            <path d="M4 6h12M8 6V4h4v2M6 6v9h8V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 6h12M8 6V4h4v2M5 6v9h10V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span>删除</span>
         </button>
       </div>
-    </div>
+    </footer>
   </aside>
 </template>
 
 <style lang="scss" scoped>
 .subtitle-panel {
   width: $subtitle-panel-width;
-  background: $bg-surface;
-  border-left: 1px solid $border;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-// ── Header ─────────────────────────────────────────────────
+// ── Header ──────────────────────────────────────────────────
 .panel-header {
-  padding: $space-4 $space-4 $space-3;
-  border-bottom: 1px solid $border;
+  padding: $space-4;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  animation: fade-up 0.3s ease-out both;
+  @include entrance;
 }
 
 .header-left {
@@ -385,41 +398,48 @@ function parseTime(timeStr: string): number {
 }
 
 .panel-title {
-  font-size: $text-base;
+  font-size: $text-xs;
   font-weight: 700;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
-.subtitle-badge {
-  font-size: $text-xs;
+.count-badge {
+  font-size: 11px;
   font-weight: 600;
-  background: rgba($primary, 0.12);
-  color: $primary;
+  background: rgba($primary, 0.1);
+  color: var(--primary);
   padding: 2px 8px;
   border-radius: $radius-full;
   border: 1px solid rgba($primary, 0.2);
 }
 
-.conf-alert-badge {
-  font-size: 10px;
+.alert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
   font-weight: 600;
-  background: rgba($warning, 0.12);
+  background: rgba($warning, 0.1);
   color: $warning;
   padding: 2px 8px;
   border-radius: $radius-full;
-  border: 1px solid rgba($warning, 0.25);
+  border: 1px solid rgba($warning, 0.2);
   cursor: pointer;
-  transition: all $transition-fast;
-  animation: pulse-warn 2s ease-in-out infinite;
+  @include pressable;
 
   &:hover {
-    background: rgba($warning, 0.2);
+    background: rgba($warning, 0.15);
   }
-}
 
-@keyframes pulse-warn {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  &.active {
+    background: rgba($warning, 0.2);
+    border-color: $warning;
+  }
+
+  .alert-icon {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .header-actions {
@@ -427,46 +447,45 @@ function parseTime(timeStr: string): number {
   gap: $space-1;
 }
 
-.hdr-btn {
-  width: 30px;
-  height: 30px;
+.icon-btn {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $radius-md;
-  color: $text-secondary;
-  transition: all $transition-fast;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  @include pressable;
 
   &:hover:not(:disabled) {
-    background: $bg-overlay;
-    color: $text-primary;
+    background: var(--bg-overlay);
+    color: var(--text-primary);
   }
 
   &:disabled {
-    opacity: 0.25;
-    cursor: not-allowed;
+    opacity: 0.3;
   }
 
-  .hdr-icon {
+  .icon-svg {
     width: 16px;
     height: 16px;
   }
 }
 
-// ── Search ─────────────────────────────────────────────────
+// ── Search ──────────────────────────────────────────────────
 .search-bar {
   padding: $space-3 $space-4;
   display: flex;
   align-items: center;
   gap: $space-2;
-  border-bottom: 1px solid $border;
-  animation: fade-up 0.3s 0.05s ease-out both;
+  border-bottom: 1px solid var(--border);
+  @include entrance(50ms);
 }
 
 .search-icon {
   width: 16px;
   height: 16px;
-  color: $text-muted;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -474,46 +493,48 @@ function parseTime(timeStr: string): number {
   flex: 1;
   background: transparent;
   border: none;
-  font-size: $text-sm;
-  color: $text-primary;
-  font-family: $font-text;
+  font-size: $text-xs;
+  color: var(--text-primary);
 
-  &::placeholder { color: $text-muted; }
-  &:focus { outline: none; }
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .search-count {
-  font-size: 10px;
-  color: $text-muted;
-  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
-// ── Confidence Filter Bar ────────────────────────────────────
-.conf-filter-bar {
+// ── Confidence Filter ───────────────────────────────────────
+.conf-filter {
   display: flex;
   align-items: center;
   gap: $space-2;
   padding: $space-2 $space-4;
-  background: $bg-overlay;
-  border-bottom: 1px solid $border;
-  animation: fade-up 0.2s ease-out both;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  @include entrance(100ms);
 }
 
 .filter-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: $text-muted;
-  white-space: nowrap;
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
-.filter-chips {
+.filter-group {
   display: flex;
   gap: $space-1;
 }
 
-.filter-chip {
+.filter-tab {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -523,62 +544,96 @@ function parseTime(timeStr: string): number {
   font-weight: 600;
   border: 1.5px solid transparent;
   cursor: pointer;
-  transition: all $transition-fast;
+  @include pressable;
 
-  &.chip-all {
-    color: $text-secondary;
-    background: $bg-elevated;
-    border-color: $border;
-    &:hover { border-color: $border-light; }
-    &.active { border-color: $text-secondary; background: $bg-overlay; }
+  &.tab-all {
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    border-color: var(--border);
+
+    &:hover {
+      border-color: var(--border-light);
+    }
+
+    &.active {
+      color: var(--text-primary);
+      background: var(--bg-overlay);
+      border-color: var(--text-muted);
+    }
   }
 
-  &.chip-high {
-    color: $success;
-    background: rgba($success, 0.08);
-    border-color: rgba($success, 0.2);
-    &:hover { background: rgba($success, 0.14); }
-    &.active { background: rgba($success, 0.18); border-color: $success; box-shadow: 0 0 0 1px rgba($success, 0.2); }
+  &.tab-high {
+    color: $conf-high;
+    background: rgba($conf-high, 0.08);
+    border-color: rgba($conf-high, 0.2);
+
+    &:hover {
+      background: rgba($conf-high, 0.14);
+    }
+
+    &.active {
+      background: rgba($conf-high, 0.18);
+      border-color: $conf-high;
+      box-shadow: 0 0 0 1px rgba($conf-high, 0.2);
+    }
   }
 
-  &.chip-mid {
-    color: $warning;
-    background: rgba($warning, 0.08);
-    border-color: rgba($warning, 0.2);
-    &:hover { background: rgba($warning, 0.14); }
-    &.active { background: rgba($warning, 0.18); border-color: $warning; box-shadow: 0 0 0 1px rgba($warning, 0.2); }
+  &.tab-mid {
+    color: $conf-mid;
+    background: rgba($conf-mid, 0.08);
+    border-color: rgba($conf-mid, 0.2);
+
+    &:hover {
+      background: rgba($conf-mid, 0.14);
+    }
+
+    &.active {
+      background: rgba($conf-mid, 0.18);
+      border-color: $conf-mid;
+      box-shadow: 0 0 0 1px rgba($conf-mid, 0.2);
+    }
   }
 
-  &.chip-low {
-    color: $error;
-    background: rgba($error, 0.08);
-    border-color: rgba($error, 0.2);
-    &:hover { background: rgba($error, 0.14); }
-    &.active { background: rgba($error, 0.18); border-color: $error; box-shadow: 0 0 0 1px rgba($error, 0.2); }
+  &.tab-low {
+    color: $conf-low;
+    background: rgba($conf-low, 0.08);
+    border-color: rgba($conf-low, 0.2);
+
+    &:hover {
+      background: rgba($conf-low, 0.14);
+    }
+
+    &.active {
+      background: rgba($conf-low, 0.18);
+      border-color: $conf-low;
+      box-shadow: 0 0 0 1px rgba($conf-low, 0.2);
+    }
   }
 
-  .chip-dot {
-    width: 6px;
-    height: 6px;
+  .tab-dot {
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background: currentColor;
-    opacity: 0.7;
+    opacity: 0.6;
   }
 
-  .chip-text { line-height: 1; }
+  .tab-label {
+    line-height: 1;
+  }
 
-  .chip-count {
-    font-family: $font-display;
+  .tab-count {
+    font-family: $font-mono;
     font-size: 10px;
-    opacity: 0.75;
+    opacity: 0.7;
   }
 }
 
-// ── Subtitle List ────────────────────────────────────────────
+// ── Subtitle List ───────────────────────────────────────────
 .subtitle-list {
   flex: 1;
   overflow-y: auto;
-  padding: $space-3 $space-3;
+  padding: $space-3;
   display: flex;
   flex-direction: column;
   gap: $space-2;
@@ -589,25 +644,23 @@ function parseTime(timeStr: string): number {
 .subtitle-card {
   position: relative;
   padding: $space-3;
-  border-radius: $radius-lg;
-  border: 1.5px solid $border;
-  background: $bg-elevated;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
   cursor: pointer;
-  transition: all $transition-base;
   overflow: hidden;
-  animation: card-enter 0.35s ease-out both;
+  animation: card-in $duration-normal $ease-out-expo both;
+  @include pressable;
 
   &:hover {
-    border-color: $border-light;
-    background: lighten($bg-elevated, 1%);
-    transform: translateY(-1px);
-    box-shadow: $shadow-md;
+    border-color: var(--border-light);
+    box-shadow: $shadow-sm;
   }
 
   &.is-selected {
-    border-color: $primary;
-    background: rgba($primary, 0.06);
-    box-shadow: 0 0 0 1px rgba($primary, 0.15), $shadow-glow-primary;
+    border-color: var(--primary);
+    background: rgba($primary, 0.05);
+    box-shadow: $glow-md;
 
     .selected-bar {
       opacity: 1;
@@ -616,24 +669,22 @@ function parseTime(timeStr: string): number {
 
   &.is-edited .card-text {
     font-style: italic;
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
-  // Left colored bar for selected
   .selected-bar {
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
     width: 3px;
-    background: linear-gradient(180deg, $primary, $accent);
-    border-radius: $radius-sm 0 0 $radius-sm;
+    background: linear-gradient(180deg, var(--primary), $accent);
     opacity: 0;
-    transition: opacity $transition-fast;
+    transition: opacity $duration-fast $ease-out-expo;
   }
 }
 
-// ── Card Header ──────────────────────────────────────────────
+// ── Card Header ─────────────────────────────────────────────
 .card-header {
   display: flex;
   align-items: center;
@@ -641,181 +692,178 @@ function parseTime(timeStr: string): number {
   margin-bottom: $space-2;
 }
 
-.card-left {
+.card-meta {
   display: flex;
   align-items: center;
   gap: $space-2;
 }
 
 .card-index {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $bg-overlay;
-  border-radius: $radius-sm;
-  font-family: $font-display;
-  font-size: $text-xs;
+  background: var(--bg-overlay);
+  border-radius: var(--radius-sm);
+  font-family: $font-mono;
+  font-size: 10px;
   font-weight: 700;
-  color: $text-secondary;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.card-times {
+.card-time {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-family: $font-display;
-  font-size: $text-xs;
-  color: $text-muted;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: var(--text-muted);
 
-  .time-start { color: $text-secondary; }
   .time-arrow {
     width: 12px;
     height: 12px;
-    color: $text-muted;
-    opacity: 0.5;
+    opacity: 0.4;
   }
-  .time-end { color: $text-muted; }
 }
 
-.card-right {
+.card-badges {
   display: flex;
   align-items: center;
   gap: $space-2;
 }
 
-// ── Confidence Pill ────────────────────────────────────────────
+// ── Confidence Pill ─────────────────────────────────────────
 .conf-pill {
-  font-family: $font-display;
+  font-family: $font-mono;
   font-size: 10px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: $radius-full;
   letter-spacing: 0.02em;
 
   &.conf-high {
-    background: rgba($success, 0.12);
-    color: $success;
-    border: 1px solid rgba($success, 0.25);
+    background: rgba($conf-high, 0.12);
+    color: $conf-high;
+    border: 1px solid rgba($conf-high, 0.25);
   }
 
   &.conf-mid {
-    background: rgba($warning, 0.12);
-    color: $warning;
-    border: 1px solid rgba($warning, 0.25);
+    background: rgba($conf-mid, 0.12);
+    color: $conf-mid;
+    border: 1px solid rgba($conf-mid, 0.25);
   }
 
   &.conf-low {
-    background: rgba($error, 0.12);
-    color: $error;
-    border: 1px solid rgba($error, 0.25);
+    background: rgba($conf-low, 0.12);
+    color: $conf-low;
+    border: 1px solid rgba($conf-low, 0.25);
   }
 }
 
-.frame-range {
-  font-family: $font-display;
+.frame-tag {
+  font-family: $font-mono;
   font-size: 10px;
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
-// ── Card Text ────────────────────────────────────────────────
+// ── Card Text ───────────────────────────────────────────────
 .card-text {
-  font-size: $text-sm;
-  color: $text-primary;
-  line-height: 1.5;
+  font-size: $text-xs;
+  color: var(--text-primary);
+  line-height: $leading-normal;
   margin: 0;
-  word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
+
+  &.is-edited {
+    font-style: italic;
+    opacity: 0.85;
+  }
 }
 
 // ── Thumbnail Strip ──────────────────────────────────────────
-.thumbnail-strip {
+.thumb-strip {
   display: flex;
   gap: 4px;
   margin-top: $space-2;
   padding-top: $space-2;
-  border-top: 1px solid $border;
+  border-top: 1px solid var(--border);
 }
 
 .thumb-img {
-  width: 48px;
-  height: 28px;
+  width: 44px;
+  height: 26px;
   object-fit: cover;
-  border-radius: $radius-sm;
-  border: 1px solid $border;
-  opacity: 0.8;
-  transition: opacity $transition-fast;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  opacity: 0.75;
+  transition: opacity $duration-fast $ease-out-expo;
 
-  &:hover { opacity: 1; }
+  &:hover {
+    opacity: 1;
+  }
 }
 
-// ── Edit Form ────────────────────────────────────────────────
+// ── Edit Form ───────────────────────────────────────────────
 .edit-form {
   margin-top: $space-3;
   padding-top: $space-3;
-  border-top: 1px solid $border;
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: $space-2;
 }
 
-.edit-time-row {
+.edit-time {
   display: flex;
   align-items: center;
   gap: $space-2;
 }
 
-.edit-arrow {
-  width: 12px;
-  height: 12px;
-  color: $text-muted;
-  flex-shrink: 0;
-}
-
-.edit-input {
+.time-input {
   flex: 1;
-  background: $bg-base;
-  border: 1px solid $border;
-  border-radius: $radius-md;
-  padding: $space-2 $space-3;
-  font-family: $font-display;
-  font-size: $text-xs;
-  color: $text-primary;
-  transition: border-color $transition-fast;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: $space-2;
+  font-family: $font-mono;
+  font-size: 11px;
+  color: var(--text-primary);
+  transition: border-color $duration-fast $ease-out-expo;
 
   &:focus {
     outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 2px rgba($primary, 0.1);
+    border-color: var(--primary);
+    box-shadow: $glow-sm;
   }
 }
 
 .edit-textarea {
   width: 100%;
-  background: $bg-base;
-  border: 1px solid $border;
-  border-radius: $radius-md;
-  padding: $space-2 $space-3;
-  font-size: $text-sm;
-  color: $text-primary;
-  font-family: $font-text;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: $space-2;
+  font-size: $text-xs;
+  color: var(--text-primary);
+  font-family: inherit;
   resize: none;
-  line-height: 1.5;
-  transition: border-color $transition-fast;
+  line-height: $leading-normal;
+  transition: border-color $duration-fast $ease-out-expo;
 
   &:focus {
     outline: none;
-    border-color: $primary;
-    box-shadow: 0 0 0 2px rgba($primary, 0.1);
+    border-color: var(--primary);
+    box-shadow: $glow-sm;
   }
 }
 
-.edit-actions {
+.edit-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -823,51 +871,38 @@ function parseTime(timeStr: string): number {
 
 .edit-hint {
   font-size: 10px;
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
-.edit-btns {
+.edit-actions {
   display: flex;
   gap: $space-2;
 }
 
 // ── Buttons ─────────────────────────────────────────────────
 .btn {
+  @include btn-base;
   padding: $space-1 $space-3;
-  border-radius: $radius-md;
-  font-size: $text-sm;
-  font-weight: 600;
-  transition: all $transition-fast;
-  cursor: pointer;
-  border: none;
+}
 
-  &-ghost {
-    background: $bg-overlay;
-    color: $text-secondary;
+.btn-ghost {
+  @include btn-ghost;
+}
 
-    &:hover {
-      background: $border;
-      color: $text-primary;
-    }
-  }
+.btn-primary {
+  @include btn-primary;
+}
 
-  &-primary {
-    background: $primary;
-    color: #fff;
-
-    &:hover {
-      background: lighten($primary, 5%);
-      box-shadow: 0 2px 8px rgba($primary, 0.3);
-    }
-  }
+.btn-danger {
+  @include btn-danger;
 }
 
 // ── Skeleton ─────────────────────────────────────────────────
-.subtitle-skeleton {
+.skeleton-card {
   padding: $space-3;
-  border-radius: $radius-lg;
-  border: 1.5px solid $border;
-  background: $bg-elevated;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 
   .skeleton-header {
@@ -877,19 +912,18 @@ function parseTime(timeStr: string): number {
   }
 
   .sk {
-    background: $bg-overlay;
-    border-radius: $radius-sm;
-    height: 12px;
+    background: var(--bg-overlay);
+    border-radius: var(--radius-sm);
 
-    &-index { width: 24px; height: 24px; border-radius: $radius-sm; flex-shrink: 0; }
-    &-time { width: 80px; }
-    &-badge { width: 36px; height: 16px; border-radius: $radius-full; margin-left: auto; }
-    &-text { width: 90%; margin-bottom: 6px; }
-    &-text-sm { width: 60%; }
+    &-index { width: 22px; height: 22px; flex-shrink: 0; }
+    &-time { width: 72px; height: 12px; }
+    &-badge { width: 32px; height: 16px; border-radius: $radius-full; margin-left: auto; }
+    &-text { width: 90%; height: 12px; margin-bottom: 6px; }
+    &-short { width: 55%; }
   }
 }
 
-// ── Empty State ──────────────────────────────────────────────
+// ── Empty State ─────────────────────────────────────────────
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -899,47 +933,37 @@ function parseTime(timeStr: string): number {
   text-align: center;
 }
 
-.empty-illustration {
-  margin-bottom: $space-4;
-  opacity: 0.4;
-}
-
 .empty-svg {
   width: 80px;
   height: 60px;
-  color: $text-muted;
+  color: var(--text-muted);
+  margin-bottom: $space-4;
+  opacity: 0.5;
 }
 
 .empty-title {
-  font-size: $text-base;
+  font-size: $text-xs;
   font-weight: 600;
-  color: $text-secondary;
+  color: var(--text-secondary);
   margin-bottom: $space-2;
 }
 
 .empty-hint {
-  font-size: $text-sm;
-  color: $text-muted;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-// ── Footer ───────────────────────────────────────────────────
+// ── Footer ─────────────────────────────────────────────────
 .panel-footer {
   padding: $space-3 $space-4;
-  border-top: 1px solid $border;
-  animation: fade-up 0.3s 0.1s ease-out both;
+  border-top: 1px solid var(--border);
+  @include entrance(100ms);
   display: flex;
   flex-direction: column;
   gap: $space-2;
 }
 
-.footer-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-// ── Batch Action Bar ─────────────────────────────────────────
-.batch-action-bar {
+.batch-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -947,17 +971,20 @@ function parseTime(timeStr: string): number {
   padding: $space-2 $space-3;
   background: rgba($warning, 0.06);
   border: 1px solid rgba($warning, 0.2);
-  border-radius: $radius-md;
+  border-radius: var(--radius-md);
 }
 
 .batch-info {
   display: flex;
   align-items: center;
   gap: $space-2;
-  font-size: $text-xs;
-  color: $text-secondary;
+  font-size: 12px;
+  color: var(--text-secondary);
 
-  strong { color: $warning; font-weight: 700; }
+  strong {
+    color: $warning;
+    font-weight: 700;
+  }
 
   .batch-icon {
     width: 14px;
@@ -969,50 +996,16 @@ function parseTime(timeStr: string): number {
 
 .batch-actions {
   display: flex;
-  align-items: center;
   gap: $space-2;
 }
 
-.batch-btn {
-  display: inline-flex;
+.footer-row {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: $radius-md;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all $transition-fast;
-  border: none;
-
-  &--danger {
-    background: rgba($error, 0.12);
-    color: $error;
-    border: 1px solid rgba($error, 0.25);
-
-    &:hover {
-      background: rgba($error, 0.2);
-      border-color: rgba($error, 0.4);
-    }
-  }
-
-  &--ghost {
-    background: transparent;
-    color: $text-muted;
-
-    &:hover {
-      background: $bg-overlay;
-      color: $text-secondary;
-    }
-  }
-
-  .batch-btn-icon {
-    width: 12px;
-    height: 12px;
-  }
+  justify-content: space-between;
 }
 
-.format-toggles {
+.format-group {
   display: flex;
   gap: $space-3;
 }
@@ -1024,17 +1017,17 @@ function parseTime(timeStr: string): number {
   cursor: pointer;
 
   input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: $primary;
+    width: 13px;
+    height: 13px;
+    accent-color: var(--primary);
     cursor: pointer;
   }
 
   .fmt-label {
-    font-size: $text-xs;
+    font-size: 11px;
     font-weight: 600;
-    color: $text-secondary;
-    font-family: $font-display;
+    color: var(--text-muted);
+    font-family: $font-mono;
     letter-spacing: 0.03em;
   }
 }
@@ -1042,13 +1035,13 @@ function parseTime(timeStr: string): number {
 .delete-btn {
   display: flex;
   align-items: center;
-  gap: $space-1;
+  gap: 5px;
   padding: $space-1 $space-3;
-  border-radius: $radius-md;
-  font-size: $text-xs;
+  border-radius: var(--radius-md);
+  font-size: 12px;
   font-weight: 600;
-  color: $text-secondary;
-  transition: all $transition-fast;
+  color: var(--text-muted);
+  @include pressable;
 
   &:hover:not(:disabled) {
     color: $error;
@@ -1057,7 +1050,6 @@ function parseTime(timeStr: string): number {
 
   &:disabled {
     opacity: 0.3;
-    cursor: not-allowed;
   }
 
   .del-icon {
@@ -1066,35 +1058,61 @@ function parseTime(timeStr: string): number {
   }
 }
 
-// ── Transitions ──────────────────────────────────────────────
-.thumb-fade-enter-active,
-.thumb-fade-leave-active { transition: opacity 0.2s ease; }
-.thumb-fade-enter-from,
-.thumb-fade-leave-to { opacity: 0; }
-
-.edit-slide-enter-active,
-.edit-slide-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
-.edit-slide-enter-from,
-.edit-slide-leave-to { opacity: 0; transform: translateY(-4px); }
-
-.fade-enter-active,
-.fade-leave-active { transition: opacity 0.3s ease; }
-.fade-enter-from,
-.fade-leave-to { opacity: 0; }
-
-// ── Animations ───────────────────────────────────────────────
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+// ── Transitions ─────────────────────────────────────────────
+.thumb-enter-active,
+.thumb-leave-active {
+  transition: opacity $duration-fast $ease-out-expo;
+}
+.thumb-enter-from,
+.thumb-leave-to {
+  opacity: 0;
 }
 
-@keyframes card-enter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+.edit-enter-active,
+.edit-leave-active {
+  transition: opacity $duration-fast $ease-out-expo,
+              transform $duration-fast $ease-out-expo;
+}
+.edit-enter-from,
+.edit-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity $duration-normal $ease-out-expo;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: opacity $duration-normal $ease-out-expo,
+              transform $duration-normal $ease-out-expo;
+}
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+// ── Animations ──────────────────────────────────────────────
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.55; }
 }
 </style>
