@@ -43,3 +43,4 @@ coverage/
 # Spec (auto-generated, do not commit)
 SPEC.md
 OPTIMIZE_PLAN.md
+PADDLEOCR_SETUP.md
