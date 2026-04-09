@@ -1,6 +1,17 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+/// RAII guard: automatically removes temp file when dropped
+struct TempFileGuard(PathBuf);
+
+impl Drop for TempFileGuard {
+    fn drop(&mut self) {
+        if let Err(e) = std::fs::remove_file(&self.0) {
+            tracing::warn!("Failed to remove temp file {:?}: {}", self.0, e);
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoMetadata {
@@ -398,11 +409,12 @@ pub async fn extract_cropped_frame_at_time(
     let uuid = uuid_v4();
     let timestamp_ms = (timestamp_secs * 1000.0) as u64;
     let output_path = std::env::temp_dir().join(format!(
-        "hardsubx_crop_{}_{}.png", 
+        "hardsubx_crop_{}_{}.png",
         timestamp_ms,
         uuid
     ));
-    
+    let _guard = TempFileGuard(output_path.clone()); // Auto-cleanup on function exit
+
     let output = Command::new("ffmpeg")
         .args([
             "-ss", &format!("{}", timestamp_secs),
@@ -425,10 +437,7 @@ pub async fn extract_cropped_frame_at_time(
         .map_err(|e| format!("Failed to read extracted frame: {}", e))?;
     
     let base64_str = base64::engine::general_purpose::STANDARD.encode(&img_data);
-    
-    // Cleanup
-    let _ = std::fs::remove_file(&output_path);
-    
+
     Ok(format!("data:image/png;base64,{}", base64_str))
 }
 
@@ -498,11 +507,12 @@ fn extract_frame_at_time_impl(
     let uuid = uuid_v4();
     let timestamp_ms = (timestamp_secs * 1000.0) as u64;
     let output_path = std::env::temp_dir().join(format!(
-        "hardsubx_frame_{}_{}.png", 
+        "hardsubx_frame_{}_{}.png",
         timestamp_ms,
         uuid
     ));
-    
+    let _guard = TempFileGuard(output_path.clone()); // Auto-cleanup on function exit
+
     // Build ffmpeg arguments
     let mut args = vec![
         "-ss".to_string(),
@@ -537,10 +547,7 @@ fn extract_frame_at_time_impl(
         .map_err(|e| format!("Failed to read extracted frame: {}", e))?;
     
     let base64_str = base64::engine::general_purpose::STANDARD.encode(&img_data);
-    
-    // Clean up temp file
-    let _ = std::fs::remove_file(&output_path);
-    
+
     Ok(format!("data:image/png;base64,{}", base64_str))
 }
 
