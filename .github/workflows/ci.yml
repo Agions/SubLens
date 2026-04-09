@@ -69,6 +69,26 @@ jobs:
           restore-keys: |
             pnpm-${{ runner.os }}-
 
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libglib2.0-dev \
+            librsvg2-dev \
+            libffmpegthumbnailer-dev \
+            libjpeg-dev \
+            libvips-dev \
+            ffmpeg
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

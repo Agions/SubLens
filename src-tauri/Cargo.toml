@@ -24,7 +24,7 @@ path = "src/main_cli.rs"
 tauri-build = { version = "2.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.0", features = ["protocol-asset"] }
+tauri = { version = "2.0", features = [] }
 tauri-plugin-shell = "2.0"
 tauri-plugin-dialog = "2.0"
 serde = { version = "1.0", features = ["derive"] }
