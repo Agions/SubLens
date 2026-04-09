@@ -35,7 +35,7 @@ thiserror = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clap = { version = "4.0", features = ["derive"] }
-base64 = { version = "0.24", default-features = false, features = ["std"] }
+base64 = { version = "0.22", default-features = false, features = ["std"] }
 chrono = "0.4"
 uuid = { version = "1.0", features = ["v4"] }
 image = "0.25"  # For image processing in OCR
