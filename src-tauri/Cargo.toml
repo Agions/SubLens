@@ -1,6 +1,6 @@
 [package]
 name = "hardsubx"
-version = "3.2.0"
+version = "3.3.0"
 description = "Professional Video OCR Subtitle Extraction Tool"
 authors = ["Agions"]
 license = "MIT"

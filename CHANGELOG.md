@@ -2,6 +2,31 @@
 
 All notable changes to HardSubX are documented here.
 
+## [3.3.0] - 2026-04-10
+
+### 🎨 Design System v2.0
+
+- **UI 设计系统全面重构**：OKLCH 色彩空间、专业字体（DM Sans/Geist）、标准化动效曲线
+- **组件微交互对齐**：Button hover、Modal 背透、StatusBar 脉冲、SubtitleList 骨架屏
+- **Rust 编译错误修复**：PathBuf trait 推断、dialog trait 导入、duplicate detect_scenes 宏冲突
+
+### ⚡ Performance
+
+- **mergeOCRResults 优化**：ROI selector 性能改进
+- **Temp 文件清理**：RAII guard 自动清理临时帧文件
+
+### 🔧 Code Quality
+
+- **CI 三路并行**：quality / build / rust-test 完全并行，消除 needs 依赖
+- **pnpm 缓存修复**：setup-node 缓存冲突解决
+- **历史失败清理**：删除 8 个历史失败 action runs
+
+### Dependencies
+
+- `base64`: downgrade 0.22（0.24 不存在）
+
+---
+
 ## [Unreleased]
 
 ### Fixed
