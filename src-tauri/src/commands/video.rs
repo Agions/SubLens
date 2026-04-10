@@ -531,7 +531,7 @@ fn extract_frame_at_time_impl(
         args.extend(["-vf".to_string(), filter.to_string()]);
     }
     
-    args.push(output_path.to_string().unwrap());
+    args.push(output_path.to_string_lossy().into_owned());
     
     let output = Command::new("ffmpeg")
         .args(&args)

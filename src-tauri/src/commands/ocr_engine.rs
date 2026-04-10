@@ -1,6 +1,7 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -351,7 +352,6 @@ pub async fn process_paddle_ocr(
     config: OCREngineConfig,
 ) -> Result<OCRProcessResult, String> {
     use std::io::Write;
-    use std::path::PathBuf;
 
     tracing::info!(
         "process_paddle_ocr: {}x{} image, ROI offset=({}, {}) size=({}, {}), engine={}",
@@ -602,9 +602,9 @@ fn find_paddle_ocr_script() -> Result<PathBuf, String> {
             .and_then(|p| p.parent().map(|p| p.to_path_buf()))
             .map(|p| p.join("scripts").join("paddle_ocr.py")),
         // Development path
-        std::path::PathBuf::from("src-tauri/scripts/paddle_ocr.py"),
+        Some(std::path::PathBuf::from("src-tauri/scripts/paddle_ocr.py")),
         // Absolute development path for Agions' machine
-        std::path::PathBuf::from("/root/.openclaw/workspace/HardSubX/src-tauri/scripts/paddle_ocr.py"),
+        Some(std::path::PathBuf::from("/root/.openclaw/workspace/HardSubX/src-tauri/scripts/paddle_ocr.py")),
         // $HOME/... path
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
