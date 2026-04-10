@@ -412,7 +412,7 @@ pub async fn process_paddle_ocr(
     let python = find_python_binary()?;
     let script_path = find_paddle_ocr_script()?;
 
-    tracing::info!("Calling PaddleOCR bridge: {} {}", python, script_path.display());
+    tracing::info!("Calling PaddleOCR bridge: {} {}", python.to_string_lossy(), script_path.to_string_lossy());
 
     // Spawn Python subprocess
     let mut child = std::process::Command::new(&python)
