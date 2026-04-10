@@ -1,7 +1,7 @@
 # HardSubX
 
 <div align="center">
-  <img src="logo.svg" width="120" height="120" alt="HardSubX" />
+  <img src="public/logo.svg" width="120" height="120" alt="HardSubX" />
 </div>
 
 <div align="center">
