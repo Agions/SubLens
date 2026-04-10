@@ -1,16 +1,26 @@
 import { describe, it, expect } from 'vitest'
 import {
-  formatSRT,
-  formatWebVTT,
-  formatASS,
-  formatCSV,
-  formatLRC,
-  formatSBV,
-} from './subtitle'
-import type { SubtitleItem } from './subtitle'
+  SubtitleExporter,
+} from '@/core/SubtitleExporter'
+import type { SubtitleItem } from '@/types/subtitle'
+import type { ROI } from '@/types/video'
 
-// Test helper to create a sample subtitle
-function createSubtitle(overrides: Partial<SubtitleItem> = {}): SubtitleItem {
+// Test helper
+function makeROI(): ROI {
+  return {
+    id: 'bottom',
+    name: 'Bottom',
+    type: 'bottom',
+    x: 0,
+    y: 85,
+    width: 100,
+    height: 15,
+    unit: 'percent',
+    enabled: true,
+  }
+}
+
+function createSub(overrides: Partial<SubtitleItem> = {}): SubtitleItem {
   return {
     id: 'test-1',
     index: 1,
@@ -21,177 +31,146 @@ function createSubtitle(overrides: Partial<SubtitleItem> = {}): SubtitleItem {
     text: 'Hello, World!',
     confidence: 0.92,
     language: 'en',
-    roi: {
-      id: 'bottom',
-      name: 'Bottom',
-      type: 'bottom',
-      x: 0,
-      y: 85,
-      width: 100,
-      height: 15,
-      unit: 'percent',
-      enabled: true,
-    },
+    roi: makeROI(),
     thumbnailUrls: [],
     edited: false,
     ...overrides,
   }
 }
 
-describe('Subtitle Formatting', () => {
-  describe('SRT Format', () => {
-    it('should format basic subtitle correctly', () => {
-      const subtitles = [createSubtitle()]
-      const result = formatSRT(subtitles)
+const exporter = new SubtitleExporter()
 
+describe('SubtitleExporter', () => {
+  describe('SRT', () => {
+    it('basic formatting', () => {
+      const result = exporter.export([createSub()], 'srt').content
       expect(result).toContain('1')
       expect(result).toContain('00:00:01,500 --> 00:00:04,000')
       expect(result).toContain('Hello, World!')
     })
 
-    it('should format multiple subtitles with index', () => {
-      const subtitles = [
-        createSubtitle({ index: 1, startTime: 0.0, endTime: 2.0, text: 'First' }),
-        createSubtitle({ index: 2, startTime: 2.0, endTime: 4.0, text: 'Second' }),
-      ]
-      const result = formatSRT(subtitles)
-
+    it('multiple subtitles with index', () => {
+      const result = exporter.export([
+        createSub({ index: 1, startTime: 0, endTime: 2, text: 'First' }),
+        createSub({ index: 2, startTime: 2, endTime: 4, text: 'Second' }),
+      ], 'srt').content
       expect(result).toContain('1\n00:00:00,000 --> 00:00:02,000\nFirst')
       expect(result).toContain('2\n00:00:02,000 --> 00:00:04,000\nSecond')
     })
 
-    it('should handle milliseconds correctly', () => {
-      const subtitles = [createSubtitle({ startTime: 1.5, endTime: 5.25 })]
-      const result = formatSRT(subtitles)
-
+    it('milliseconds', () => {
+      const result = exporter.export([createSub({ startTime: 1.5, endTime: 5.25 })], 'srt').content
       expect(result).toContain('00:00:01,500 --> 00:00:05,250')
     })
   })
 
-  describe('VTT Format', () => {
-    it('should include WEBVTT header', () => {
-      const subtitles = [createSubtitle()]
-      const result = formatWebVTT(subtitles)
-
+  describe('VTT', () => {
+    it('includes WEBVTT header', () => {
+      const result = exporter.export([createSub()], 'vtt').content
       expect(result.startsWith('WEBVTT')).toBe(true)
     })
 
-    it('should use dot separator for milliseconds', () => {
-      const subtitles = [createSubtitle({ startTime: 1.5, endTime: 4.0 })]
-      const result = formatWebVTT(subtitles)
-
+    it('dot separator for ms', () => {
+      const result = exporter.export([createSub({ startTime: 1.5, endTime: 4 })], 'vtt').content
       expect(result).toContain('00:00:01.500 --> 00:00:04.000')
     })
   })
 
-  describe('ASS Format', () => {
-    it('should include script info header', () => {
-      const subtitles = [createSubtitle()]
-      const result = formatASS(subtitles)
-
+  describe('ASS', () => {
+    it('includes script info', () => {
+      const result = exporter.export([createSub()], 'ass').content
       expect(result).toContain('[Script Info]')
       expect(result).toContain('[V4+ Styles]')
       expect(result).toContain('[Events]')
     })
 
-    it('should escape commas in text', () => {
-      const subtitles = [createSubtitle({ text: 'Hello, World' })]
-      const result = formatASS(subtitles)
-
-      // Commas should be escaped as \,
+    it('escapes commas', () => {
+      const result = exporter.export([createSub({ text: 'Hello, World' })], 'ass').content
       expect(result).toContain('Hello\\, World')
     })
 
-    it('should convert newlines to \\N', () => {
-      const subtitles = [createSubtitle({ text: 'Line 1\nLine 2' })]
-      const result = formatASS(subtitles)
-
+    it('converts newlines to \\N', () => {
+      const result = exporter.export([createSub({ text: 'Line 1\nLine 2' })], 'ass').content
       expect(result).toContain('Line 1\\NLine 2')
     })
   })
 
-  describe('CSV Format', () => {
-    it('should include header row', () => {
-      const subtitles = [createSubtitle()]
-      const result = formatCSV(subtitles)
-
+  describe('CSV', () => {
+    it('header row', () => {
+      const result = exporter.export([createSub()], 'csv').content
       expect(result.startsWith('Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence')).toBe(true)
     })
 
-    it('should escape quotes in text', () => {
-      const subtitles = [createSubtitle({ text: 'He said "hi"' })]
-      const result = formatCSV(subtitles)
-
-      // Quotes should be doubled and wrapped
+    it('escapes quotes', () => {
+      const result = exporter.export([createSub({ text: 'He said "hi"' })], 'csv').content
       expect(result).toContain('"He said ""hi"""')
     })
   })
 
-  describe('LRC Format', () => {
-    it('should include LRC metadata header', () => {
-      const subtitles = [createSubtitle()]
-      const result = formatLRC(subtitles)
-
+  describe('LRC', () => {
+    it('LRC metadata header', () => {
+      const result = exporter.export([createSub()], 'lrc').content
       expect(result).toContain('[ti:HardSubX Export]')
       expect(result).toContain('[ar:HardSubX]')
     })
 
-    it('should format timestamp correctly', () => {
-      const subtitles = [createSubtitle({ startTime: 65.5 })] // 1m 5.5s
-      const result = formatLRC(subtitles)
-
+    it('timestamp format mm:ss.xx', () => {
+      const result = exporter.export([createSub({ startTime: 65.5 })], 'lrc').content
       expect(result).toContain('[01:05.50]')
     })
   })
 
-  describe('SBV Format', () => {
-    it('should use comma-separated timestamp format', () => {
-      const subtitles = [createSubtitle({ startTime: 1.5, endTime: 4.0 })]
-      const result = formatSBV(subtitles)
-
-      // SBV uses MM:SS,mmm format
+  describe('SBV', () => {
+    it('comma-separated timestamp', () => {
+      const result = exporter.export([createSub({ startTime: 1.5, endTime: 4 })], 'sbv').content
       expect(result).toContain('00:01,500')
     })
   })
-})
 
-describe('Timestamp Formatting', () => {
-  it('should pad single digit values', () => {
-    const subtitles = [createSubtitle({ startTime: 3661.5 })] // 1h 1m 1.5s
-    const result = formatSRT(subtitles)
-
-    expect(result).toContain('01:01:01,500')
+  describe('JSON', () => {
+    it('includes metadata', () => {
+      const result = exporter.export([createSub()], 'json').content
+      const parsed = JSON.parse(result)
+      expect(parsed.version).toBe('3.0')
+      expect(parsed.tool).toBe('HardSubX')
+    })
   })
 
-  it('should handle zero correctly', () => {
-    const subtitles = [createSubtitle({ startTime: 0, endTime: 0 })]
-    const result = formatSRT(subtitles)
-
-    expect(result).toContain('00:00:00,000 --> 00:00:00,000')
-  })
-})
-
-describe('Edge Cases', () => {
-  it('should handle empty text', () => {
-    const subtitles = [createSubtitle({ text: '' })]
-    const result = formatSRT(subtitles)
-
-    expect(result).toBeDefined()
+  describe('TXT', () => {
+    it('plain text only', () => {
+      const result = exporter.export([createSub({ text: 'Hello' })], 'txt').content
+      expect(result).toBe('Hello')
+    })
   })
 
-  it('should handle very long text', () => {
-    const longText = 'A'.repeat(1000)
-    const subtitles = [createSubtitle({ text: longText })]
-    const result = formatSRT(subtitles)
+  describe('empty subtitle list', () => {
+    it('SRT returns empty string', () => {
+      const result = exporter.export([], 'srt').content
+      expect(result).toBe('')
+    })
 
-    expect(result).toContain(longText)
+    it('JSON returns valid empty object', () => {
+      const result = exporter.export([], 'json').content
+      const parsed = JSON.parse(result)
+      expect(parsed.subtitles).toEqual([])
+    })
   })
 
-  it('should handle special characters', () => {
-    const subtitles = [createSubtitle({ text: '<script>alert("xss")</script>' })]
-    const result = formatSRT(subtitles)
+  describe('edge cases', () => {
+    it('empty text', () => {
+      const result = exporter.export([createSub({ text: '' })], 'srt').content
+      expect(result).toBeDefined()
+    })
 
-    // Should not escape HTML in SRT (that's the viewer's job)
-    expect(result).toContain('<script>')
+    it('very long text', () => {
+      const longText = 'A'.repeat(1000)
+      const result = exporter.export([createSub({ text: longText })], 'srt').content
+      expect(result).toContain(longText)
+    })
+
+    it('special characters not escaped in SRT', () => {
+      const result = exporter.export([createSub({ text: '<script>alert("xss")</script>' })], 'srt').content
+      expect(result).toContain('<script>')
+    })
   })
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { ExportFormat } from '@/types/subtitle'
+import { type ExportFormat } from '@/core'
 import Modal from '@/components/common/Modal.vue'
 import Button from '@/components/common/Button.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
