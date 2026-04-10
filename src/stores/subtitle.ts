@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, EditableField, EditableValue, ExportFormats } from '@/types/subtitle'
-import { formatSRT, formatWebVTT, formatASS, formatSSA, formatJSON, formatLRC, formatSBV, formatCSV } from '@/types/subtitle'
 import { CONFIDENCE_HIGH, CONFIDENCE_MID } from '@/types/video'
+import { getExporter, type ExportFormat } from '@/core'
 
 export const useSubtitleStore = defineStore('subtitle', () => {
   // State
@@ -183,21 +183,8 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     if (sub) applyFieldEdit(sub, edit.field, edit.newValue)
   }
   
-  // Export dispatch table (avoids switch/case branching)
-  const EXPORTERS: Record<string, () => string> = {
-    srt: () => formatSRT(subtitles.value),
-    vtt: () => formatWebVTT(subtitles.value),
-    ass: () => formatASS(subtitles.value),
-    ssa: () => formatSSA(subtitles.value),
-    json: () => formatJSON(subtitles.value),
-    txt: () => subtitles.value.map(sub => sub.text).join('\n'),
-    lrc: () => formatLRC(subtitles.value),
-    sbv: () => formatSBV(subtitles.value),
-    csv: () => formatCSV(subtitles.value),
-  }
-
-  function exportToFormat(format: keyof typeof EXPORTERS): string {
-    return EXPORTERS[format]?.() ?? ''
+  function exportToFormat(format: ExportFormat): string {
+    return getExporter().export(subtitles.value, format).content
   }
   
   function setConfidenceFilter(filter: 'all' | 'low' | 'mid' | 'high') {
