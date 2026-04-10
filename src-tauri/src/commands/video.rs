@@ -557,7 +557,9 @@ fn uuid_v4() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
-#[tauri::command]
+// NOTE: detect_scenes is intentionally NOT a #[tauri::command] here to avoid
+// duplicate __cmd__detect_scenes macro conflict with scene::detect_scenes.
+// Use scene::detect_scenes via generate_handler![] instead.
 pub async fn detect_scenes(
     path: String,
     threshold: f32,
