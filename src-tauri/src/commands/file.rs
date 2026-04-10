@@ -1,5 +1,5 @@
 use tauri::AppHandle;
-use tauri_plugin_dialog::Dialog;
+use tauri_plugin_dialog::DialogExt;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FileFilter {

@@ -595,7 +595,7 @@ fn find_python_binary() -> Result<PathBuf, String> {
 /// Find the paddle_ocr.py script
 fn find_paddle_ocr_script() -> Result<PathBuf, String> {
     // Check multiple possible locations
-    let candidates = [
+    let candidates: [Option<std::path::PathBuf>; 4] = [
         // Bundled with the app (relative to executable)
         std::env::current_exe()
             .ok()
