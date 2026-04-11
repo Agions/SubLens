@@ -44,6 +44,8 @@ export const DEFAULT_PIPELINE_OPTIONS: PipelineOptions = {
 
 // ─── Levenshtein 距离（带缓存）──────────────────────────────────────
 const _similarityCache = new Map<string, number>()
+// Separate array to reliably track cache insertion order (Map.keys() order not guaranteed by spec)
+const _cacheOrder: string[] = []
 
 export function textSimilarity(a: string, b: string): number {
   if (a === b) return 1
@@ -73,9 +75,15 @@ export function textSimilarity(a: string, b: string): number {
 
   // LRU 缓存（最多 2000 条）
   if (_similarityCache.size >= 2000) {
-    const firstKey = _similarityCache.keys().next().value
-    if (firstKey) _similarityCache.delete(firstKey)
+    // Evict oldest entries until size is back to 1000
+    while (_similarityCache.size > 1000) {
+      const oldest = _cacheOrder.shift()
+      if (oldest) {
+        _similarityCache.delete(oldest)
+      }
+    }
   }
+  _cacheOrder.push(cacheKey)
   _similarityCache.set(cacheKey, sim)
   return sim
 }
@@ -272,5 +280,6 @@ export class SubtitlePipeline {
   /** 清空相似度缓存 */
   clearCache(): void {
     _similarityCache.clear()
+    _cacheOrder.length = 0
   }
 }
