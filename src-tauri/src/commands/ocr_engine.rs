@@ -1,4 +1,5 @@
 use base64::Engine;
+use image::{ImageBuffer, Rgba};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -345,8 +346,6 @@ pub async fn process_paddle_ocr(
     roi_height: Option<u32>,
     config: OCREngineConfig,
 ) -> Result<OCRProcessResult, String> {
-    use std::io::Write;
-
     tracing::info!(
         "process_paddle_ocr: {}x{} image, ROI offset=({}, {}) size=({}, {}), engine={}",
         width, height,
@@ -364,17 +363,15 @@ pub async fn process_paddle_ocr(
 
     let start = Instant::now();
 
-    // Write image data to a temp PNG file
+    // Write image data to a proper PNG file using the image crate
     let temp_dir = std::env::temp_dir();
     let image_path = temp_dir.join(format!("hardsubx_paddle_{}.png", uuid_v4()));
 
-    {
-        let mut file = std::fs::File::create(&image_path)
-            .map_err(|e| format!("Failed to create temp image: {}", e))?;
-        // Write PNG signature + raw pixel data
-        file.write_all(&image_data)
-            .map_err(|e| format!("Failed to write image data: {}", e))?;
-    }
+    // Encode raw RGBA bytes as a proper PNG file
+    let img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, image_data)
+        .ok_or_else(|| "Failed to create image buffer from raw data (check width/height)".to_string())?;
+    img.save(&image_path)
+        .map_err(|e| format!("Failed to save PNG image: {}", e))?;
 
     // Build input JSON for the Python script
     let lang = config.language.get(0).cloned().unwrap_or_else(|| "ch".to_string());
