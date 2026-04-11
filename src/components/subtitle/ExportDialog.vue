@@ -4,6 +4,7 @@ import { type ExportFormat } from '@/core'
 import Modal from '@/components/common/Modal.vue'
 import Button from '@/components/common/Button.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
+import { useFileOperations } from '@/composables/useFileOperations'
 
 defineProps<{
   open?: boolean
@@ -30,6 +31,7 @@ function openDialog() {
 defineExpose({ open: openDialog, close })
 
 const subtitleStore = useSubtitleStore()
+const fileOps = useFileOperations()
 
 const selectedFormats = computed(() => {
   return Object.entries(subtitleStore.exportFormats)
@@ -40,34 +42,6 @@ const selectedFormats = computed(() => {
 const isExporting = ref(false)
 const exportResults = ref<string[]>([])
 
-async function handleExport() {
-  if (selectedFormats.value.length === 0) {
-    alert('请至少选择一种导出格式')
-    return
-  }
-
-  isExporting.value = true
-  exportResults.value = []
-
-  const baseName = 'subtitle_export'
-
-  for (const format of selectedFormats.value) {
-    try {
-      // File write implementation pending Tauri file API
-      subtitleStore.exportToFormat(format as ExportFormat)
-      const ext = format === 'ssa' ? 'ssa' : format === 'sbv' ? 'sbv' : format
-      const fileName = `${baseName}.${ext}`
-
-      
-      exportResults.value.push(`✅ ${format.toUpperCase()}: ${fileName}`)
-    } catch {
-      exportResults.value.push(`❌ ${format.toUpperCase()}: 导出失败`)
-    }
-  }
-
-  isExporting.value = false
-}
-
 const formatDescriptions: Record<string, string> = {
   srt: 'SubRip - 最通用',
   vtt: 'WebVTT - 网页视频',
@@ -77,7 +51,49 @@ const formatDescriptions: Record<string, string> = {
   txt: 'TXT - 纯文本',
   lrc: 'LRC - 歌词格式',
   sbv: 'SBV - YouTube',
-  csv: 'CSV - Excel表格'
+  csv: 'CSV - Excel表格',
+}
+
+async function handleExport() {
+  if (selectedFormats.value.length === 0) {
+    alert('请至少选择一种导出格式')
+    return
+  }
+
+  isExporting.value = true
+  exportResults.value = []
+
+  const baseName = `subtitles_${Date.now()}`
+
+  for (const format of selectedFormats.value) {
+    try {
+      const content = subtitleStore.exportToFormat(format as ExportFormat)
+      if (!content) {
+        exportResults.value.push(`❌ ${format.toUpperCase()}: 生成内容失败`)
+        continue
+      }
+
+      const ext = format
+      const defaultName = `${baseName}.${ext}`
+
+      const filePath = await fileOps.saveFileDialog(`导出 ${format.toUpperCase()}`, defaultName)
+      if (!filePath) {
+        exportResults.value.push(`⏭️  ${format.toUpperCase()}: 已取消`)
+        continue
+      }
+
+      const saved = await fileOps.writeTextFile(filePath, content)
+      if (saved) {
+        exportResults.value.push(`✅ ${format.toUpperCase()}: ${filePath}`)
+      } else {
+        exportResults.value.push(`❌ ${format.toUpperCase()}: 保存失败`)
+      }
+    } catch (e) {
+      exportResults.value.push(`❌ ${format.toUpperCase()}: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
+  isExporting.value = false
 }
 </script>
 

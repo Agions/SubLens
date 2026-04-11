@@ -84,8 +84,12 @@ export function useFileOperations() {
       srt: 'srt',
       vtt: 'vtt',
       ass: 'ass',
+      ssa: 'ssa',
       json: 'json',
-      txt: 'txt'
+      txt: 'txt',
+      lrc: 'lrc',
+      sbv: 'sbv',
+      csv: 'csv',
     }
 
     const ext = extensions[format] || 'txt'

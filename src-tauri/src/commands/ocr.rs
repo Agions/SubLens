@@ -93,15 +93,15 @@ fn save_frame_to_temp_png(frame_data: &[u8], width: u32, height: u32) -> Result<
         .map(|o| o.status.success())
         .unwrap_or(false);
 
-    let _ = std::fs::remove_file(&ppm_path);
-
-    if !convert_ok || !png_guard.path().exists() {
-        // ffmpeg fallback: Tesseract can read PPM directly, so reuse ppm_path
+    if convert_ok && png_guard.path().exists() {
+        // Primary path: ImageMagick converted PPM → PNG, clean up PPM
+        let _ = std::fs::remove_file(&ppm_path);
+        Ok(png_guard)
+    } else {
+        // Fallback path: Tesseract reads PPM directly, keep it (guard manages cleanup)
         let _ = std::fs::remove_file(png_guard.path());
-        return Ok(TempFileGuard::new(ppm_path));
+        Ok(TempFileGuard::new(ppm_path))
     }
-
-    Ok(png_guard)
 }
 
 /// Process an image file with the Tesseract CLI, returning structured OCRResult.

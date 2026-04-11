@@ -16,7 +16,7 @@ export interface BatchJob {
 
 export interface BatchOptions {
   outputDir: string
-  formats: ('srt' | 'vtt' | 'ass' | 'json' | 'txt')[]
+  formats: ('srt' | 'vtt' | 'ass' | 'ssa' | 'json' | 'txt' | 'lrc' | 'sbv' | 'csv')[]
   roiPreset: string
   ocrEngine: OCREngine
   languages: string[]
