@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, inject } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 
@@ -17,6 +17,40 @@ const isDragging = ref(false)
 const isHovering = ref(false)
 const hoverFrame = ref(0)
 const hoverPosition = ref({ x: 0, y: 0 })
+const hoverThumbnail = ref<string | null>(null)
+
+// Video control functions from VideoPreview
+const seekToFrame = inject<(frame: number) => void>('seekToFrame')
+const captureFrame = inject<() => string | null>('captureFrame')
+
+// Debounce thumbnail capture for performance
+let thumbnailTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Seek and capture thumbnail at given frame
+async function captureThumbnailAtFrame(frame: number) {
+  if (!seekToFrame || !captureFrame) return null
+  
+  // Seek to the frame
+  seekToFrame(frame)
+  
+  // Wait for video to actually seek (seeked event)
+  await new Promise<void>(resolve => {
+    const videoEl = document.querySelector('video')
+    if (!videoEl) {
+      resolve()
+      return
+    }
+    const handler = () => {
+      videoEl.removeEventListener('seeked', handler)
+      resolve()
+    }
+    videoEl.addEventListener('seeked', handler)
+    // Timeout fallback
+    setTimeout(resolve, 200)
+  })
+  
+  return captureFrame()
+}
 
 function getFrameFromEvent(e: MouseEvent): number {
   const target = document.querySelector('.timeline-track') as HTMLElement
@@ -56,6 +90,14 @@ function handleTimelineHover(e: MouseEvent) {
   hoverFrame.value = Math.floor(percent * totalFrames.value)
   hoverPosition.value = { x: e.clientX - rect.left, y: e.clientY - rect.top }
   isHovering.value = true
+
+  // Capture thumbnail with debounce for performance
+  if (thumbnailTimeout) clearTimeout(thumbnailTimeout)
+  thumbnailTimeout = setTimeout(async () => {
+    if (seekToFrame && captureFrame) {
+      hoverThumbnail.value = await captureThumbnailAtFrame(hoverFrame.value)
+    }
+  }, 100)
 }
 
 function handleTimelineLeave() {
@@ -223,6 +265,12 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
           transform: 'translateX(-50%)'
         }"
       >
+        <img
+          v-if="hoverThumbnail"
+          :src="hoverThumbnail"
+          class="preview-thumbnail"
+          alt="Frame preview"
+        />
         <span class="preview-time">{{ formatTime(hoverFrame) }}</span>
         <span class="preview-frame">#{{ hoverFrame.toLocaleString() }}</span>
       </div>
@@ -534,6 +582,15 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
   font-family: $font-mono;
   font-size: 9px;
   color: $text-muted;
+}
+
+.preview-thumbnail {
+  width: 160px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: $radius-sm;
+  background: $bg-surface;
+  margin-bottom: 4px;
 }
 
 // ── Animations ───────────────────────────────────────────────

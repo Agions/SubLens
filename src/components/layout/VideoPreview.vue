@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, provide } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
@@ -17,7 +17,8 @@ const {
   togglePlay,
   seekToFrame,
   seekRelative,
-  handleKeydown
+  handleKeydown,
+  captureFrameAsDataURL
 } = useVideoPlayer()
 
 const videoElement = ref<HTMLVideoElement | null>(null)
@@ -29,6 +30,9 @@ const hoverX = ref(0)
 onMounted(() => {
   if (videoElement.value) {
     initVideo(videoElement.value)
+    // Provide video control functions for Timeline thumbnail preview
+    provide('seekToFrame', seekToFrame)
+    provide('captureFrame', captureFrameAsDataURL)
   }
   window.addEventListener('keydown', handleKeydown)
 })
