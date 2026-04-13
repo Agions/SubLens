@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 
@@ -13,6 +13,41 @@ const emit = defineEmits<{
 
 // Timeline zoom level (frames per pixel)
 const zoomLevel = ref(1)
+const isDragging = ref(false)
+
+function getFrameFromEvent(e: MouseEvent): number {
+  const target = document.querySelector('.timeline-track') as HTMLElement
+  if (!target) return 0
+  const rect = target.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const percent = Math.max(0, Math.min(1, x / rect.width))
+  return Math.floor(percent * totalFrames.value)
+}
+
+function handlePlayheadMouseDown(e: MouseEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+  isDragging.value = true
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+function handleMouseMove(e: MouseEvent) {
+  if (!isDragging.value) return
+  const frame = getFrameFromEvent(e)
+  emit('seek', Math.max(0, Math.min(frame, totalFrames.value - 1)))
+}
+
+function handleMouseUp() {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
+}
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
+})
 
 const totalFrames = computed(() => projectStore.videoMeta?.totalFrames ?? 0)
 const fps = computed(() => projectStore.videoMeta?.fps ?? 30)
@@ -150,7 +185,9 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
         <!-- Playhead -->
         <div
           class="playhead"
+          :class="{ dragging: isDragging }"
           :style="{ left: `${playheadPosition}%` }"
+          @mousedown="handlePlayheadMouseDown"
         >
           <div class="playhead-head"/>
           <div class="playhead-line"/>
@@ -349,6 +386,11 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
   width: 2px;
   transform: translateX(-50%);
   z-index: $z-dropdown;
+  cursor: grab;
+  
+  &.dragging {
+    cursor: grabbing;
+  }
 }
 
 .playhead-head {
