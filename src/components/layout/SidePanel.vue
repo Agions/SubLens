@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch, onMounted } from 'vue'
 import type { Ref } from 'vue'
 
 interface ExtractionSession {
@@ -15,11 +15,17 @@ interface ExtractionSession {
 }
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
+import { useSettingsStore } from '@/stores/settings'
+import { useTheme } from '@/composables/useTheme'
+import { useSystemCheck } from '@/composables/useSystemCheck'
 import { ROI_PRESETS, type OCREngine } from '@/types/video'
 import type { ExportFormats } from '@/types/subtitle'
 
 const projectStore = useProjectStore()
 const subtitleStore = useSubtitleStore()
+const settingsStore = useSettingsStore()
+const { setTheme } = useTheme()
+const { checkDependencies, lastResult } = useSystemCheck()
 
 const openExportDialog = inject<() => void>('openExportDialog')
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,8 +39,26 @@ function openExport() {
   openExportDialog?.()
 }
 
-type TabKey = 'files' | 'progress' | 'roi' | 'ocr' | 'export'
+type TabKey = 'files' | 'progress' | 'roi' | 'ocr' | 'export' | 'settings'
 const activeTab = ref<TabKey>('files')
+
+// Settings tab local state
+const localSettings = ref({ ...settingsStore.settings })
+
+onMounted(() => {
+  checkDependencies()
+})
+
+watch(localSettings, (newSettings) => {
+  Object.assign(settingsStore.settings, newSettings)
+}, { deep: true })
+
+function handleThemeChange() {
+  setTheme(localSettings.value.theme)
+}
+
+// System dependencies status
+const systemDeps = computed(() => lastResult.value?.dependencies ?? [])
 
 // OCR Engine definitions with detailed stats
 const ocrEngines: {
@@ -197,6 +221,8 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
           { key: 'progress', icon: 'chart', label: '进度' },
           { key: 'roi', icon: 'crop', label: '区域' },
           { key: 'ocr', icon: 'ocr', label: 'OCR' },
+          { key: 'export', icon: 'export', label: '导出' },
+          { key: 'settings', icon: 'settings', label: '设置' },
         ] as const"
         :key="tab.key"
         :class="['tab-item', { active: activeTab === tab.key }]"
@@ -220,6 +246,16 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
         <svg v-if="tab.icon === 'ocr'" class="tab-icon" viewBox="0 0 20 20" fill="none">
           <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/>
           <path d="M7 8h6M7 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <!-- Export icon -->
+        <svg v-if="tab.icon === 'export'" class="tab-icon" viewBox="0 0 20 20" fill="none">
+          <path d="M10 3v10m0 0L6 9m4 4l4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <!-- Settings icon -->
+        <svg v-if="tab.icon === 'settings'" class="tab-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10 3v2m0 10v2M3 10h2m10 0h2M5.05 5.05l1.41 1.41m7.08 7.08l1.41 1.41M5.05 14.95l1.41-1.41m7.08-7.08l1.41-1.41" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
         <span class="tab-label">{{ tab.label }}</span>
       </button>
@@ -728,6 +764,125 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
           </svg>
           导出字幕文件
         </button>
+      </div>
+    </div>
+
+    <!-- ── Settings Tab ─────────────────────────────────── -->
+    <div v-if="activeTab === 'settings'" class="tab-content settings-tab">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">外观</span>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-label">主题</span>
+            <span class="setting-desc">选择应用界面主题</span>
+          </div>
+          <div class="setting-control">
+            <select v-model="localSettings.theme" class="select-input" @change="handleThemeChange">
+              <option value="dark">深色</option>
+              <option value="light">浅色</option>
+            </select>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-label">语言</span>
+            <span class="setting-desc">界面显示语言</span>
+          </div>
+          <div class="setting-control">
+            <select v-model="localSettings.language" class="select-input">
+              <option value="zh-CN">中文</option>
+              <option value="en-US">English</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">字幕列表</span>
+        </div>
+        <div class="setting-item toggle-item">
+          <div class="setting-info">
+            <span class="setting-label">显示缩略图</span>
+            <span class="setting-desc">在字幕列表中显示帧缩略图</span>
+          </div>
+          <div class="setting-control">
+            <button
+              :class="['toggle-btn', { active: localSettings.showThumbnails }]"
+              @click="localSettings.showThumbnails = !localSettings.showThumbnails"
+            >
+              <span class="toggle-thumb" />
+            </button>
+          </div>
+        </div>
+        <div class="setting-item toggle-item">
+          <div class="setting-info">
+            <span class="setting-label">删除确认</span>
+            <span class="setting-desc">删除字幕时显示确认对话框</span>
+          </div>
+          <div class="setting-control">
+            <button
+              :class="['toggle-btn', { active: localSettings.confirmDelete }]"
+              @click="localSettings.confirmDelete = !localSettings.confirmDelete"
+            >
+              <span class="toggle-thumb" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">自动保存</span>
+        </div>
+        <div class="setting-item toggle-item">
+          <div class="setting-info">
+            <span class="setting-label">启用自动保存</span>
+            <span class="setting-desc">定期自动保存项目进度</span>
+          </div>
+          <div class="setting-control">
+            <button
+              :class="['toggle-btn', { active: localSettings.autoSave }]"
+              @click="localSettings.autoSave = !localSettings.autoSave"
+            >
+              <span class="toggle-thumb" />
+            </button>
+          </div>
+        </div>
+        <div class="setting-item" v-if="localSettings.autoSave">
+          <div class="setting-info">
+            <span class="setting-label">保存间隔</span>
+            <span class="setting-desc">自动保存间隔（秒）</span>
+          </div>
+          <div class="setting-control">
+            <input
+              type="number"
+              v-model.number="localSettings.autoSaveInterval"
+              min="10"
+              max="300"
+              class="number-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">系统状态</span>
+        </div>
+        <div class="system-status">
+          <div
+            v-for="dep in systemDeps"
+            :key="dep.name"
+            :class="['dep-item', dep.installed ? 'dep-ok' : 'dep-missing']"
+          >
+            <span class="dep-icon">{{ dep.installed ? '✓' : '✗' }}</span>
+            <span class="dep-name">{{ dep.name }}</span>
+            <span class="dep-status">{{ dep.installed ? '已安装' : '未安装' }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </aside>
@@ -1768,6 +1923,172 @@ const formatDescriptions: Record<keyof ExportFormats, string> = {
     width: 18px;
     height: 18px;
   }
+}
+
+// ── Settings Tab ─────────────────────────────────────────────
+.settings-tab {
+  padding: $space-3;
+  overflow-y: auto;
+  @include custom-scrollbar;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-3 $space-2;
+  border-bottom: 1px solid $border-light;
+  
+  &:last-child { border-bottom: none; }
+}
+
+.setting-info {
+  flex: 1;
+  min-width: 0;
+  
+  .setting-label {
+    display: block;
+    font-size: $text-sm;
+    font-weight: 500;
+    color: $text-primary;
+    margin-bottom: 2px;
+  }
+  
+  .setting-desc {
+    font-size: $text-xs;
+    color: $text-muted;
+    line-height: 1.4;
+  }
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-shrink: 0;
+  margin-left: $space-3;
+}
+
+.select-input {
+  padding: $space-1 $space-2;
+  font-size: $text-xs;
+  background: $bg-elevated;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  color: $text-primary;
+  cursor: pointer;
+  min-width: 70px;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
+
+.number-input {
+  padding: $space-1 $space-2;
+  font-size: $text-xs;
+  background: $bg-elevated;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  color: $text-primary;
+  width: 60px;
+  text-align: center;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
+
+.range-input {
+  width: 80px;
+  accent-color: $primary;
+}
+
+.range-value {
+  font-size: $text-xs;
+  color: $text-secondary;
+  min-width: 32px;
+  text-align: right;
+}
+
+.toggle-item {
+  .setting-info { flex: 1; }
+}
+
+.toggle-btn {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: $radius-full;
+  background: $bg-overlay;
+  border: none;
+  cursor: pointer;
+  transition: background $transition-fast;
+  flex-shrink: 0;
+  
+  .toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: $text-muted;
+    transition: all $transition-fast;
+  }
+  
+  &.active {
+    background: $primary;
+    
+    .toggle-thumb {
+      left: 18px;
+      background: white;
+    }
+  }
+}
+
+.system-status {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.dep-item {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2;
+  border-radius: $radius-md;
+  font-size: $text-xs;
+  
+  &.dep-ok {
+    background: rgba($secondary, 0.1);
+    .dep-icon { color: $secondary; }
+    .dep-status { color: $secondary; }
+  }
+  
+  &.dep-missing {
+    background: rgba($error, 0.1);
+    .dep-icon { color: $error; }
+    .dep-status { color: $error; }
+  }
+}
+
+.dep-icon {
+  font-weight: 600;
+  width: 16px;
+  text-align: center;
+}
+
+.dep-name {
+  flex: 1;
+  color: $text-primary;
+}
+
+.dep-status {
+  font-size: 10px;
 }
 
 // ── Animations ─────────────────────────────────────────────
