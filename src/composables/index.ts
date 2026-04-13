@@ -9,6 +9,7 @@ export { useTheme } from './useTheme'
 export { useVideoMetadata } from './useVideoMetadata'
 export { useSystemCheck } from './useSystemCheck'
 export { useImagePreprocessor } from './useImagePreprocessor'
+export { useSubtitleList } from './useSubtitleList'
 
 // Types
 export type { KeyboardShortcut } from './useKeyboardShortcuts'
