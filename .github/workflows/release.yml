@@ -50,6 +50,8 @@ jobs:
   # ── Tauri desktop app (one job per target) ───────────────────────────────────
   build-tauri:
     needs: build-web
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -184,7 +186,7 @@ jobs:
 
       - name: Build CLI binary
         run: |
-          cargo build --release --target ${{ matrix.target }} --bin hardsubx-cli -p hardsubx
+          cargo build --release --target ${{ matrix.target }} --bin hardsubx-cli --manifest-path src-tauri/Cargo.toml
 
       - name: Package CLI
         run: |
@@ -198,3 +200,4 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: ${{ matrix.artifact }}.tar.gz
           generate_release_notes: false
+          token: ${{ secrets.GITHUB_TOKEN }}
