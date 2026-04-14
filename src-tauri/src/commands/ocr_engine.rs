@@ -49,7 +49,7 @@ pub async fn init_ocr_engine(config: OCREngineConfig) -> Result<String, String> 
     match config.engine.as_str() {
         "paddle" => {
             // Check if Python and PaddleOCR are available
-            match find_python_binary() {
+            match find_python_binary().await {
                 Ok(_) => {
                     match find_paddle_ocr_script() {
                         Ok(script) => {
@@ -149,15 +149,15 @@ pub async fn process_roi_ocr(
 }
 
 #[tauri::command]
-pub fn get_available_ocr_engines() -> HashMap<String, bool> {
+pub async fn get_available_ocr_engines() -> HashMap<String, bool> {
     let mut engines = HashMap::new();
     // Tesseract.js is available via frontend WASM
     engines.insert("tesseract".to_string(), true);
-    
+
     // Check PaddleOCR availability dynamically
-    let paddle_available = find_python_binary().is_ok() && find_paddle_ocr_script().is_ok();
+    let paddle_available = find_python_binary().await.is_ok() && find_paddle_ocr_script().is_ok();
     engines.insert("paddle".to_string(), paddle_available);
-    
+
     // EasyOCR requires Python but not yet integrated
     engines.insert("easyocr".to_string(), false);
     engines
@@ -402,7 +402,7 @@ pub async fn process_paddle_ocr(
         .map_err(|e| format!("Failed to serialize input JSON: {}", e))?;
 
     // Find Python and the paddle_ocr.py script
-    let python = find_python_binary()?;
+    let python = find_python_binary().await?;
     let script_path = find_paddle_ocr_script()?;
 
     tracing::info!("Calling PaddleOCR bridge: {} {}", python.to_string_lossy(), script_path.to_string_lossy());
@@ -418,13 +418,10 @@ pub async fn process_paddle_ocr(
         .map_err(|e| format!("Failed to spawn Python process: {}. Is Python installed?", e))?;
 
     // Write input JSON to stdin (async)
-    if let Some(ref mut stdin) = child.stdin {
-        tokio::io::AsyncWriteExt::write_all(stdin, input_str.as_bytes())
+    if let Some(mut stdin) = child.stdin.take() {
+        tokio::io::AsyncWriteExt::write_all(&mut stdin, input_str.as_bytes())
             .await
             .map_err(|e| format!("Failed to write to Python stdin: {}", e))?;
-        tokio::io::AsyncWriteExt::close(stdin)
-            .await
-            .map_err(|e| format!("Failed to close stdin: {}", e))?;
     }
 
     // Read stdout
@@ -517,8 +514,8 @@ pub async fn process_paddle_ocr(
 
 /// Check if PaddleOCR is installed and available
 #[tauri::command]
-pub fn check_paddle_ocr_available() -> serde_json::Value {
-    let python = match find_python_binary() {
+pub async fn check_paddle_ocr_available() -> serde_json::Value {
+    let python = match find_python_binary().await {
         Ok(p) => p.to_string_lossy().to_string(),
         Err(e) => {
             return serde_json::json!({
@@ -570,14 +567,14 @@ pub fn check_paddle_ocr_available() -> serde_json::Value {
         }
         Err(e) => serde_json::json!({
             "available": false,
-            "error": e.to_string(),
+            "error": format!("{}", e),
             "message": "Failed to run PaddleOCR check"
         }),
     }
 }
 
-/// Find Python executable in PATH
-fn find_python_binary() -> Result<PathBuf, String> {
+/// Find Python executable in PATH (async)
+async fn find_python_binary() -> Result<PathBuf, String> {
     // Try common Python commands
     let candidates = ["python3", "python", "python3.11", "python3.10", "python3.9"];
     for cmd in candidates {
