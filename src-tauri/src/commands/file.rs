@@ -27,7 +27,10 @@ pub async fn save_file_dialog(
     } else {
         for filter in filters {
             let (name, extensions) = filter.to_filter_tuple();
-            builder = builder.add_filter(&name, &extensions.iter().map(|s| s.as_str()).collect::<Vec<_>>());
+            builder = builder.add_filter(
+                &name,
+                &extensions.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            );
         }
     }
 
@@ -54,7 +57,10 @@ pub async fn open_file_dialog(
     } else {
         for filter in filters {
             let (name, extensions) = filter.to_filter_tuple();
-            builder = builder.add_filter(&name, &extensions.iter().map(|s| s.as_str()).collect::<Vec<_>>());
+            builder = builder.add_filter(
+                &name,
+                &extensions.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            );
         }
     }
 
@@ -67,29 +73,25 @@ pub async fn open_file_dialog(
 }
 
 #[tauri::command]
-pub async fn write_text_file(
-    path: String,
-    content: String,
-) -> Result<(), String> {
-    std::fs::write(&path, &content)
+pub async fn write_text_file(path: String, content: String) -> Result<(), String> {
+    tokio::fs::write(&path, &content)
+        .await
         .map_err(|e| format!("Failed to write file {}: {}", path, e))
 }
 
 #[tauri::command]
-pub async fn read_text_file(
-    path: String,
-) -> Result<String, String> {
-    std::fs::read_to_string(&path)
+pub async fn read_text_file(path: String) -> Result<String, String> {
+    tokio::fs::read_to_string(&path)
+        .await
         .map_err(|e| format!("Failed to read file {}: {}", path, e))
 }
 
 #[tauri::command]
-pub async fn get_file_info(
-    path: String,
-) -> Result<FileInfo, String> {
-    let metadata = std::fs::metadata(&path)
+pub async fn get_file_info(path: String) -> Result<FileInfo, String> {
+    let metadata = tokio::fs::metadata(&path)
+        .await
         .map_err(|e| format!("Failed to get file info: {}", e))?;
-    
+
     Ok(FileInfo {
         path,
         size: metadata.len(),

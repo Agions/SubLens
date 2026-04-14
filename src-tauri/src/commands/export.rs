@@ -1,6 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::io::Write;
 use std::path::Path;
 
 use super::types::{BoundingBox, ROI};
@@ -221,10 +219,8 @@ pub async fn export_subtitles(
     };
     
     let path = Path::new(&output_path);
-    let mut file = File::create(path)
-        .map_err(|e| format!("Failed to create file: {}", e))?;
-    
-    file.write_all(content.as_bytes())
+    tokio::fs::write(path, content.as_bytes())
+        .await
         .map_err(|e| format!("Failed to write file: {}", e))?;
     
     tracing::info!("Successfully exported subtitles to {}", output_path);

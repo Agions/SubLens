@@ -2,8 +2,6 @@
 //! All OCR in this module goes through the system Tesseract CLI,
 //! using temp files to bridge Rust frame data with the external process.
 
-use std::process::Command;
-
 use super::types::{map_lang_to_tesseract, BoundingBox, OCRConfig, ROI};
 use super::utils::{uuid_v4, TempFileGuard};
 
@@ -35,7 +33,7 @@ pub async fn process_frame(
         return Err("Invalid frame dimensions".to_string());
     }
 
-    let temp_guard = save_frame_to_temp_png(&frame_data, width, height)?;
+    let temp_guard = save_frame_to_temp_png(&frame_data, width, height).await?;
     let result = process_with_tesseract(temp_guard.path(), &config).await;
     drop(temp_guard); // explicit cleanup before returning
     result
@@ -49,7 +47,11 @@ pub async fn process_roi(
     roi: ROI,
     config: OCRConfig,
 ) -> Result<OCRResult, String> {
-    tracing::info!("Processing ROI: {:?} with OCR engine: {}", roi, config.engine);
+    tracing::info!(
+        "Processing ROI: {:?} with OCR engine: {}",
+        roi,
+        config.engine
+    );
 
     if frame_data.is_empty() {
         return Err("Frame data is empty".to_string());
@@ -62,50 +64,61 @@ pub async fn process_roi(
     let (roi_x, roi_y, roi_w, roi_h) = roi.to_pixels(width, height);
 
     // Crop frame data to ROI
-    let cropped_data = crop_frame_to_roi(&frame_data, width, height, roi_x, roi_y, roi_w, roi_h)?;
+    let cropped_data =
+        crop_frame_to_roi(&frame_data, width, height, roi_x, roi_y, roi_w, roi_h)?;
 
-    let temp_guard = save_frame_to_temp_png(&cropped_data, roi_w, roi_h)?;
+    let temp_guard = save_frame_to_temp_png(&cropped_data, roi_w, roi_h).await?;
     let result = process_with_tesseract(temp_guard.path(), &config).await;
     drop(temp_guard);
     result
 }
 
-/// Save raw RGBA frame data to a PNG temp file, managed by TempFileGuard.
-fn save_frame_to_temp_png(frame_data: &[u8], width: u32, height: u32) -> Result<TempFileGuard, String> {
+/// Save raw RGBA frame data to a PNG temp file, managed by TempFileGuard (async).
+async fn save_frame_to_temp_png(
+    frame_data: &[u8],
+    width: u32,
+    height: u32,
+) -> Result<TempFileGuard, String> {
     // Write PPM (P6 binary PPM — no external tool needed)
     let ppm_path = std::env::temp_dir().join(format!("hardsubx_ocr_{}.ppm", uuid_v4()));
 
     let mut ppm_data = format!("P6\n{} {}\n255\n", width, height).into_bytes();
     ppm_data.extend_from_slice(frame_data);
 
-    std::fs::write(&ppm_path, &ppm_data)
+    tokio::fs::write(&ppm_path, &ppm_data)
+        .await
         .map_err(|e| format!("Failed to write temp PPM: {}", e))?;
 
     // Try ImageMagick first, then ffmpeg as fallback
-    let png_guard = TempFileGuard::new(
-        std::env::temp_dir().join(format!("hardsubx_ocr_{}.png", uuid_v4())),
-    );
+    let png_guard = TempFileGuard::new(std::env::temp_dir().join(format!(
+        "hardsubx_ocr_{}.png",
+        uuid_v4()
+    )));
 
-    let convert_ok = Command::new("convert")
+    let convert_ok = tokio::process::Command::new("convert")
         .arg(ppm_path.to_str().unwrap())
         .arg(png_guard.path().to_str().unwrap())
         .output()
+        .await
         .map(|o| o.status.success())
         .unwrap_or(false);
 
     if convert_ok && png_guard.path().exists() {
         // Primary path: ImageMagick converted PPM → PNG, clean up PPM
-        let _ = std::fs::remove_file(&ppm_path);
+        let _ = tokio::fs::remove_file(&ppm_path).await;
         Ok(png_guard)
     } else {
         // Fallback path: Tesseract reads PPM directly, keep it (guard manages cleanup)
-        let _ = std::fs::remove_file(png_guard.path());
+        let _ = tokio::fs::remove_file(png_guard.path()).await;
         Ok(TempFileGuard::new(ppm_path))
     }
 }
 
-/// Process an image file with the Tesseract CLI, returning structured OCRResult.
-async fn process_with_tesseract(image_path: &std::path::Path, config: &OCRConfig) -> Result<OCRResult, String> {
+/// Process an image file with the Tesseract CLI, returning structured OCRResult (async).
+async fn process_with_tesseract(
+    image_path: &std::path::Path,
+    config: &OCRConfig,
+) -> Result<OCRResult, String> {
     let tesseract_lang = config
         .language
         .iter()
@@ -115,13 +128,14 @@ async fn process_with_tesseract(image_path: &std::path::Path, config: &OCRConfig
         .collect::<Vec<_>>()
         .join("+");
 
-    let output = Command::new("tesseract")
+    let output = tokio::process::Command::new("tesseract")
         .arg(image_path.to_str().unwrap_or("stdout"))
         .arg("stdout")
         .arg("-l")
         .arg(&tesseract_lang)
         .arg("tsv")
         .output()
+        .await
         .map_err(|e| format!("Failed to run tesseract: {}", e))?;
 
     if !output.status.success() {

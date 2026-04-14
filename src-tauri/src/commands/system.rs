@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::process::Command;
 use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,13 +60,13 @@ fn system_dependencies() -> &'static [SystemDependency; 4] {
 }
 
 #[tauri::command]
-pub fn check_system_dependencies() -> SystemCheckResult {
+pub async fn check_system_dependencies() -> SystemCheckResult {
     let mut results = Vec::new();
     let mut all_satisfied = true;
     let mut recommendations = Vec::new();
 
     for dep in system_dependencies() {
-        let result = check_single_dependency(dep);
+        let result = check_single_dependency(dep).await;
 
         if !result.installed && dep.required {
             all_satisfied = false;
@@ -92,10 +91,11 @@ pub fn check_system_dependencies() -> SystemCheckResult {
     }
 }
 
-fn check_single_dependency(dep: &SystemDependency) -> DependencyCheckResult {
-    let output = Command::new(&dep.command)
+async fn check_single_dependency(dep: &SystemDependency) -> DependencyCheckResult {
+    let output = tokio::process::Command::new(&dep.command)
         .args(&dep.version_args)
-        .output();
+        .output()
+        .await;
 
     match output {
         Ok(out) => {
@@ -168,15 +168,17 @@ fn extract_version(output: &str) -> Option<String> {
 }
 
 #[tauri::command]
-pub fn get_tesseract_languages() -> Vec<String> {
-    let output = Command::new("tesseract")
+pub async fn get_tesseract_languages() -> Vec<String> {
+    let output = tokio::process::Command::new("tesseract")
         .args(["--list-langs"])
-        .output();
+        .output()
+        .await;
 
     match output {
         Ok(out) if out.status.success() => {
             let stdout = String::from_utf8_lossy(&out.stdout);
-            stdout.lines()
+            stdout
+                .lines()
                 .skip(1)
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Instant;
+use tokio::io::AsyncWriteExt;
 
 use super::types::BoundingBox;
 
@@ -205,11 +206,10 @@ pub async fn ocr_image_tesseract(
     language: String,
     tesseract_path: Option<String>,
 ) -> Result<OCRProcessResult, String> {
-    use std::process::Command;
     use std::time::Instant;
-    
+
     let start = Instant::now();
-    
+
     // First, try using native Rust tesseract crate if available
     if let Ok(result) = try_native_tesseract(&image_path, &language) {
         let processing_time_ms = start.elapsed().as_millis() as u64;
@@ -220,33 +220,35 @@ pub async fn ocr_image_tesseract(
             processing_time_ms,
         });
     }
-    
+
     // Fallback to CLI tesseract
     tracing::info!("Native tesseract crate not available, using CLI");
-    
+
     // Determine tesseract binary path
     let tesseract = tesseract_path.unwrap_or_else(|| "tesseract".to_string());
-    
+
     // Check if tesseract is available
-    let version_check = Command::new(&tesseract)
+    let version_check = tokio::process::Command::new(&tesseract)
         .args(["--version"])
-        .output();
-    
+        .output()
+        .await;
+
     if version_check.is_err() {
         return Err(format!(
             "Tesseract not found. Install Tesseract OCR and ensure it's in your PATH, \
             or use Tesseract.js on the frontend."
         ));
     }
-    
+
     // Build tesseract command - output TSV format for detailed results
-    let output = Command::new(&tesseract)
+    let output = tokio::process::Command::new(&tesseract)
         .arg(&image_path)
         .arg("stdout")
         .arg("-l")
         .arg(&language)
         .arg("tsv")
         .output()
+        .await
         .map_err(|e| format!("Failed to run tesseract: {}", e))?;
     
     if !output.status.success() {
@@ -405,8 +407,8 @@ pub async fn process_paddle_ocr(
 
     tracing::info!("Calling PaddleOCR bridge: {} {}", python.to_string_lossy(), script_path.to_string_lossy());
 
-    // Spawn Python subprocess
-    let mut child = std::process::Command::new(&python)
+    // Spawn Python subprocess (async)
+    let mut child = tokio::process::Command::new(&python)
         .arg(&script_path)
         .arg("--stdin")
         .stdin(std::process::Stdio::piped())
@@ -415,20 +417,24 @@ pub async fn process_paddle_ocr(
         .spawn()
         .map_err(|e| format!("Failed to spawn Python process: {}. Is Python installed?", e))?;
 
-    // Write input JSON to stdin
+    // Write input JSON to stdin (async)
     if let Some(ref mut stdin) = child.stdin {
-        stdin
-            .write_all(input_str.as_bytes())
+        tokio::io::AsyncWriteExt::write_all(stdin, input_str.as_bytes())
+            .await
             .map_err(|e| format!("Failed to write to Python stdin: {}", e))?;
+        tokio::io::AsyncWriteExt::close(stdin)
+            .await
+            .map_err(|e| format!("Failed to close stdin: {}", e))?;
     }
 
     // Read stdout
     let output = child
         .wait_with_output()
+        .await
         .map_err(|e| format!("Python process failed: {}", e))?;
 
-    // Clean up temp image
-    let _ = std::fs::remove_file(&image_path);
+    // Clean up temp image (async)
+    let _ = tokio::fs::remove_file(&image_path).await;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -536,10 +542,11 @@ pub fn check_paddle_ocr_available() -> serde_json::Value {
     };
 
     // Run the --check command
-    let output = std::process::Command::new(&python)
+    let output = tokio::process::Command::new(&python)
         .arg(&script_path)
         .arg("--check")
-        .output();
+        .output()
+        .await;
 
     match output {
         Ok(out) if out.status.success() => {
@@ -574,7 +581,7 @@ fn find_python_binary() -> Result<PathBuf, String> {
     // Try common Python commands
     let candidates = ["python3", "python", "python3.11", "python3.10", "python3.9"];
     for cmd in candidates {
-        if let Ok(path) = std::process::Command::new(cmd).arg("--version").output() {
+        if let Ok(path) = tokio::process::Command::new(cmd).arg("--version").output().await {
             if path.status.success() {
                 return Ok(PathBuf::from(cmd));
             }
@@ -636,38 +643,33 @@ pub async fn ocr_base64_image(
     language: String,
 ) -> Result<OCRProcessResult, String> {
     use std::time::Instant;
-    use std::io::Write;
-    use std::process::Command;
-    
+
     let start = Instant::now();
-    
+
     // Decode base64 to image
     let image_bytes = base64::engine::general_purpose::STANDARD
         .decode(&image_data)
         .map_err(|e| format!("Failed to decode base64 image: {}", e))?;
-    
-    // Write to temp file
+
+    // Write to temp file (async)
     let temp_path = std::env::temp_dir().join(format!(
         "hardsubx_ocr_{}.png",
         uuid_v4()
     ));
-    
-    {
-        let mut file = std::fs::File::create(&temp_path)
-            .map_err(|e| format!("Failed to create temp file: {}", e))?;
-        file.write_all(&image_bytes)
-            .map_err(|e| format!("Failed to write image data: {}", e))?;
-    }
-    
+
+    tokio::fs::write(&temp_path, &image_bytes)
+        .await
+        .map_err(|e| format!("Failed to write temp file: {}", e))?;
+
     // Process with Tesseract CLI
     let result = ocr_image_tesseract(
         temp_path.to_string_lossy().to_string(),
         language,
         None,
     ).await;
-    
-    // Cleanup temp file
-    let _ = std::fs::remove_file(&temp_path);
+
+    // Cleanup temp file (async)
+    let _ = tokio::fs::remove_file(&temp_path).await;
     
     match result {
         Ok(mut r) => {
