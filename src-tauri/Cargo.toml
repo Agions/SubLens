@@ -44,8 +44,8 @@ image = "0.25"  # For image processing in OCR
 tauri-plugin-opener = "2.0"
 
 [profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = "s"
+# panic = "abort"  # removed – caused exit code 101 on CI linker issues
+codegen-units = 16
+lto = false
+opt-level = 2
 strip = true
