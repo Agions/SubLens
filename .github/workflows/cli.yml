@@ -1,0 +1,57 @@
+name: CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-cli:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: hardsubx-cli-x86_64-unknown-linux-gnu
+          - platform: windows-latest
+            target: x86_64-pc-windows-gnu
+            artifact: hardsubx-cli-x86_64-pc-windows-gnu
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            artifact: hardsubx-cli-x86_64-apple-darwin
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            artifact: hardsubx-cli-aarch64-apple-darwin
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Build CLI binary
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin hardsubx-cli --manifest-path src-tauri/Cargo.toml
+
+      - name: Package CLI
+        run: |
+          EXE_EXT=${{ matrix.platform == 'windows-latest' && '.exe' || '' }}
+          SRC="src-tauri/target/${{ matrix.target }}/release/hardsubx-cli${EXE_EXT}"
+          tar -czvf ${{ matrix.artifact }}.tar.gz -C "$(dirname $SRC)" "$(basename $SRC)"
+
+      - name: Upload CLI binary
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: ${{ matrix.artifact }}.tar.gz
+          generate_release_notes: false
+          token: ${{ secrets.GITHUB_TOKEN }}
