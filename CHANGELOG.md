@@ -2,6 +2,24 @@
 
 All notable changes to HardSubX are documented here.
 
+## [3.4.0] - 2026-04-14
+
+### ⚡ Performance — Async I/O
+
+**所有 `std::process::Command` 和 `std::fs` 替换为 `tokio::` async 版本**（主线程不再阻塞）:
+
+| 文件 | 改动 |
+|------|------|
+| `scene.rs` | `get_video_fps`、`detect_scenes_ffmpeg`、`get_video_info` → `tokio::process::Command` + `tokio::fs` |
+| `video.rs` | `get_video_metadata_ffprobe/ffmpeg`、`extract_frame_at_time_impl`、`detect_scenes_ffmpeg` → `tokio::async` |
+| `ocr.rs` | `save_frame_to_temp_png`、`process_with_tesseract` → `tokio::async` |
+| `ocr_engine.rs` | `ocr_image_tesseract`、`process_paddle_ocr`、`check_paddle_ocr_available`、`find_python_binary` → `tokio async` |
+| `system.rs` | `check_single_dependency`、`get_tesseract_languages` → `tokio::process::Command` |
+| `file.rs` | `write/read_text_file`、`get_file_info` → `tokio::fs` |
+| `export.rs` | `export_subtitles` → `tokio::fs::write` |
+
+---
+
 ## [3.3.1] - 2026-04-10
 
 ### 🏗️ Architecture Refactor
