@@ -429,7 +429,7 @@ pub async fn extract_frame_at_time(
     extract_frame_at_time_impl(&path, timestamp_secs, None).await
 }
 
-/// Extract a cropped frame at specific ROI
+/// Extract a cropped frame at specific ROI (pixel coordinates)
 #[tauri::command]
 pub async fn extract_cropped_frame(
     path: String,
@@ -439,11 +439,20 @@ pub async fn extract_cropped_frame(
     roi_width: f32,
     roi_height: f32,
 ) -> Result<String, String> {
-    // Pass ROI as percentage-based crop filter
-    let crop_filter = format!(
-        "crop={}:{}:{}:{}",
-        roi_width as u32, roi_height as u32, roi_x as u32, roi_y as u32
-    );
+    // Build ROI struct with explicit pixel unit to match build_roi_crop_filter semantics
+    let roi = ROI {
+        x: roi_x as u32,
+        y: roi_y as u32,
+        width: roi_width as u32,
+        height: roi_height as u32,
+        unit: "pixel".to_string(),
+        ..Default::default()
+    };
+    // Get video metadata for video dimensions (needed by build_roi_crop_filter)
+    let metadata = get_video_metadata_ffprobe(&path)
+        .await
+        .map_err(|e| format!("Failed to get video metadata: {}", e))?;
+    let crop_filter = build_roi_crop_filter(&roi, metadata.width, metadata.height);
     extract_frame_at_time_impl(&path, timestamp_secs, Some(&crop_filter)).await
 }
 
