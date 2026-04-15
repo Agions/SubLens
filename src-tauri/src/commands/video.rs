@@ -29,6 +29,8 @@ pub struct Frame {
 pub struct ExtractOptions {
     pub scene_threshold: f32,
     pub frame_interval: u32,
+    /// Optional max frames cap. None = unlimited (capped at 200,000 for safety).
+    pub max_frames: Option<usize>,
 }
 
 #[tauri::command]
@@ -295,7 +297,8 @@ pub async fn extract_frames(
         options.frame_interval
     };
     let total_possible = ((metadata.total_frames as f64 / frame_interval as f64).ceil() as usize);
-    let max_frames = 1000_usize;
+    // No hard cap — use options.max_frames if provided, else 200,000 as absolute safety max
+    let max_frames = options.max_frames.unwrap_or(200_000);
     let total_extractable = total_possible.min(max_frames);
 
     if total_possible > max_frames {
