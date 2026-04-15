@@ -212,7 +212,7 @@ pub async fn calculate_frame_similarity(
         return Ok(1.0);
     }
 
-    let step = (frame1_data.len() / 4) / sample_count;
+    let step = ((frame1_data.len() / 4) / sample_count).max(1);
     let mut total_diff = 0f32;
 
     for i in 0..sample_count {

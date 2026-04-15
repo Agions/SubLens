@@ -73,10 +73,10 @@ export function textSimilarity(a: string, b: string): number {
   const dist = dp[long.length]
   const sim = 1 - dist / Math.max(short.length, long.length)
 
-  // LRU 缓存（最多 2000 条）
-  if (_similarityCache.size >= 2000) {
-    // Evict oldest entries until size is back to 1000
-    while (_similarityCache.size > 1000) {
+  // LRU 缓存（最多 3000 条，淘汰至 2000）
+  if (_similarityCache.size >= 3000) {
+    // Evict oldest entries until size is back to 2000 (33% headroom)
+    while (_similarityCache.size > 2000) {
       const oldest = _cacheOrder.shift()
       if (oldest) {
         _similarityCache.delete(oldest)
