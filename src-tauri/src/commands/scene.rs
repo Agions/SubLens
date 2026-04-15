@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SceneDetectionConfig {
@@ -27,7 +27,7 @@ pub async fn detect_scenes(
         return Err(format!("File not found: {}", video_path));
     }
 
-    // 获取视频 FPS 用于帧号计算
+    // Get video FPS for frame number calculation
     let fps = match get_video_fps(&video_path).await {
         Ok(f) => f,
         Err(e) => {
@@ -36,8 +36,13 @@ pub async fn detect_scenes(
         }
     };
 
-    // Use ffmpeg for scene detection via select filter
-    let scene_timestamps = detect_scenes_ffmpeg(&video_path, config.threshold, fps).await?;
+    // Use scenedetect (Python) for reliable scene detection
+    let scene_timestamps = detect_scenes_scenedetect(
+        &video_path,
+        config.threshold,
+        config.min_scene_length.max(1),
+    )
+    .await?;
 
     // Convert timestamps to SceneChange list
     let scene_changes: Vec<SceneChange> = scene_timestamps
@@ -46,7 +51,7 @@ pub async fn detect_scenes(
         .map(|(_i, timestamp)| SceneChange {
             frame_index: (timestamp * fps) as u64,
             timestamp,
-            similarity: 0.0, // ffmpeg scene detection doesn't provide this
+            similarity: 0.0, // scenedetect doesn't provide per-frame similarity
         })
         .collect();
 
@@ -89,7 +94,11 @@ async fn get_video_fps(path: &str) -> Result<f64, String> {
     let fps = if fps_parts.len() == 2 {
         let num: f64 = fps_parts[0].parse().unwrap_or(30.0);
         let den: f64 = fps_parts[1].parse().unwrap_or(1.0);
-        if den > 0.0 { num / den } else { 30.0 }
+        if den > 0.0 {
+            num / den
+        } else {
+            30.0
+        }
     } else {
         fps_str.parse().unwrap_or(30.0)
     };
@@ -97,45 +106,88 @@ async fn get_video_fps(path: &str) -> Result<f64, String> {
     Ok(fps)
 }
 
-/// Detect scene changes using ffmpeg (async)
-async fn detect_scenes_ffmpeg(path: &str, threshold: f32, _fps: f64) -> Result<Vec<f64>, String> {
-    // Use ffmpeg with select filter for scene detection
-    // threshold: 0-1 range, convert to ffmpeg's expected value (0-1 for scene detection)
-    let threshold_str = format!("{}", threshold.clamp(0.1, 0.9));
+/// Find the scene_detect.py script location
+fn find_scene_detect_script() -> Result<PathBuf, String> {
+    let candidates: [Option<PathBuf>; 4] = [
+        // Bundled with the app (relative to executable)
+        std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+            .map(|p| p.join("scripts").join("scene_detect.py")),
+        // Development path
+        Some(PathBuf::from("src-tauri/scripts/scene_detect.py")),
+        // Absolute development path
+        Some(PathBuf::from(
+            "/root/.openclaw/workspace/HardSubX/src-tauri/scripts/scene_detect.py",
+        )),
+        // CARGO_MANIFEST_DIR path
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .map(|p| p.join("src-tauri/scripts/scene_detect.py")),
+    ];
 
-    let output = tokio::process::Command::new("ffmpeg")
-        .args([
-            "-i", path,
-            "-vf", &format!("select='gt(scene,{})',showinfo", threshold_str),
-            "-f", "null",
-            "-",
-        ])
-        .output()
-        .await
-        .map_err(|e| format!("Failed to run ffmpeg scene detection: {}", e))?;
+    for candidate in candidates.into_iter().flatten() {
+        if candidate.exists() {
+            tracing::info!("Found scene_detect.py at: {}", candidate.display());
+            return Ok(candidate);
+        }
+    }
 
-    // Note: ffmpeg scene detection outputs to stderr
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let mut scene_timestamps = Vec::new();
+    Err(
+        "scene_detect.py not found. Expected at: src-tauri/scripts/scene_detect.py".to_string(),
+    )
+}
 
-    for line in stderr.lines() {
-        if line.contains("pts_time:") {
-            // Extract timestamp from showinfo
-            if let Some(time_str) = line.split("pts_time:").nth(1) {
-                let time: f64 = time_str
-                    .split_whitespace()
-                    .next()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(0.0);
-                if time > 0.0 {
-                    // Skip timestamp 0
-                    scene_timestamps.push(time);
-                }
+/// Find Python3 binary (async)
+async fn find_python3() -> Result<PathBuf, String> {
+    let candidates = ["python3", "python", "python3.11", "python3.10", "python3.9"];
+
+    for cmd in candidates {
+        if let Ok(output) = tokio::process::Command::new(cmd)
+            .arg("--version")
+            .output()
+            .await
+        {
+            if output.status.success() {
+                return Ok(PathBuf::from(cmd));
             }
         }
     }
 
-    Ok(scene_timestamps)
+    Err("Python3 not found in PATH. Please install Python 3.8+".to_string())
+}
+
+/// Detect scene changes using scenedetect Python library (async)
+/// Replaces deprecated ffmpeg showinfo-based approach.
+async fn detect_scenes_scenedetect(
+    path: &str,
+    threshold: f32,
+    min_scene_len: u32,
+) -> Result<Vec<f64>, String> {
+    let python = find_python3().await?;
+    let script = find_scene_detect_script()?;
+
+    let output = tokio::process::Command::new(&python)
+        .args([
+            script.to_str().unwrap(),
+            path,
+            &format!("{}", threshold.clamp(0.05, 0.95)),
+            &min_scene_len.to_string(),
+        ])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run scene_detect.py: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("scene_detect.py failed: {}", stderr));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let timestamps: Vec<f64> = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse scene_detect.py JSON output: {}\nOutput: {}", e, stdout))?;
+
+    Ok(timestamps)
 }
 
 #[tauri::command]
