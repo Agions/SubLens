@@ -2,7 +2,6 @@ use base64::Engine;
 use image::{ImageBuffer, Rgba};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::time::Instant;
 use tokio::io::AsyncWriteExt;
 
