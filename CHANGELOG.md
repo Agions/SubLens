@@ -2,6 +2,29 @@
 
 All notable changes to SubLens are documented here.
 
+## [3.5.0] - 2026-04-16
+
+### 🎨 Branding — Project Renamed to SubLens
+
+- **项目正式更名**：HardSubX → **SubLens**，中文名「视频字幕提取工具」
+- **新 Logo 设计**：从 H 形重新设计为 aperture/镜头造型，`SUBLENS` 文字标识
+- **GitHub 仓库重命名**：`Agions/HardSubX` → `Agions/SubLens`
+- **GitHub Description**：更新为 `SubLens - 视频字幕提取工具，从视频中提取硬编码字幕...`
+- **GitHub Topics**：统一为 `hard-subtitle`, `subtitle-extraction`, `video-subtitle`, `ocr`, `video-processing` 等
+- **UI 文字全面更新**：ToolBar / SettingsView / AboutDialog Logo 标题 → SubLens
+- **导出格式元数据**：ASS/SSA/LRC/SBV/JSON 等格式 header 中的 `tool` 字段 → `SubLens`
+- **所有文档链接**：统一指向 `Agions/SubLens`
+
+### 📝 Documentation
+
+- README.md：标题、更新说明和目录结构 → SubLens
+- docs/：index / getting-started / architecture / cli 标题全部更新
+- CONTRIBUTING.md：标题和 GitHub 链接更新
+- SECURITY.md：GitHub Security Advisory 链接更新
+- package.json：description 更新为 SubLens
+
+---
+
 ## [3.4.0] - 2026-04-14
 
 ### ⚡ Performance — Async I/O
