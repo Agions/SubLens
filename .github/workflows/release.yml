@@ -110,6 +110,7 @@ jobs:
             libffmpegthumbnailer-dev \
             libjpeg-dev \
             libvips-dev \
+            libglib2.0-dev \
             ffmpeg
 
       - name: Build Tauri app
@@ -120,31 +121,31 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'HardSubX ${{ github.ref_name }}'
+          releaseName: 'SubLens ${{ github.ref_name }}'
           releaseBody: |
-            ## HardSubX ${{ github.ref_name }}
+            ## SubLens ${{ github.ref_name }}
 
-            Professional video subtitle extraction tool powered by OCR.
+            视频字幕提取工具，从视频中提取硬编码字幕，支持多种格式输出。
 
             ### Downloads
 
             | Platform | Architecture | File |
             |---------|-------------|------|
-            | macOS | Apple Silicon (M1/M2/M3) | `HardSubX_macos-apple-silicon.tar.gz` |
-            | macOS | Intel | `HardSubX_macos-intel.tar.gz` |
-            | Linux | x86_64 | `HardSubX_ubuntu-x64.tar.gz` |
-            | Windows | x64 | `HardSubX_windows-x64.zip` |
+            | macOS | Apple Silicon (M1/M2/M3) | `SubLens_macos-apple-silicon.tar.gz` |
+            | macOS | Intel | `SubLens_macos-intel.tar.gz` |
+            | Linux | x86_64 | `SubLens_ubuntu-x64.tar.gz` |
+            | Windows | x64 | `SubLens_windows-x64.zip` |
 
             ### Features
-            - Video subtitle extraction via OCR (Tesseract.js / PaddleOCR / EasyOCR)
-            - Multiple export formats: SRT, VTT, ASS, SSA, JSON, TXT, LRC, SBV, CSV
-            - Multi-language support: Chinese, English, Japanese, Korean, etc.
-            - Keyboard shortcuts & theme switching
-            - Desktop GUI + CLI dual mode
+            - 视频字幕提取 via OCR (Tesseract.js / PaddleOCR / EasyOCR)
+            - 多种导出格式：SRT, VTT, ASS, SSA, JSON, TXT, LRC, SBV, CSV
+            - 多语言支持：中文、英文、日文、韩文等
+            - 键盘快捷键 & 主题切换
+            - 桌面 GUI + CLI 双模式
 
             ### Installation
             1. Download the archive for your platform
-            2. Extract and run `HardSubX` (Linux/macOS) or `HardSubX.exe` (Windows)
-            3. **macOS**: run `xattr -cr ./HardSubX` if blocked by Gatekeeper
+            2. Extract and run `SubLens` (Linux/macOS) or `SubLens.exe` (Windows)
+            3. **macOS**: run `xattr -cr ./SubLens` if blocked by Gatekeeper
           args: ${{ matrix.args }}
 
