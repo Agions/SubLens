@@ -96,18 +96,23 @@ export function useSubtitleExtractor() {
       }
       if (!isExtracting.value) break
 
+      // ── 帧间隔跳帧（优先检查，避免无效帧捕获）───────────
+      if (frameIndex % opts.frameInterval !== 0) {
+        continue
+      }
+
       // ── 捕获帧 ───────────────────────────────────────
       const frameData = videoPlayer.captureFrame()
       if (!frameData) continue
 
-      // ── 场景变化检测 ──────────────────────────────────
-      if (prevFrameData && !sceneDetector.detect(prevFrameData, frameData)) {
+      // ── ROI 预检测：跳过全黑/低方差帧（无字幕概率高）───
+      if (isRoiRegionLikelyEmpty(frameData, roi)) {
         prevFrameData = frameData
         continue
       }
 
-      // ── 帧间隔跳帧 ────────────────────────────────────
-      if (frameIndex % opts.frameInterval !== 0) {
+      // ── 场景变化检测 ──────────────────────────────────
+      if (prevFrameData && !sceneDetector.detect(prevFrameData, frameData)) {
         prevFrameData = frameData
         continue
       }
@@ -242,6 +247,43 @@ export function useSubtitleExtractor() {
 
   function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  /**
+   * ROI 预检测：计算 ROI 区域的像素方差和亮度，跳过无字幕的高概率帧。
+   * 原理：字幕区域通常有中高频文字笔画（高方差），
+   *       纯色背景/Logo/黑边方差极低。
+   */
+  function isRoiRegionLikelyEmpty(frameData: ImageData, roi: { x: number; y: number; width: number; height: number }): boolean {
+    const { data, width, height } = frameData
+    const x0 = Math.floor((roi.x / 100) * width)
+    const y0 = Math.floor((roi.y / 100) * height)
+    const rw = Math.floor((roi.width / 100) * width)
+    const rh = Math.floor((roi.height / 100) * height)
+
+    let sum = 0
+    let sumSq = 0
+    let count = 0
+
+    for (let y = y0; y < Math.min(y0 + rh, height - 1); y += 2) {
+      for (let x = x0; x < Math.min(x0 + rw, width - 1); x += 2) {
+        const idx = (y * width + x) * 4
+        // 灰度值
+        const gray = (data[idx] * 299 + data[idx + 1] * 587 + data[idx + 2] * 114) / 1000
+        sum += gray
+        sumSq += gray * gray
+        count++
+      }
+    }
+
+    if (count === 0) return false
+
+    const mean = sum / count
+    const variance = (sumSq / count) - mean * mean
+
+    // 方差阈值：低于 100 的 ROI 区域几乎无文字/字幕（纯色背景）
+    // 典型字幕区域方差在 200-2000 之间
+    return variance < 100
   }
 
   return {
