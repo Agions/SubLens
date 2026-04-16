@@ -281,11 +281,11 @@ export class SubtitlePipeline {
   processStage(rawSubs: SubtitleLite[], stage: 0 | 1 | 2 | 3 | 4): SubtitleLite[] {
     let result = [...rawSubs]
     result.sort((a, b) => a.startTime - b.startTime)
-    if (stage >= 1) result = stage0_normalize(result)
-    if (stage >= 2) result = stage1_filterJitter(result, this.opts)
-    if (stage >= 3) result = stage2_mergeSplit(result, this.opts)
-    if (stage >= 4) result = stage3_mergeSimilar(result, this.opts)
-    if (stage >= 5) result = stage4_computeEndTime(result)
+    if (stage >= 0) result = stage0_normalize(result)
+    if (stage >= 1) result = stage1_filterJitter(result, this.opts)
+    if (stage >= 2) result = stage2_mergeSplit(result, this.opts)
+    if (stage >= 3) result = stage3_mergeSimilar(result, this.opts)
+    if (stage >= 4) result = stage4_computeEndTime(result)
     return result
   }
 
