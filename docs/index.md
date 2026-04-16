@@ -1,94 +1,43 @@
-# SubLens 文档
-
-<div align="center">
-
-SubLens - 专业的视频字幕提取工具，从任何视频中提取硬编码字幕。
-
-**Version**: 3.3.1 · **License**: MIT
-
-</div>
-
 ---
+layout: home
 
-## 📖 Documentation
+hero:
+  name: SubLens
+  text: 视频字幕提取工具
+  tagline: 从视频中提取硬编码字幕，输出 SRT / VTT / ASS / JSON 等多种格式
+  image:
+    src: /logo.svg
+    alt: SubLens
+  actions:
+    - theme: brand
+      text: 快速上手 →
+      link: /guide/getting-started
+    - theme: alt
+      text: CLI 参考 →
+      link: /guide/cli
 
-| Guide | Description |
-|:---|:---|
-| [Getting Started](getting-started.md) | Installation, setup, and first extraction |
-| [CLI Reference](cli.md) | Full command-line interface reference |
-| [Architecture](architecture.md) | Project structure and technical design |
+features:
+  - icon: 🎯
+    title: 帧级精度
+    details: 每个字幕精确映射到视频帧，时间线悬停预览实际画面
 
+  - icon: 🔍
+    title: 智能导航
+    details: 支持 j/k 键快速跳转、置信度过滤、搜索定位、千条字幕虚拟滚动
+
+  - icon: 🤖
+    title: 多引擎 OCR
+    details: PaddleOCR / EasyOCR / Tesseract.js 多模识别，80+ 语言支持
+
+  - icon: ✨
+    title: 智能后处理
+    details: 多轮识别取最优、文本正则化、置信度校准、Levenshtein 相似度去重
+
+  - icon: 🎨
+    title: 专业 UI
+    details: OKLCH 色彩系统、暗色/亮色主题、六标签式界面、微交互动效
+
+  - icon: 📦
+    title: 12 种导出格式
+    details: SRT / VTT / ASS / SSA / JSON / CSV / TXT / LRC / SBV / MD / STL / TTML
 ---
-
-## ✨ Features
-
-### Frame-Accurate Extraction
-Each subtitle maps to exact video frames. **Timeline thumbnail preview** shows actual video frames on hover.
-
-### Multi-Engine OCR
-PaddleOCR, EasyOCR, and Tesseract.js with multi-pass refinement. Real-time accuracy estimation based on engine + language + settings.
-
-### Smart Post-Processing
-- **4-stage pipeline**: filter jitter → merge split → merge similar → compute end time
-- **Language-aware**: full/half-width punctuation, Chinese typo correction
-- **Confidence calibration**: mixed language / short text / repeated chars auto-degraded
-- **Levenshtein similarity** merge for deduplication
-
-### Professional UI
-- **OKLCH design system** — perceptually uniform colors
-- **Tab-based interface** — Files / Progress / ROI / OCR / Export / Settings
-- **Dark/light themes** — professional video editing aesthetics
-- **Virtual scrolling** — smooth performance with 1000+ subtitles
-
-### 12 Export Formats
-SRT · VTT · ASS · SSA · JSON · CSV · TXT · LRC · SBV · MD · STL · TTML
-
----
-
-## 🚀 Quick Install
-
-```bash
-git clone https://github.com/Agions/SubLens.git
-cd SubLens
-pnpm install
-pnpm tauri dev
-```
-
----
-
-## ⌨️ Keyboard Shortcuts
-
-| Key | Action |
-|:---|:---|
-| `Space` | Play / Pause |
-| `J` / `K` | Previous / Next subtitle (with toast preview) |
-| `←` / `→` | Frame step |
-| `Shift + ←/→` | Jump to subtitle |
-| `Ctrl + Z` | Undo |
-| `Ctrl + Y` | Redo |
-| `?` | Show shortcuts |
-
----
-
-## 📁 Project Structure
-
-```
-SubLens/
-├── src/                    # Vue 3 frontend (17 composables, 23 components)
-│   ├── components/        # UI components
-│   │   ├── layout/tabs/   # Tab-based UI
-│   │   ├── video/         # Timeline, ROISelector
-│   │   └── subtitle/       # SubtitleList, ExportDialog
-│   ├── composables/        # Logic/UI separation
-│   ├── stores/             # Pinia state
-│   └── core/               # Business logic
-├── src-tauri/             # Rust backend
-├── cli/                   # Node.js CLI tool
-└── docs/                  # This documentation
-```
-
----
-
-## License
-
-MIT — see [LICENSE](../LICENSE)

@@ -1,23 +1,21 @@
-# SubLens CLI 参考
+# CLI 参考
 
-## Installation
+## 安装 {#installation}
 
 ```bash
-# Option 1: npx (no install required)
-npx hardsubx-cli extract video.mp4 --output ./subs
+# Option 1: npx (无需安装)
+npx sublens-cli extract video.mp4 --output ./subs
 
-# Option 2: Build and run locally
+# Option 2: Build locally
 cd cli && pnpm install && pnpm build
 node dist/extract.js
 
-# Option 3: Install via Cargo (full Rust backend)
+# Option 3: Install via Cargo (完整 Rust 后端)
 cargo install --path src-tauri
-hardsubx-cli extract video.mp4 --output ./subs
+sublens-cli extract video.mp4 --output ./subs
 ```
 
----
-
-## Global Flags
+## 全局参数 {#global-flags}
 
 | Flag | Short | Type | Default | Description |
 |:---|:---:|:---:|:---:|:---|
@@ -26,21 +24,17 @@ hardsubx-cli extract video.mp4 --output ./subs
 | `--verbose` | — | flag | false | Verbose output |
 | `--config` | `-c` | path | — | Custom config file |
 
----
-
-## Commands
-
-### `extract` — Extract subtitles from video
+## extract — 提取字幕 {#extract}
 
 ```bash
-hardsubx-cli extract <video> [options]
+sublens-cli extract <video> [options]
 ```
 
 **Arguments**
 
 | Argument | Description |
 |:---|:---|
-| `<video>` | Path to input video file |
+| `<video>` | 输入视频文件路径 |
 
 **Options**
 
@@ -51,7 +45,7 @@ hardsubx-cli extract <video> [options]
 | `--roi` | — | string | `bottom` | ROI preset or `x,y,w,h` |
 | `--ocr` | — | string | `tesseract` | Engine: `paddle`, `easyocr`, `tesseract` |
 | `--lang` | `-l` | string | `eng` | Languages (e.g. `ch,en`, `ja`, `kor`) |
-| `--confidence` | `-c` | number | `70` | Min confidence 0–100 |
+| `--confidence` | — | number | `70` | Min confidence 0–100 |
 | `--frame-interval` | — | number | `1` | Process every N frames |
 | `--scene-threshold` | — | number | `0.3` | Scene change sensitivity |
 | `--no-postprocess` | — | flag | false | Skip text post-processing |
@@ -63,22 +57,22 @@ hardsubx-cli extract <video> [options]
 
 ```bash
 # Basic extraction to SRT
-hardsubx-cli extract video.mp4 --output ./subs
+sublens-cli extract video.mp4 --output ./subs
 
 # Multi-format output
-hardsubx-cli extract video.mp4 --format srt,vtt,json --output ./subs
+sublens-cli extract video.mp4 --format srt,vtt,json --output ./subs
 
 # Chinese + English, PaddleOCR engine
-hardsubx-cli extract video.mp4 --ocr paddle --lang ch,en --roi bottom
+sublens-cli extract video.mp4 --ocr paddle --lang ch,en --roi bottom
 
 # Custom ROI coordinates (x,y,width,height in percent)
-hardsubx-cli extract video.mp4 --roi 0,85,100,15
+sublens-cli extract video.mp4 --roi 0,85,100,15
 
 # High confidence threshold
-hardsubx-cli extract video.mp4 --confidence 85
+sublens-cli extract video.mp4 --confidence 85
 
 # Process every 2 frames (faster, lower accuracy)
-hardsubx-cli extract video.mp4 --frame-interval 2
+sublens-cli extract video.mp4 --frame-interval 2
 ```
 
 **Sample output**
@@ -105,15 +99,11 @@ Output: ./subs/
   video.json (47 entries + frame mapping)
 ```
 
----
-
-### `preview` — Preview a specific frame
+## preview — 预览帧 {#preview}
 
 ```bash
-hardsubx-cli preview <video> [options]
+sublens-cli preview <video> [options]
 ```
-
-**Options**
 
 | Option | Short | Type | Default | Description |
 |:---|:---:|:---:|:---:|:---|
@@ -121,21 +111,15 @@ hardsubx-cli preview <video> [options]
 | `--roi` | — | string | — | Draw ROI rectangle on output |
 | `--output` | `-o` | path | stdout | Save preview image |
 
-**Example**
-
 ```bash
-hardsubx-cli preview video.mp4 --frame 1500 --roi bottom
+sublens-cli preview video.mp4 --frame 1500 --roi bottom
 ```
 
----
-
-### `info` — Show video metadata
+## info — 视频信息 {#info}
 
 ```bash
-hardsubx-cli info <video>
+sublens-cli info <video>
 ```
-
-**Sample output**
 
 ```
 video.mp4
@@ -148,9 +132,7 @@ Audio: AAC 48kHz stereo
 Codec: H.264 / AVC
 ```
 
----
-
-## Exit Codes
+## 退出码 {#exit-codes}
 
 | Code | Meaning |
 |:---:|:---|
