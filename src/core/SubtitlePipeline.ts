@@ -4,6 +4,7 @@
  * 独立的后处理管道：将原始 OCR 结果经过多级处理得到干净字幕。
  *
  * 管道阶段（顺序执行）：
+ *   Stage 0: normalize      — 文本正则化（CRLF 合并、全角/半角规范化）
  *   Stage 1: filterJitter   — 移除单帧 OCR 噪声
  *   Stage 2: mergeSplit      — 合并因场景检测跳跃而分裂的相同字幕
  *   Stage 3: mergeSimilar    — 合并时间接近的相似字幕
@@ -88,6 +89,24 @@ export function textSimilarity(a: string, b: string): number {
   return sim
 }
 
+// ─── Stage 0: 文本正则化（CRLF 合并 + 全角/半角规范化）───────────────
+function stage0_normalize(subs: SubtitleLite[]): SubtitleLite[] {
+  return subs.map(sub => ({
+    ...sub,
+    text: sub.text
+      // 统一换行符
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      // 移除每行首尾空白
+      .split('\n')
+      .map(line => line.trim())
+      .join('\n')
+      // 去除连续多个换行
+      .replace(/\n{3,}/g, '\n\n')
+      .trim(),
+  }))
+}
+
 // ─── Stage 1: 过滤 OCR 噪声 ───────────────────────────────────────
 function stage1_filterJitter(subs: SubtitleLite[], opts: PipelineOptions): SubtitleLite[] {
   if (subs.length < 2) return subs
@@ -113,7 +132,7 @@ function stage1_filterJitter(subs: SubtitleLite[], opts: PipelineOptions): Subti
 
     const simPrev = prev ? textSimilarity(prev.text, curr.text) : 0
     const simNext = next ? textSimilarity(curr.text, next.text) : 0
-    const similarThreshold = 0.85
+    const similarThreshold = opts.splitSimilarityThreshold
 
     if (simPrev >= similarThreshold && simNext >= similarThreshold) {
       // 三连相同 → 桥接到前一条
@@ -240,6 +259,9 @@ export class SubtitlePipeline {
     // 按时间排序（addSubtitle 已保证有序，此处防御性排序）
     result.sort((a, b) => a.startTime - b.startTime)
 
+    // Stage 0: 文本正则化
+    result = stage0_normalize(result)
+
     // Stage 1: 过滤噪声
     result = stage1_filterJitter(result, this.opts)
 
@@ -256,13 +278,14 @@ export class SubtitlePipeline {
   }
 
   /** 仅执行单阶段（用于调试/对比） */
-  processStage(rawSubs: SubtitleLite[], stage: 1 | 2 | 3 | 4): SubtitleLite[] {
+  processStage(rawSubs: SubtitleLite[], stage: 0 | 1 | 2 | 3 | 4): SubtitleLite[] {
     let result = [...rawSubs]
     result.sort((a, b) => a.startTime - b.startTime)
-    if (stage >= 1) result = stage1_filterJitter(result, this.opts)
-    if (stage >= 2) result = stage2_mergeSplit(result, this.opts)
-    if (stage >= 3) result = stage3_mergeSimilar(result, this.opts)
-    if (stage >= 4) result = stage4_computeEndTime(result)
+    if (stage >= 1) result = stage0_normalize(result)
+    if (stage >= 2) result = stage1_filterJitter(result, this.opts)
+    if (stage >= 3) result = stage2_mergeSplit(result, this.opts)
+    if (stage >= 4) result = stage3_mergeSimilar(result, this.opts)
+    if (stage >= 5) result = stage4_computeEndTime(result)
     return result
   }
 
