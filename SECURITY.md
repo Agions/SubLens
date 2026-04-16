@@ -14,7 +14,7 @@ If you discover a security vulnerability, please report it through one of the me
 
 ### Method 1: GitHub Security Advisories
 
-Use [GitHub Security Advisories](https://github.com/Agions/HardSubX/security/advisories/new) to report privately.
+Use [GitHub Security Advisories](https://github.com/Agions/SubLens/security/advisories/new) to report privately.
 
 This allows us to discuss and fix the issue before public disclosure.
 
@@ -44,4 +44,4 @@ For all reported vulnerabilities, we will provide a timeline and keep you update
 
 ---
 
-For a list of disclosed security issues, see [Security Advisories](https://github.com/Agions/HardSubX/security/advisories).
+For a list of disclosed security issues, see [Security Advisories](https://github.com/Agions/SubLens/security/advisories).
