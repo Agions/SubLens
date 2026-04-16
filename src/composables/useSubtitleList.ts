@@ -137,6 +137,30 @@ export function useSubtitleList() {
     return 'low'
   }
 
+  /**
+   * Returns a CSS gradient color for the confidence heatmap bar.
+   * Green (#22c55e) -> Yellow (#eab308) -> Red (#ef4444) based on confidence.
+   */
+  function getConfidenceHeatmap(confidence: number): string {
+    if (confidence >= 0.85) {
+      return `linear-gradient(180deg, #22c55e ${Math.round(confidence * 100 - 85) * (100/15)}%, #16a34a 100%)`
+    } else if (confidence >= 0.60) {
+      // Interpolate yellow to green
+      const t = (confidence - 0.60) / 0.25
+      const r = Math.round(234 - t * 12)
+      const g = Math.round(179 + t * 17)
+      const b = Math.round(8 + t * 78)
+      return `linear-gradient(180deg, rgb(${r},${g},${b}) 0%, rgb(${Math.round(r*0.7)},${Math.round(g*0.7)},${Math.round(b*0.7)}) 100%)`
+    } else {
+      // Interpolate red to yellow
+      const t = confidence / 0.60
+      const r = Math.round(239 - t * 5)
+      const g = Math.round(68 + t * 111)
+      const b = Math.round(68 + t * 60)
+      return `linear-gradient(180deg, rgb(${r},${g},${b}) 0%, rgb(${Math.round(r*0.7)},${Math.round(g*0.7)},${Math.round(b*0.7)}) 100%)`
+    }
+  }
+
   return {
     // State
     displayCount,
@@ -168,5 +192,6 @@ export function useSubtitleList() {
     formatTimeSrt,
     parseTime,
     getConfidenceLevel,
+    getConfidenceHeatmap,
   }
 }

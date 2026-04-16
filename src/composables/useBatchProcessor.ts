@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useOCREngine } from './useOCREngine'
 import { type OCREngine } from '@/types/video'
@@ -9,6 +9,7 @@ export interface BatchJob {
   outputPath: string
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
   progress: number
+  stageLabel?: string
   error?: string
   startedAt?: Date
   completedAt?: Date
@@ -40,6 +41,42 @@ export function useBatchProcessor() {
   const currentJob = ref<BatchJob | null>(null)
   const isProcessing = ref(false)
 
+  // Timing for ETA
+  const batchStartTime = ref<number | null>(null)
+  const avgProcessingTime = ref<number>(0) // ms per completed job
+
+  // Overall queue progress (0-100)
+  const overallProgress = computed(() => {
+    if (jobs.value.length === 0) return 0
+    const total = jobs.value.length
+    const completed = jobs.value.filter(j =>
+      j.status === 'completed' || j.status === 'failed' || j.status === 'cancelled'
+    ).length
+    const processing = jobs.value.filter(j => j.status === 'processing')
+    const inProgress = processing.reduce((sum, j) => sum + j.progress, 0)
+    return Math.round((completed * 100 + inProgress) / total)
+  })
+
+  // Estimated seconds remaining
+  const estimatedTimeRemaining = computed(() => {
+    if (!isProcessing.value || jobs.value.length === 0) return null
+    const remaining = jobs.value.filter(j =>
+      j.status === 'pending' || j.status === 'processing'
+    ).length
+    if (remaining === 0) return null
+    const avgMs = avgProcessingTime.value || 30000 // default 30s per job
+    return Math.ceil((remaining * avgMs) / 1000)
+  })
+
+  function updateAvgProcessingTime(jobDurationMs: number) {
+    const prev = avgProcessingTime.value
+    const count = jobs.value.filter(j => j.status === 'completed').length
+    // Running average
+    avgProcessingTime.value = prev === 0
+      ? jobDurationMs
+      : Math.round(prev * (count - 1) / count + jobDurationMs / count)
+  }
+
   // Add files to queue
   function addToQueue(inputPaths: string[], options: BatchOptions): BatchJob[] {
     const newJobs: BatchJob[] = inputPaths.map(inputPath => ({
@@ -59,6 +96,7 @@ export function useBatchProcessor() {
     if (isProcessing.value) return
     
     isProcessing.value = true
+    batchStartTime.value = Date.now()
     
     const maxConcurrency = options.maxConcurrency || 2
     const pendingJobs = jobs.value.filter(j => j.status === 'pending')
@@ -122,13 +160,16 @@ export function useBatchProcessor() {
     
     currentJob.value = null
     isProcessing.value = false
+    batchStartTime.value = null
   }
 
   // Process single job - actual implementation
   async function processJob(job: BatchJob, options: BatchOptions) {
+    const jobStart = Date.now()
     try {
       // 1. Get video metadata via Tauri backend
       job.progress = 5
+      job.stageLabel = '读取视频元数据'
       const videoMeta = await invoke<{
         path: string
         width: number
@@ -145,6 +186,7 @@ export function useBatchProcessor() {
       
       // 2. Initialize OCR engine
       job.progress = 10
+      job.stageLabel = '初始化 OCR 引擎'
       const langMap: Record<string, string[]> = {
         ch: ['eng', 'chi_sim'],
         en: ['eng'],
@@ -157,9 +199,10 @@ export function useBatchProcessor() {
       await ocr.init(options.ocrEngine, langs)
       
       // 3. Extract frames and process OCR
+      job.progress = 30
+      job.stageLabel = '检测场景变化'
       // Note: This is a simplified version - full implementation would
       // use the video element to capture frames and run OCR on each
-      job.progress = 30
       
       // For batch processing, we use the Tauri backend to extract frames
       // and process them via OCR
@@ -173,6 +216,7 @@ export function useBatchProcessor() {
       })
       
       job.progress = 60
+      job.stageLabel = '提取帧并进行 OCR'
       
       // Process each detected scene
       const totalScenes = sceneChanges.length || 1
@@ -182,6 +226,7 @@ export function useBatchProcessor() {
         }
 
         const timestamp = sceneChanges[i] / videoMeta.fps
+        job.stageLabel = `处理场景 ${i + 1}/${totalScenes}`
 
         // Extract frame at this timestamp (result used for OCR in full implementation)
         await invoke<string>('extract_frame_at_time', {
@@ -194,6 +239,7 @@ export function useBatchProcessor() {
       
       // 4. Export subtitles in requested formats
       job.progress = 95
+      job.stageLabel = '导出字幕'
       
       const baseName = job.inputPath.split('/').pop()?.replace(/\.[^.]+$/, '') || 'subtitle'
       
@@ -205,6 +251,8 @@ export function useBatchProcessor() {
         })
       }
       
+      // Update average processing time
+      updateAvgProcessingTime(Date.now() - jobStart)
       
     } catch (e) {
       console.error(`[Batch] Failed to process ${job.inputPath}:`, e)
@@ -260,6 +308,8 @@ export function useBatchProcessor() {
     jobs,
     currentJob,
     isProcessing,
+    overallProgress,
+    estimatedTimeRemaining,
     addToQueue,
     startBatch,
     cancelBatch,

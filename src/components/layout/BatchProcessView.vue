@@ -5,6 +5,8 @@ import { useBatchProcessor, type BatchJob, type BatchOptions } from '@/composabl
 const {
   jobs,
   isProcessing,
+  overallProgress,
+  estimatedTimeRemaining,
   addToQueue,
   startBatch,
   cancelBatch,
@@ -89,6 +91,13 @@ function getStatusText(status: BatchJob['status']): string {
 
 const s = computed(() => stats())
 
+function formatETA(seconds: number | null): string {
+  if (seconds === null) return ''
+  if (seconds < 60) return `约 ${seconds}s`
+  if (seconds < 3600) return `约 ${Math.ceil(seconds / 60)}m`
+  return `约 ${Math.floor(seconds / 3600)}h ${Math.ceil((seconds % 3600) / 60)}m`
+}
+
 // Dialog state
 const isOpen = ref(false)
 
@@ -110,6 +119,14 @@ defineExpose({ open: openDialog, close: closeDialog })
       <div class="header-left">
         <h2 class="batch-title">批量处理</h2>
         <span v-if="jobs.length > 0" class="job-count-badge">{{ jobs.length }} 个任务</span>
+        <!-- Overall progress bar (only during processing) -->
+        <div v-if="isProcessing" class="overall-progress-wrap">
+          <div class="overall-progress-bar">
+            <div class="overall-progress-fill" :style="{ width: overallProgress + '%' }"/>
+          </div>
+          <span class="overall-progress-pct">{{ overallProgress }}%</span>
+          <span v-if="estimatedTimeRemaining !== null" class="eta-label">{{ formatETA(estimatedTimeRemaining) }}</span>
+        </div>
       </div>
       <div class="header-actions">
         <button
@@ -324,6 +341,7 @@ defineExpose({ open: openDialog, close: closeDialog })
                         <div class="job-progress-fill" :style="{ width: job.progress + '%' }"/>
                       </div>
                       <span class="job-progress-pct">{{ Math.round(job.progress) }}%</span>
+                      <span v-if="job.stageLabel" class="job-stage-label">{{ job.stageLabel }}</span>
                     </div>
 
                     <!-- Error text -->
@@ -421,6 +439,43 @@ defineExpose({ open: openDialog, close: closeDialog })
   padding: 3px 10px;
   border-radius: $radius-full;
   border: 1px solid rgba($primary, 0.2);
+}
+
+.overall-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.overall-progress-bar {
+  width: 80px;
+  height: 6px;
+  background: $bg-overlay;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.overall-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $primary, $accent);
+  border-radius: $radius-full;
+  transition: width 0.4s ease;
+}
+
+.overall-progress-pct {
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: 700;
+  color: $primary;
+}
+
+.eta-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-muted;
+  background: $bg-overlay;
+  padding: 2px 8px;
+  border-radius: $radius-full;
 }
 
 .header-actions {
@@ -934,6 +989,12 @@ defineExpose({ open: openDialog, close: closeDialog })
   color: $primary;
   min-width: 28px;
   text-align: right;
+}
+
+.job-stage-label {
+  font-size: 10px;
+  color: $text-muted;
+  margin-left: $space-1;
 }
 
 .job-error-text {

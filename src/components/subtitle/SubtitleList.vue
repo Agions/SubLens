@@ -27,6 +27,7 @@ const {
   deleteSelected,
   formatTimeShort,
   getConfidenceLevel,
+  getConfidenceHeatmap,
 } = useSubtitleList()
 
 // Reset pagination when filter changes
@@ -224,6 +225,13 @@ const exportFormatKeys = Object.keys(subtitleStore.exportFormats) as (keyof Expo
               </div>
             </div>
           </Transition>
+
+          <!-- Confidence heatmap bar -->
+          <div
+            class="conf-heatmap"
+            :style="{ background: getConfidenceHeatmap(sub.confidence) }"
+            :title="`置信度: ${Math.round(sub.confidence * 100)}%`"
+          />
 
           <!-- Selected indicator -->
           <div class="selected-bar"/>
@@ -634,6 +642,17 @@ const exportFormatKeys = Object.keys(subtitleStore.exportFormats) as (keyof Expo
     background: linear-gradient(180deg, var(--primary), $accent);
     opacity: 0;
     transition: opacity $duration-fast $ease-out-expo;
+  }
+
+  .conf-heatmap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    opacity: 0.7;
+    border-radius: $radius-lg 0 0 $radius-lg;
+    z-index: 0;
   }
 }
 

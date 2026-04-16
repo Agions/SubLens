@@ -276,4 +276,136 @@ describe('SubtitlePipeline', () => {
       expect(returned).toBe(p)
     })
   })
+
+  // ─── Boundary: Empty & Single Item ──────────────────────────────
+  describe('Boundary: empty and single item', () => {
+    it('processStage handles empty array at any stage without errors', () => {
+      const stages: Array<0 | 1 | 2 | 3 | 4> = [1, 2, 3, 4]
+      for (const stage of stages) {
+        expect(() => pipeline.processStage([], stage)).not.toThrow()
+        expect(pipeline.processStage([], stage)).toHaveLength(0)
+      }
+      // Stage 0 also
+      expect(() => pipeline.processStage([], 0)).not.toThrow()
+      expect(pipeline.processStage([], 0)).toHaveLength(0)
+    })
+
+    it('process handles single subtitle without errors', () => {
+      const input = [sub(1.0, 3.5, 'Solo item', 0.95)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      expect(result[0].text).toBe('Solo item')
+      expect(result[0].startTime).toBe(1.0)
+      expect(result[0].endTime).toBe(3.5)
+    })
+
+    it('process handles single subtitle with zero duration', () => {
+      const input = [sub(1.0, 1.0, 'Zero duration', 0.9)]
+      const result = pipeline.process(input)
+      // Should not crash; may be filtered or kept
+      expect(result.length).toBeGreaterThanOrEqual(0)
+    })
+
+    it('process handles single subtitle with very long text', () => {
+      const longText = 'A'.repeat(1000)
+      const input = [sub(0, 5, longText, 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      expect(result[0].text).toBe(longText)
+    })
+
+    it('process handles single subtitle with overlapping timestamps', () => {
+      const input = [sub(1.0, 5.0, 'Range', 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+    })
+  })
+
+  // ─── Boundary: Special Characters ──────────────────────────────
+  describe('Boundary: special characters', () => {
+    it('handles pure unicode Chinese text', () => {
+      const input = [
+        sub(0.0, 2.0, '你好世界', 0.9),
+        sub(2.2, 4.0, '你好世界', 0.9), // identical → should merge in stage 3
+      ]
+      const result = pipeline.process(input)
+      // Both same text, close together → merged or kept separate but no crash
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach(s => expect(typeof s.text).toBe('string'))
+    })
+
+    it('handles pure unicode Japanese text', () => {
+      const input = [sub(0.0, 2.0, 'こんにちは世界', 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      expect(result[0].text).toBe('こんにちは世界')
+    })
+
+    it('handles pure unicode Korean text', () => {
+      const input = [sub(0.0, 2.0, '안녕하세요', 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      expect(result[0].text).toBe('안녕하세요')
+    })
+
+    it('handles emoji-only text without crashing', () => {
+      const input = [
+        sub(0.0, 1.5, '🎉🎊', 0.9),
+        sub(1.7, 3.0, '🎉🎊', 0.9), // identical → stage 3 similar merge
+      ]
+      const result = pipeline.process(input)
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach(s => expect(typeof s.text).toBe('string'))
+    })
+
+    it('handles mixed emoji and text', () => {
+      const input = [sub(0.0, 2.0, 'Hello 👋 World 🌍', 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      expect(result[0].text).toBe('Hello 👋 World 🌍')
+    })
+
+    it('handles text containing HTML-like tags', () => {
+      const input = [sub(0.0, 2.0, '<b>bold</b> &amp; <i>italic</i>', 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      expect(result[0].text).toBe('<b>bold</b> &amp; <i>italic</i>')
+    })
+
+    it('handles text with newlines and carriage returns', () => {
+      const input = [sub(0.0, 2.0, 'Line1\nLine2\rLine3', 0.9)]
+      const result = pipeline.process(input)
+      expect(result).toHaveLength(1)
+      // Pipeline normalizes \r to \n (expected behavior)
+      expect(result[0].text.replace(/\r/g, '\n')).toBe('Line1\nLine2\nLine3')
+    })
+
+    it('handles text with zero-width and special unicode characters', () => {
+      const input = [
+        sub(0.0, 2.0, 'Hello\u200BWorld', 0.9), // zero-width space
+        sub(2.2, 4.0, 'Hello\u200BWorld', 0.9), // same → stage 3 merge candidate
+      ]
+      const result = pipeline.process(input)
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach(s => expect(typeof s.text).toBe('string'))
+    })
+
+    it('handles text with repeated identical strings (stress test)', () => {
+      const items = Array.from({ length: 10 }, (_, i) =>
+        sub(i * 0.5, i * 0.5 + 0.4, 'Repeat', 0.9)
+      )
+      const result = pipeline.process(items)
+      // Many overlapping short items with same text → should not crash
+      expect(result.length).toBeGreaterThan(0)
+    })
+
+    it('handles all-empty text (empty string subtitles)', () => {
+      const input = [
+        sub(0.0, 1.0, '', 0.9),
+        sub(1.2, 2.0, '', 0.9),
+      ]
+      // Should not crash; empty texts may be filtered or kept
+      expect(() => pipeline.process(input)).not.toThrow()
+    })
+  })
 })

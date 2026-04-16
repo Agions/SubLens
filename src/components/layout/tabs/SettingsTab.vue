@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useSettingsTab } from '@/composables/useSettingsTab'
+import { useProjectStore } from '@/stores/project'
 
 const { localSettings, systemDeps, handleThemeChange } = useSettingsTab()
+const projectStore = useProjectStore()
 </script>
 
 <template>
@@ -101,6 +103,52 @@ const { localSettings, systemDeps, handleThemeChange } = useSettingsTab()
             max="300"
             class="number-input"
           />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">处理选项</span>
+      </div>
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-label">合并相似度阈值</span>
+          <span class="setting-desc">字幕合并的文本相似度阈值</span>
+        </div>
+        <div class="setting-control slider-control">
+          <div class="slider-track">
+            <div class="slider-fill" :style="{ width: projectStore.extractOptions.mergeThreshold * 100 + '%' }"/>
+            <input
+              type="range"
+              v-model.number="projectStore.extractOptions.mergeThreshold"
+              min="0.5"
+              max="1.0"
+              step="0.01"
+              class="slider"
+            />
+          </div>
+          <span class="slider-value">{{ Math.round(projectStore.extractOptions.mergeThreshold * 100) }}%</span>
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-label">置信度阈值</span>
+          <span class="setting-desc">字幕识别的最低置信度</span>
+        </div>
+        <div class="setting-control slider-control">
+          <div class="slider-track">
+            <div class="slider-fill" :style="{ width: projectStore.extractOptions.confidenceThreshold * 100 + '%' }"/>
+            <input
+              type="range"
+              v-model.number="projectStore.extractOptions.confidenceThreshold"
+              min="0"
+              max="1"
+              step="0.01"
+              class="slider"
+            />
+          </div>
+          <span class="slider-value">{{ Math.round(projectStore.extractOptions.confidenceThreshold * 100) }}%</span>
         </div>
       </div>
     </div>
