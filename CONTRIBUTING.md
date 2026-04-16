@@ -8,7 +8,7 @@ Contributions are welcome. This guide covers how to report issues, submit code, 
 
 Before opening a new issue:
 
-1. Search [GitHub Issues](https://github.com/Agions/HardSubX/issues) to check if it already exists
+1. Search [GitHub Issues](https://github.com/Agions/SubLens/issues) to check if it already exists
 2. If not, open a new issue with a clear title and detailed reproduction steps
 
 For bug reports, include:
@@ -106,7 +106,7 @@ Closes #123
 ### Local Setup
 
 ```bash
-git clone https://github.com/Agions/HardSubX.git
+git clone https://github.com/Agions/SubLens.git
 cd SubLens
 pnpm install
 

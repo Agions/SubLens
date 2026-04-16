@@ -48,7 +48,7 @@ SRT · VTT · ASS · SSA · JSON · CSV · TXT · LRC · SBV · MD · STL · TTM
 ## 🚀 Quick Install
 
 ```bash
-git clone https://github.com/Agions/HardSubX.git
+git clone https://github.com/Agions/SubLens.git
 cd SubLens
 pnpm install
 pnpm tauri dev

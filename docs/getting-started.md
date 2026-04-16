@@ -28,7 +28,7 @@ Then switch to PaddleOCR engine in the SubLens UI. See [PADDLEOCR_SETUP.md](../P
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Agions/HardSubX.git
+git clone https://github.com/Agions/SubLens.git
 cd SubLens
 
 # 2. Install frontend dependencies
