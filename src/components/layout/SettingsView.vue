@@ -222,7 +222,7 @@ function getDepIcon(dep: { name: string, installed: boolean }) {
         <div class="about-info">
           <div class="about-logo">🎬</div>
           <div class="about-text">
-            <h4>HardSubX</h4>
+            <h4>硬字幕提取</h4>
             <p>专业视频字幕提取工具</p>
             <p class="version">版本 3.0.0</p>
           </div>

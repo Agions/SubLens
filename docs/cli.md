@@ -1,4 +1,4 @@
-# HardSubX CLI Reference
+# 硬字幕提取 CLI 参考
 
 ## Installation
 

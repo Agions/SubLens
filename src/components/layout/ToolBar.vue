@@ -118,7 +118,7 @@ function openAbout() {
             fill="currentColor"
           />
         </svg>
-        <span class="logo-text">HardSubX</span>
+        <span class="logo-text">硬字幕提取</span>
       </div>
 
       <div class="divider" />

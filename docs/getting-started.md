@@ -1,4 +1,4 @@
-# Getting Started with HardSubX
+# 硬字幕提取 - 快速上手
 
 ## Prerequisites
 

@@ -1,12 +1,12 @@
-# HardSubX
+# 硬字幕提取
 
 <div align="center">
-  <img src="public/logo.svg" width="120" height="120" alt="HardSubX" />
+  <img src="public/logo.svg" width="120" height="120" alt="硬字幕提取" />
 </div>
 
 <div align="center">
 
-Professional video hard subtitle extraction tool. Extract hardcoded subtitles from any video and output SRT, VTT, ASS, JSON and more. Built with Tauri + Vue 3 + Rust.
+硬字幕提取 - 从视频中提取硬编码字幕，支持多种格式输出。基于 Tauri + Vue 3 + Rust 构建。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/Agions/HardSubX?style=social)](https://github.com/Agions/HardSubX/stargazers)
@@ -14,6 +14,7 @@ Professional video hard subtitle extraction tool. Extract hardcoded subtitles fr
 [![Tauri](https://img.shields.io/badge/Tauri-FFC131?style=flat-square&logo=tauri&logoColor=FFC131)](https://tauri.app)
 [![Vue](https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org)
 [![Rust](https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![简体中文](https://img.shields.io/badge/简体中文-中文-blue.svg)]
 
 </div>
 

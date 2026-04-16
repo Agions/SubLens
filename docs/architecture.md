@@ -1,4 +1,4 @@
-# HardSubX Architecture
+# 硬字幕提取 架构设计
 
 ## Overview
 

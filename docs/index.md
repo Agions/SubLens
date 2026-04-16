@@ -1,8 +1,8 @@
-# HardSubX Documentation
+# 硬字幕提取 文档
 
 <div align="center">
 
-Professional video hard subtitle extraction tool. Extract hardcoded subtitles from any video.
+硬字幕提取 - 专业的视频硬字幕提取工具，从任何视频中提取硬编码字幕。
 
 **Version**: 3.3.1 · **License**: MIT
 
@@ -73,7 +73,7 @@ pnpm tauri dev
 ## 📁 Project Structure
 
 ```
-HardSubX/
+硬字幕提取/
 ├── src/                    # Vue 3 frontend (17 composables, 23 components)
 │   ├── components/        # UI components
 │   │   ├── layout/tabs/   # Tab-based UI
