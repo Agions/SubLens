@@ -1,4 +1,4 @@
-//! Unit tests for HardSubX Tauri backend
+//! Unit tests for SubLens Tauri backend
 
 #[cfg(test)]
 mod tests {

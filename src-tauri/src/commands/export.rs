@@ -100,7 +100,7 @@ fn export_as_ass(subtitles: &[SubtitleItem]) -> String {
     // ASS/SSA Advanced Substation Alpha format
     let mut output = String::from(
         "[Script Info]
-Title: HardSubX Export
+Title: SubLens Export
 ScriptType: v4.00+
 Collisions: Normal
 PlayDepth: 0
@@ -142,7 +142,7 @@ fn export_as_ssa(subtitles: &[SubtitleItem]) -> String {
     // SSA (SubStation Alpha) - older format with v4.00
     let mut output = String::from(
         "[Script Info]
-Title:HardSubX Export
+Title: SubLens Export
 ScriptType:v4.00
 Collisions:Normal
 PlayDepth:0
@@ -174,7 +174,7 @@ fn export_as_json(subtitles: &[SubtitleItem]) -> String {
     let output = serde_json::json!({
         "version": "3.0",
         "generatedAt": chrono_lite_now(),
-        "tool": "HardSubX",
+        "tool": "SubLens",
         "subtitleCount": subtitles.len(),
         "subtitles": subtitles.iter().map(|sub| {
             serde_json::json!({

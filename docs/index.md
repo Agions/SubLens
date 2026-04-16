@@ -1,8 +1,8 @@
-# 硬字幕提取 文档
+# SubLens 文档
 
 <div align="center">
 
-硬字幕提取 - 专业的视频硬字幕提取工具，从任何视频中提取硬编码字幕。
+SubLens - 专业的视频字幕提取工具，从任何视频中提取硬编码字幕。
 
 **Version**: 3.3.1 · **License**: MIT
 
@@ -49,7 +49,7 @@ SRT · VTT · ASS · SSA · JSON · CSV · TXT · LRC · SBV · MD · STL · TTM
 
 ```bash
 git clone https://github.com/Agions/HardSubX.git
-cd HardSubX
+cd SubLens
 pnpm install
 pnpm tauri dev
 ```
@@ -73,7 +73,7 @@ pnpm tauri dev
 ## 📁 Project Structure
 
 ```
-硬字幕提取/
+SubLens/
 ├── src/                    # Vue 3 frontend (17 composables, 23 components)
 │   ├── components/        # UI components
 │   │   ├── layout/tabs/   # Tab-based UI

@@ -1,5 +1,5 @@
 /**
- * SubtitlePipeline — HardSubX Core
+ * SubtitlePipeline — SubLens Core
  * ================================
  * 独立的后处理管道：将原始 OCR 结果经过多级处理得到干净字幕。
  *

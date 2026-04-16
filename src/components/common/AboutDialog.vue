@@ -35,12 +35,12 @@ function close() {
 </script>
 
 <template>
-  <Modal :open="open" title="关于 硬字幕提取" size="md" @close="close">
+  <Modal :open="open" title="关于 SubLens" size="md" @close="close">
     <div class="about-content">
       <div class="about-header">
         <div class="app-icon">🎬</div>
         <div class="app-info">
-          <h2 class="app-name">硬字幕提取</h2>
+          <h2 class="app-name">SubLens</h2>
           <p class="app-version">版本 {{ version }}</p>
           <p class="app-date">构建于 {{ buildDate }}</p>
         </div>

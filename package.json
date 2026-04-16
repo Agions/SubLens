@@ -1,7 +1,7 @@
 {
   "name": "hardsubx",
   "version": "3.4.0",
-  "description": "Professional Video OCR Subtitle Extraction Tool",
+  "description": "SubLens - Video Subtitle Extraction Tool",
   "type": "module",
   "scripts": {
     "dev": "vite",

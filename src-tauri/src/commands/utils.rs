@@ -1,4 +1,4 @@
-//! Shared utilities for the HardSubX commands layer.
+//! Shared utilities for the SubLens commands layer.
 
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};

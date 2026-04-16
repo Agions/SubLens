@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="HardSubX Logo">
-  <title>HardSubX</title>
-  <desc>Professional video hard subtitle extraction tool</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="SubLens Logo">
+  <title>SubLens</title>
+  <desc>Video subtitle extraction lens</desc>
   <defs>
     <linearGradient id="lgBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0D1117"/>
@@ -14,48 +14,60 @@
       <stop offset="0%" stop-color="#00D4AA"/>
       <stop offset="100%" stop-color="#00FFD0"/>
     </linearGradient>
-    <filter id="glowing">
-      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+    <linearGradient id="lgRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4D9BFF"/>
+      <stop offset="50%" stop-color="#00D4AA"/>
+      <stop offset="100%" stop-color="#0A84FF"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSoft">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
+
   <!-- Card background -->
   <rect x="0" y="0" width="200" height="200" rx="36" fill="url(#lgBg)"/>
   <!-- Border -->
-  <rect x="1" y="1" width="198" height="198" rx="35" fill="none" stroke="#0A84FF" stroke-width="1" stroke-opacity="0.25"/>
+  <rect x="1" y="1" width="198" height="198" rx="35" fill="none" stroke="url(#lgRing)" stroke-width="1" stroke-opacity="0.3"/>
 
-  <!-- H left bar -->
-  <rect x="30" y="28" width="22" height="110" rx="6" fill="url(#lgBlue)" filter="url(#glowing)"/>
-  <!-- H right bar -->
-  <rect x="82" y="28" width="22" height="110" rx="6" fill="url(#lgBlue)" filter="url(#glowing)"/>
-  <!-- H crossbar -->
-  <rect x="52" y="72" width="52" height="18" rx="4" fill="#1C1C21"/>
+  <!-- Outer lens ring -->
+  <circle cx="100" cy="92" r="58" fill="none" stroke="url(#lgBlue)" stroke-width="5" stroke-opacity="0.25"/>
+  <!-- Middle lens ring -->
+  <circle cx="100" cy="92" r="46" fill="none" stroke="url(#lgBlue)" stroke-width="3" stroke-opacity="0.4"/>
+  <!-- Inner lens ring -->
+  <circle cx="100" cy="92" r="34" fill="none" stroke="url(#lgCyan)" stroke-width="2" stroke-opacity="0.6"/>
 
-  <!-- X crosshairs targeting area -->
-  <line x1="50" y1="34" x2="108" y2="86" stroke="#00D4AA" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-  <line x1="108" y1="34" x2="50" y2="86" stroke="#00D4AA" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-  <!-- Crosshair center dot -->
-  <circle cx="79" cy="60" r="6" fill="none" stroke="#00FFD0" stroke-width="1.5" opacity="0.85"/>
-  <circle cx="79" cy="60" r="2.5" fill="#00FFD0"/>
+  <!-- Aperture blades (6-blade iris) - S shape implied through asymmetric placement -->
+  <!-- Blade 1 (top-right) -->
+  <path d="M 100 58 Q 120 70 118 92 Q 110 82 100 80 Z" fill="#4D9BFF" opacity="0.7"/>
+  <!-- Blade 2 (right) -->
+  <path d="M 134 92 Q 120 110 100 108 Q 110 100 114 92 Z" fill="#0A84FF" opacity="0.65"/>
+  <!-- Blade 3 (bottom-right) -->
+  <path d="M 118 126 Q 108 118 100 120 Q 102 110 112 108 Z" fill="#00D4AA" opacity="0.6"/>
+  <!-- Blade 4 (bottom-left) -->
+  <path d="M 82 126 Q 92 110 100 108 Q 90 115 88 120 Z" fill="#00D4AA" opacity="0.55"/>
+  <!-- Blade 5 (left) -->
+  <path d="M 66 92 Q 80 100 88 92 Q 82 85 76 92 Z" fill="#0A84FF" opacity="0.5"/>
+  <!-- Blade 6 (top-left) -->
+  <path d="M 82 58 Q 90 75 100 80 Q 95 70 88 65 Z" fill="#4D9BFF" opacity="0.6"/>
 
-  <!-- Subtitle track bars (bottom of H) -->
-  <rect x="44" y="108" width="64" height="5" rx="2.5" fill="url(#lgCyan)" opacity="0.95"/>
-  <rect x="50" y="118" width="48" height="4" rx="2" fill="url(#lgCyan)" opacity="0.72"/>
-  <rect x="55" y="127" width="36" height="3.5" rx="1.75" fill="url(#lgCyan)" opacity="0.48"/>
+  <!-- Center lens dot -->
+  <circle cx="100" cy="92" r="16" fill="none" stroke="url(#lgCyan)" stroke-width="2" opacity="0.8" filter="url(#glow)"/>
+  <circle cx="100" cy="92" r="8" fill="url(#lgCyan)" opacity="0.9" filter="url(#glow)"/>
+  <circle cx="100" cy="92" r="3" fill="#ffffff" opacity="0.9"/>
 
-  <!-- Film frame notch (top-right) -->
-  <rect x="136" y="22" width="44" height="32" rx="5" fill="none" stroke="#4D9BFF" stroke-width="1.5" stroke-opacity="0.55"/>
-  <!-- Film notch cuts -->
-  <rect x="136" y="22" width="12" height="9" rx="1.5" fill="#0D1117"/>
-  <rect x="168" y="22" width="12" height="9" rx="1.5" fill="#0D1117"/>
-  <!-- H inside film frame -->
-  <rect x="148" y="29" width="5" height="16" rx="1.5" fill="#4D9BFF" opacity="0.7"/>
-  <rect x="163" y="29" width="5" height="16" rx="1.5" fill="#4D9BFF" opacity="0.7"/>
-  <rect x="153" y="36" width="10" height="4" rx="1" fill="#1C1C21"/>
+  <!-- Subtitle track bars (bottom) -->
+  <rect x="44" y="148" width="64" height="5" rx="2.5" fill="url(#lgCyan)" opacity="0.95"/>
+  <rect x="50" y="158" width="48" height="4" rx="2" fill="url(#lgCyan)" opacity="0.72"/>
+  <rect x="55" y="167" width="36" height="3.5" rx="1.75" fill="url(#lgCyan)" opacity="0.48"/>
 
-  <!-- Brand text at bottom -->
-  <text x="100" y="185" font-family="'JetBrains Mono','SF Mono','Consolas',monospace" font-size="11" font-weight="600" letter-spacing="3" fill="#4D9BFF" text-anchor="middle" opacity="0.8">HARDSUBX</text>
+  <!-- Brand text -->
+  <text x="100" y="188" font-family="'JetBrains Mono','SF Mono','Consolas',monospace" font-size="11" font-weight="600" letter-spacing="3" fill="#4D9BFF" text-anchor="middle" opacity="0.85">SUBLENS</text>
 
   <!-- Subtle separator line -->
-  <rect x="40" y="166" width="120" height="1" rx="0.5" fill="#21262D"/>
+  <rect x="40" y="169" width="120" height="1" rx="0.5" fill="#21262D"/>
 </svg>

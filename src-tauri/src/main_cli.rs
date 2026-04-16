@@ -1,4 +1,4 @@
-//! HardSubX CLI - Command Line Interface
+//! SubLens CLI - Command Line Interface
 //! 
 //! Usage:
 //!   hardsubx-cli extract <video_file> [options]
@@ -13,7 +13,7 @@ use std::process::Command;
 #[command(
     name = "hardsubx-cli",
     version = "3.2.0",
-    about = "HardSubX v3.2.0 - Professional Video Subtitle Extraction Tool"
+    about = "SubLens v3.2.0 - Video Subtitle Extraction Tool"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -80,7 +80,7 @@ fn main() {
         Commands::Extract { 
             video, output, format, roi, ocr, lang, threshold 
         } => {
-            println!("🎬 HardSubX CLI v3.2.0");
+            println!("🎬 SubLens CLI v3.2.0");
             println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             println!("📁 Input: {}", video);
             println!("📂 Output: {}", output);

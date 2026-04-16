@@ -118,7 +118,7 @@ function openAbout() {
             fill="currentColor"
           />
         </svg>
-        <span class="logo-text">硬字幕提取</span>
+        <span class="logo-text">SubLens</span>
       </div>
 
       <div class="divider" />

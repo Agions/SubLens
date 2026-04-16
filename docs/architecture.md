@@ -1,8 +1,8 @@
-# 硬字幕提取 架构设计
+# SubLens 架构设计
 
 ## Overview
 
-HardSubX is a Tauri 2.x desktop application with a Vue 3 frontend and Rust backend. It extracts hardcoded (burned-in) subtitles from video files using OCR and produces frame-accurate subtitle outputs.
+SubLens is a Tauri 2.x desktop application with a Vue 3 frontend and Rust backend. It extracts hardcoded (burned-in) subtitles from video files using OCR and produces frame-accurate subtitle outputs.
 
 ```
 +-------------------------------------------------------------+
@@ -38,7 +38,7 @@ HardSubX is a Tauri 2.x desktop application with a Vue 3 frontend and Rust backe
 ## Directory Structure
 
 ```
-HardSubX/
+SubLens/
 ├── src/                          # Vue 3 frontend
 │   ├── components/
 │   │   ├── common/               # Button, Modal, Tooltip, SubtitleToast, AboutDialog
@@ -119,7 +119,7 @@ HardSubX/
 
 ## State Management
 
-HardSubX uses **Pinia** for frontend state with a clear separation:
+SubLens uses **Pinia** for frontend state with a clear separation:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -244,7 +244,7 @@ interface SubtitleItem {
 
 ## OKLCH Design System
 
-HardSubX uses the **OKLCH** color space for perceptually uniform colors:
+SubLens uses the **OKLCH** color space for perceptually uniform colors:
 
 ```css
 :root {

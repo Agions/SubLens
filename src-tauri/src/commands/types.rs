@@ -1,4 +1,4 @@
-//! Shared types for the HardSubX commands layer.
+//! Shared types for the SubLens commands layer.
 //! All cross-cutting data structures live here to avoid duplication.
 
 use serde::{Deserialize, Serialize};

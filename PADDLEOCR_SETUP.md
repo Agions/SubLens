@@ -61,7 +61,7 @@ For NVIDIA GPU acceleration:
 pip install paddlepaddle-gpu
 ```
 
-The HardSubX UI will automatically use the GPU when the PaddleOCR engine is selected.
+The SubLens UI will automatically use the GPU when the PaddleOCR engine is selected.
 
 ## FAQ
 

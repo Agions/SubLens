@@ -1,5 +1,5 @@
 /**
- * Subtitle Types — HardSubX
+ * Subtitle Types — SubLens
  * ==========================
  * 核心数据类型定义。
  * 格式化逻辑已迁移至 src/core/SubtitleExporter.ts。

@@ -1,4 +1,4 @@
-# 硬字幕提取 - 快速上手
+# SubLens - 快速上手
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ conda install cudatoolkit=11.8 -c nvidia
 pip install paddlepaddle-gpu
 ```
 
-Then switch to PaddleOCR engine in the HardSubX UI. See [PADDLEOCR_SETUP.md](../PADDLEOCR_SETUP.md) for full instructions.
+Then switch to PaddleOCR engine in the SubLens UI. See [PADDLEOCR_SETUP.md](../PADDLEOCR_SETUP.md) for full instructions.
 
 ---
 
@@ -29,7 +29,7 @@ Then switch to PaddleOCR engine in the HardSubX UI. See [PADDLEOCR_SETUP.md](../
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Agions/HardSubX.git
-cd HardSubX
+cd SubLens
 
 # 2. Install frontend dependencies
 pnpm install

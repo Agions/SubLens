@@ -24,7 +24,7 @@ pub fn run() {
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    info!("Starting HardSubX v3.2.0");
+    info!("Starting SubLens v3.2.0");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())

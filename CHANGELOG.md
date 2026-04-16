@@ -1,6 +1,6 @@
-# 硬字幕提取 更新日志
+# SubLens 更新日志
 
-All notable changes to 硬字幕提取 (HardSubX) are documented here.
+All notable changes to SubLens are documented here.
 
 ## [3.4.0] - 2026-04-14
 

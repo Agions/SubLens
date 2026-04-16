@@ -1,4 +1,4 @@
-# 硬字幕提取 CLI 参考
+# SubLens CLI 参考
 
 ## Installation
 
@@ -84,7 +84,7 @@ hardsubx-cli extract video.mp4 --frame-interval 2
 **Sample output**
 
 ```
-HardSubX CLI v3.2.0 — Video Info
+SubLens CLI v3.2.0 — Video Info
 ================================
 File: video.mp4
 Resolution: 1920x1080

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * HardSubX CLI v3.2.0
+ * SubLens CLI v3.2.0
  * Video Subtitle Extraction Tool
  */
 
@@ -127,7 +127,7 @@ async function main() {
       if (!existsSync(videoPath)) { console.error('❌ Video not found'); process.exit(1) }
       const info = getVideoInfo(videoPath)
       console.log(`
-🔍 HardSubX CLI v3.2.0 — Video Info
+🔍 SubLens CLI v3.2.0 — Video Info
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📁 File:   ${videoPath}
 📐 Size:   ${info.width}×${info.height}

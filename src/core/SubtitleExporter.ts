@@ -81,7 +81,7 @@ function formatASS(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
 
   const header = `[Script Info]
-Title: HardSubX Export
+Title: SubLens Export
 ScriptType: v4.00+
 Collisions: Normal
 PlayDepth: 0
@@ -110,7 +110,7 @@ function formatSSA(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
 
   const header = `[Script Info]
-Title:HardSubX Export
+Title: SubLens Export
 ScriptType:v4.00+
 Collisions:Normal
 PlayDepth:0
@@ -135,7 +135,7 @@ function formatJSON(subs: SubtitleItem[]): string {
   return JSON.stringify({
     version: '3.0',
     generatedAt: new Date().toISOString(),
-    tool: 'HardSubX',
+    tool: 'SubLens',
     subtitles: subs.map(sub => ({
       index: sub.index,
       startTime: sub.startTime,
@@ -158,12 +158,12 @@ function formatTXT(subs: SubtitleItem[]): string {
 function formatLRC(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
 
-  const header = `[ti:HardSubX Export]
-[ar:HardSubX]
+  const header = `[ti:SubLens Export]
+[ar:SubLens]
 [al:Subtitle Export]
-[by:HardSubX v3.0]
+[by:SubLens v3.0]
 [offset:0]
-[re:HardSubX]
+[re:SubLens]
 
 `
   const content = subs.map(sub => {

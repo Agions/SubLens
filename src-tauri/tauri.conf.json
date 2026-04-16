@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "HardSubX",
+  "productName": "SubLens",
   "version": "3.3.1",
-  "identifier": "com.hardsubx.desktop",
+  "identifier": "com.sublens.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "HardSubX — Professional Video Subtitle Extraction",
+        "title": "SubLens — 视频字幕提取工具",
         "width": 1400,
         "height": 900,
         "minWidth": 1200,
@@ -41,8 +41,8 @@
     ],
     "resources": [],
     "category": "Utility",
-    "shortDescription": "Professional video subtitle extraction tool",
-    "longDescription": "HardSubX is a professional video subtitle extraction tool powered by OCR. It extracts hardcoded subtitles from videos using Tesseract.js, PaddleOCR, or EasyOCR, and exports to multiple formats including SRT, VTT, ASS, SSA, JSON, TXT, LRC, SBV, and CSV.",
+    "shortDescription": "SubLens - 视频字幕提取工具",
+    "longDescription": "SubLens is a video subtitle extraction tool powered by OCR. It extracts hardcoded subtitles from videos using Tesseract.js, PaddleOCR, or EasyOCR, and exports to multiple formats including SRT, VTT, ASS, SSA, JSON, TXT, LRC, SBV, and CSV.",
     "windows": {
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",

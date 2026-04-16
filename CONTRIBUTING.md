@@ -1,4 +1,4 @@
-# Contributing to HardSubX
+# Contributing to SubLens
 
 Contributions are welcome. This guide covers how to report issues, submit code, and set up your development environment.
 
@@ -12,7 +12,7 @@ Before opening a new issue:
 2. If not, open a new issue with a clear title and detailed reproduction steps
 
 For bug reports, include:
-- HardSubX version
+- SubLens version
 - Operating system
 - Steps to reproduce
 - Expected vs actual behavior
@@ -107,7 +107,7 @@ Closes #123
 
 ```bash
 git clone https://github.com/Agions/HardSubX.git
-cd HardSubX
+cd SubLens
 pnpm install
 
 # Start development server

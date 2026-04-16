@@ -1,12 +1,12 @@
-# 硬字幕提取
+# SubLens
 
 <div align="center">
-  <img src="public/logo.svg" width="120" height="120" alt="硬字幕提取" />
+  <img src="public/logo.svg" width="120" height="120" alt="SubLens" />
 </div>
 
 <div align="center">
 
-硬字幕提取 - 从视频中提取硬编码字幕，支持多种格式输出。基于 Tauri + Vue 3 + Rust 构建。
+SubLens - 视频字幕提取工具，从视频中提取硬编码字幕，支持多种格式输出。基于 Tauri + Vue 3 + Rust 构建。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/Agions/HardSubX?style=social)](https://github.com/Agions/HardSubX/stargazers)
@@ -82,7 +82,7 @@ MP4 · MKV · AVI · MOV · WebM
 ```bash
 # Clone the repo
 git clone https://github.com/Agions/HardSubX.git
-cd HardSubX
+cd SubLens
 
 # Install frontend dependencies
 pnpm install
@@ -139,7 +139,7 @@ hardsubx-cli --help
 ## Project Structure
 
 ```
-HardSubX/
+SubLens/
 ├── src/                         # Vue 3 frontend
 │   ├── components/              # Vue components
 │   │   ├── common/             # Button, Modal, Tooltip, SubtitleToast
