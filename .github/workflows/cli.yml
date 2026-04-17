@@ -55,6 +55,7 @@ jobs:
           EXE_EXT=${{ matrix.platform == 'windows-latest' && '.exe' || '' }}
           SRC="src-tauri/target/${{ matrix.target }}/release/sublens-cli${EXE_EXT}"
           tar -czvf ${{ matrix.artifact }}.tar.gz -C "$(dirname $SRC)" "$(basename $SRC)"
+        shell: bash
 
       - name: Upload CLI binary
         uses: softprops/action-gh-release@v2
