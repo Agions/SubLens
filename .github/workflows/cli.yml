@@ -44,7 +44,7 @@ jobs:
         if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libcairo2-dev libgirepository1.0-dev libsoup-3.0-dev pkg-config libssl-dev
+          sudo apt-get install -y libgtk-3-dev libcairo2-dev libgirepository1.0-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev pkg-config libssl-dev
 
       - name: Build CLI binary
         run: |
