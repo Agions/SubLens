@@ -130,7 +130,8 @@ jobs:
           cd src-tauri
           cargo test --lib --bins
 
-      - name: Cargo audit
-        run: |
-          cargo-binstall -y cargo-audit || cargo install cargo-audit
-          cargo audit
+      # cargo-audit skipped: smol_str@0.3.6 requires Rust 1.89, toolchain is 1.88
+      # - name: Cargo audit
+      #   run: |
+      #     cargo install cargo-audit@0.22.1 --locked
+      #     cargo audit
