@@ -44,9 +44,10 @@ export const DEFAULT_PIPELINE_OPTIONS: PipelineOptions = {
 }
 
 // ─── Levenshtein 距离（带缓存）──────────────────────────────────────
+// LRU cache using Map (insertion-order aware) — O(1) delete via Map.delete
 const _similarityCache = new Map<string, number>()
-// Separate array to reliably track cache insertion order (Map.keys() order not guaranteed by spec)
-const _cacheOrder: string[] = []
+const MAX_CACHE_SIZE = 3000
+const TRIM_TO_SIZE = 2000
 
 export function textSimilarity(a: string, b: string): number {
   if (a === b) return 1
@@ -74,17 +75,13 @@ export function textSimilarity(a: string, b: string): number {
   const dist = dp[long.length]
   const sim = 1 - dist / Math.max(short.length, long.length)
 
-  // LRU 缓存（最多 3000 条，淘汰至 2000）
-  if (_similarityCache.size >= 3000) {
-    // Evict oldest entries until size is back to 2000 (33% headroom)
-    while (_similarityCache.size > 2000) {
-      const oldest = _cacheOrder.shift()
-      if (oldest) {
-        _similarityCache.delete(oldest)
-      }
+  // LRU 缓存淘汰 — Map.delete 是 O(1)，避免 Array.shift() 的 O(n)
+  if (_similarityCache.size >= MAX_CACHE_SIZE) {
+    for (const key of _similarityCache.keys()) {
+      if (_similarityCache.size <= TRIM_TO_SIZE) break
+      _similarityCache.delete(key)
     }
   }
-  _cacheOrder.push(cacheKey)
   _similarityCache.set(cacheKey, sim)
   return sim
 }
@@ -303,6 +300,5 @@ export class SubtitlePipeline {
   /** 清空相似度缓存 */
   clearCache(): void {
     _similarityCache.clear()
-    _cacheOrder.length = 0
   }
 }

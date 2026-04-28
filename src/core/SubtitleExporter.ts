@@ -94,12 +94,18 @@ Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
 
   const events = subs.map(sub => {
-    const text = sub.text
-      .replace(/\\/g, '\\\\')
-      .replace(/\{/g, '\\{')
-      .replace(/\}/g, '\\}')
-      .replace(/,/g, '\\,')
-      .replace(/\n/g, '\\N')
+    // Single-pass replacement via Map (avoids 5x string allocation)
+    const ESCAPE_MAP = new Map([
+      [/\\/g, '\\\\'],
+      [/\{/g, '\\{'],
+      [/\}/g, '\\}'],
+      [/,/g, '\\,'],
+      [/\n/g, '\\N'],
+    ])
+    let text = sub.text
+    for (const [pattern, replacement] of ESCAPE_MAP) {
+      text = text.replace(pattern, replacement)
+    }
     return `Dialogue: 0,${tsASS(sub.startTime)},${tsASS(sub.endTime)},Default,,0,0,0,,${text}`
   }).join('\n')
 

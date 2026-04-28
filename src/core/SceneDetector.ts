@@ -51,7 +51,9 @@ function chiSquareDistance(
   let chiSquare = 0
 
   for (let b = 0; b < totalBins; b++) {
-    const expected = histA[b] || 0.1  // 平滑：避免除零
+    // Laplace smoothing: use max(histA[b], 1) to avoid zero-count division
+    // Add-one smoothing guarantees minimum expected count of 1
+    const expected = histA[b] || 1
     const observed = histB[b]
     chiSquare += ((observed - expected) ** 2) / expected
   }

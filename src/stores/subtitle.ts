@@ -58,13 +58,16 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     return result
   })
 
-  // Confidence level statistics
-  const confidenceStats = computed(() => ({
-    low: subtitles.value.filter(s => s.confidence < CONFIDENCE_MID).length,
-    mid: subtitles.value.filter(s => s.confidence >= CONFIDENCE_MID && s.confidence < CONFIDENCE_HIGH).length,
-    high: subtitles.value.filter(s => s.confidence >= CONFIDENCE_HIGH).length,
-    total: subtitles.value.length,
-  }))
+  // Confidence level statistics — single pass O(n)
+  const confidenceStats = computed(() => {
+    let low = 0, mid = 0, high = 0
+    for (const s of subtitles.value) {
+      if (s.confidence < CONFIDENCE_MID) low++
+      else if (s.confidence < CONFIDENCE_HIGH) mid++
+      else high++
+    }
+    return { low, mid, high, total: subtitles.value.length }
+  })
 
   // Low-confidence subtitles for batch operations
   const lowConfidenceSubtitles = computed(() =>
@@ -207,11 +210,11 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   }
 
   function batchDeleteLowConfidence() {
-    const lowIds = new Set(lowConfidenceSubtitles.value.map(s => s.id))
-    subtitles.value = subtitles.value.filter(s => !lowIds.has(s.id))
+    const threshold = CONFIDENCE_MID
+    subtitles.value = subtitles.value.filter(s => s.confidence >= threshold)
     // Re-index
     subtitles.value.forEach((s, i) => { s.index = i + 1 })
-    if (lowIds.has(selectedId.value ?? '')) selectedId.value = null
+    if (selectedId.value && !subtitles.value.some(s => s.id === selectedId.value)) selectedId.value = null
   }
 
   function clearAll() {
