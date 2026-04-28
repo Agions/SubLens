@@ -82,7 +82,7 @@ jobs:
             ffmpeg
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.85.0
+        uses: dtolnay/rust-toolchain@1.88.0
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2
@@ -115,12 +115,15 @@ jobs:
             ffmpeg
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.85.0
+        uses: dtolnay/rust-toolchain@1.88.0
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+
+      - name: Generate Cargo.lock
+        run: cd src-tauri && cargo generate-lockfile
 
       - name: Run unit tests
         run: |
