@@ -27,7 +27,7 @@ jobs:
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: ~/.pnpm-store
+          path: ~/.pnpm
           key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             pnpm-${{ runner.os }}-
@@ -64,7 +64,7 @@ jobs:
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: ~/.pnpm-store
+          path: ~/.pnpm
           key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             pnpm-${{ runner.os }}-
@@ -129,5 +129,5 @@ jobs:
 
       - name: Cargo audit
         run: |
-          cargo install cargo-audit
+          cargo-binstall -y cargo-audit || cargo install cargo-audit
           cargo audit

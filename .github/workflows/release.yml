@@ -92,7 +92,7 @@ jobs:
           path: dist
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.85.0
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2
