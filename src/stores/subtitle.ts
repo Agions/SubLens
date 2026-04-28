@@ -160,13 +160,13 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   
   // Edit with history — type-safe field update
   function applyFieldEdit(sub: SubtitleItem, field: EditableField, value: EditableValue) {
-    if (field === 'text') {
-      sub.text = value as string
+    if (field === 'text' && typeof value === 'string') {
+      sub.text = value
       sub.edited = true
-    } else if (field === 'startTime') {
-      sub.startTime = value as number
-    } else if (field === 'endTime') {
-      sub.endTime = value as number
+    } else if (field === 'startTime' && typeof value === 'number') {
+      sub.startTime = value
+    } else if (field === 'endTime' && typeof value === 'number') {
+      sub.endTime = value
     }
   }
 

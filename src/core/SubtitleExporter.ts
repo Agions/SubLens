@@ -21,44 +21,37 @@ function pad3(n: number): string {
   return n.toString().padStart(3, '0')
 }
 
-function tsSRT(seconds: number): string {
+function _decompose(seconds: number) {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   const s = Math.floor(seconds % 60)
-  const ms = Math.floor((seconds % 1) * 1000)
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)},${pad3(ms)}`
+  const remainder = seconds % 1
+  return { h, m, s, remainder }
+}
+
+function tsSRT(seconds: number): string {
+  const { h, m, s, remainder } = _decompose(seconds)
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)},${pad3(Math.floor(remainder * 1000))}`
 }
 
 function tsVTT(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const ms = Math.floor((seconds % 1) * 1000)
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)}.${pad3(ms)}`
+  const { h, m, s, remainder } = _decompose(seconds)
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)}.${pad3(Math.floor(remainder * 1000))}`
 }
 
 function tsASS(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const cs = Math.floor((seconds % 1) * 100)
-  return `${h}:${pad2(m)}:${pad2(s)}.${pad2(cs)}`
+  const { h, m, s, remainder } = _decompose(seconds)
+  return `${h}:${pad2(m)}:${pad2(s)}.${pad2(Math.floor(remainder * 100))}`
 }
 
 function tsSBV(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const ms = Math.floor((seconds % 1) * 1000)
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)},${ms.toString().padStart(3, '0')}`
+  const { h, m, s, remainder } = _decompose(seconds)
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)},${String(Math.floor(remainder * 1000)).padStart(3, '0')}`
 }
 
 function tsSSA(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const frms = Math.floor((seconds % 1) * 30)
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)}:${pad2(frms)}`
+  const { h, m, s, remainder } = _decompose(seconds)
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)}:${pad2(Math.floor(remainder * 30))}`
 }
 
 // ─── 格式化函数 ─────────────────────────────────────────────────────
@@ -77,6 +70,14 @@ function formatVTT(subs: SubtitleItem[]): string {
   return `WEBVTT\n\n${content}`
 }
 
+const _ASS_ESCAPE_MAP = new Map([
+  [/\\/g, '\\\\'],
+  [/\{/g, '\\{'],
+  [/\}/g, '\\}'],
+  [/,/g, '\\,'],
+  [/\n/g, '\\N'],
+])
+
 function formatASS(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
 
@@ -94,16 +95,8 @@ Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
 
   const events = subs.map(sub => {
-    // Single-pass replacement via Map (avoids 5x string allocation)
-    const ESCAPE_MAP = new Map([
-      [/\\/g, '\\\\'],
-      [/\{/g, '\\{'],
-      [/\}/g, '\\}'],
-      [/,/g, '\\,'],
-      [/\n/g, '\\N'],
-    ])
     let text = sub.text
-    for (const [pattern, replacement] of ESCAPE_MAP) {
+    for (const [pattern, replacement] of _ASS_ESCAPE_MAP) {
       text = text.replace(pattern, replacement)
     }
     return `Dialogue: 0,${tsASS(sub.startTime)},${tsASS(sub.endTime)},Default,,0,0,0,,${text}`

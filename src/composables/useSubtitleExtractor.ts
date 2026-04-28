@@ -182,11 +182,12 @@ export function useSubtitleExtractor() {
       const cleaned = pipeline.process(rawSubs)
 
       // 转换回 SubtitleItem（需要 id, index 等完整字段）
+      // Build index once — O(n), then each map lookup is O(1) instead of O(n)
+      const rawIndex = new Map(rawSubs.map(r => [`${r.startTime}#${r.text}`, r]))
       subtitleStore.setSubtitles(
         cleaned.map((s, i) => {
-          const match = rawSubs.find(r =>
-            Math.abs(r.startTime - s.startTime) < 0.1 && r.text === s.text
-          )
+          const match = rawIndex.get(`${s.startTime}#${s.text}`)
+            ?? rawSubs.find(r => Math.abs(r.startTime - s.startTime) < 0.1 && r.text === s.text)
           return {
             id: match ? `sub-${s.startFrame}-${Date.now()}-${i}` : `sub-${i}`,
             index: i + 1,

@@ -191,7 +191,7 @@ function stage2_mergeSplit(subs: SubtitleLite[], opts: PipelineOptions): Subtitl
       startFrame: group[0].startFrame,
       endFrame: group[group.length - 1].endFrame,
       text: best.text,
-      confidence: Math.max(...group.map(s => s.confidence)),
+      confidence: best.confidence,
     }]
   })
 }
