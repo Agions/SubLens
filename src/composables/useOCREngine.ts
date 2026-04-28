@@ -46,6 +46,39 @@ interface TesseractLoggerMessage {
   progress: number
 }
 
+/**
+ * Spatial grid deduplication for multi-pass OCR results.
+ * Exported for unit testing; call through useOCREngine().mergeOCRResults in production.
+ */
+export function _mergeOCRResults(resultsList: OCRResult[][]): OCRResult[] {
+  const flat = resultsList.flat().sort((a, b) => b.confidence - a.confidence)
+  const cellSize = 20
+  const grid = new Map<string, OCRResult>()
+
+  for (const word of flat) {
+    const cx = word.boundingBox.x + word.boundingBox.width / 2
+    const cy = word.boundingBox.y + word.boundingBox.height / 2
+    const cellKey = `${Math.floor(cx / cellSize)},${Math.floor(cy / cellSize)}`
+
+    let isDuplicate = false
+    for (let dx = -1; dx <= 1 && !isDuplicate; dx++) {
+      for (let dy = -1; dy <= 1 && !isDuplicate; dy++) {
+        const neighborKey = `${Math.floor(cx / cellSize) + dx},${Math.floor(cy / cellSize) + dy}`
+        const existing = grid.get(neighborKey)
+        if (existing && existing.text === word.text) {
+          isDuplicate = true
+        }
+      }
+    }
+
+    if (!isDuplicate) {
+      grid.set(cellKey, word)
+    }
+  }
+
+  return Array.from(grid.values())
+}
+
 export function useOCREngine() {
   const isReady = ref(false)
   const isProcessing = ref(false)
@@ -290,32 +323,7 @@ export function useOCREngine() {
 
   // ─── OCR 结果合并（空间网格）─────────────────────────────────
   function mergeOCRResults(resultsList: OCRResult[][]): OCRResult[] {
-    const flat = resultsList.flat().sort((a, b) => b.confidence - a.confidence)
-    const cellSize = 20
-    const grid = new Map<string, OCRResult>()
-
-    for (const word of flat) {
-      const cx = word.boundingBox.x + word.boundingBox.width / 2
-      const cy = word.boundingBox.y + word.boundingBox.height / 2
-      const cellKey = `${Math.floor(cx / cellSize)},${Math.floor(cy / cellSize)}`
-
-      let isDuplicate = false
-      for (let dx = -1; dx <= 1 && !isDuplicate; dx++) {
-        for (let dy = -1; dy <= 1 && !isDuplicate; dy++) {
-          const neighborKey = `${Math.floor(cx / cellSize) + dx},${Math.floor(cy / cellSize) + dy}`
-          const existing = grid.get(neighborKey)
-          if (existing && existing.text === word.text) {
-            isDuplicate = true
-          }
-        }
-      }
-
-      if (!isDuplicate) {
-        grid.set(cellKey, word)
-      }
-    }
-
-    return Array.from(grid.values())
+    return _mergeOCRResults(resultsList)
   }
 
   // ─── 终止 ─────────────────────────────────────────────────────
