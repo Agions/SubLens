@@ -25,6 +25,46 @@ import {
   getCalibrator,
 } from '@/core'
 
+
+/**
+ * Computes ROI region variance to detect likely empty (solid-color) regions.
+ * Exported for unit testing.
+ */
+export function _isRoiRegionLikelyEmpty(
+  frameData: { data: Uint8ClampedArray; width: number; height: number },
+  roi: { x: number; y: number; width: number; height: number },
+  threshold = 100,
+): boolean {
+  const { data, width, height } = frameData
+  const x0 = Math.floor((roi.x / 100) * width)
+  const y0 = Math.floor((roi.y / 100) * height)
+  const rw = Math.floor((roi.width / 100) * width)
+  const rh = Math.floor((roi.height / 100) * height)
+
+  let sum = 0
+  let sumSq = 0
+  let count = 0
+
+  for (let y = y0; y < Math.min(y0 + rh, height - 1); y += 2) {
+    for (let x = x0; x < Math.min(x0 + rw, width - 1); x += 2) {
+      const idx = (y * width + x) * 4
+      // 灰度值 (Luminance formula)
+      const gray = (data[idx] * 299 + data[idx + 1] * 587 + data[idx + 2] * 114) / 1000
+      sum += gray
+      sumSq += gray * gray
+      count++
+    }
+  }
+
+  if (count === 0) return false
+
+  const mean = sum / count
+  const variance = (sumSq / count) - mean * mean
+
+  // Variance < threshold → likely empty (solid background)
+  return variance < threshold
+}
+
 export function useSubtitleExtractor() {
   const projectStore = useProjectStore()
   const subtitleStore = useSubtitleStore()
@@ -256,35 +296,7 @@ export function useSubtitleExtractor() {
    *       纯色背景/Logo/黑边方差极低。
    */
   function isRoiRegionLikelyEmpty(frameData: ImageData, roi: { x: number; y: number; width: number; height: number }): boolean {
-    const { data, width, height } = frameData
-    const x0 = Math.floor((roi.x / 100) * width)
-    const y0 = Math.floor((roi.y / 100) * height)
-    const rw = Math.floor((roi.width / 100) * width)
-    const rh = Math.floor((roi.height / 100) * height)
-
-    let sum = 0
-    let sumSq = 0
-    let count = 0
-
-    for (let y = y0; y < Math.min(y0 + rh, height - 1); y += 2) {
-      for (let x = x0; x < Math.min(x0 + rw, width - 1); x += 2) {
-        const idx = (y * width + x) * 4
-        // 灰度值
-        const gray = (data[idx] * 299 + data[idx + 1] * 587 + data[idx + 2] * 114) / 1000
-        sum += gray
-        sumSq += gray * gray
-        count++
-      }
-    }
-
-    if (count === 0) return false
-
-    const mean = sum / count
-    const variance = (sumSq / count) - mean * mean
-
-    // 方差阈值：低于 100 的 ROI 区域几乎无文字/字幕（纯色背景）
-    // 典型字幕区域方差在 200-2000 之间
-    return variance < 100
+    return _isRoiRegionLikelyEmpty(frameData, roi)
   }
 
   return {
