@@ -62,7 +62,7 @@ const DEFAULT_CONFIG: PreprocessorConfig = {
 /**
  * Apply grayscale conversion to image data
  */
-function toGrayscale(imageData: ImageData): ImageData {
+export function toGrayscale(imageData: ImageData): ImageData {
   const { data, width, height } = imageData
   const grayscale = new ImageData(width, height)
   
@@ -81,11 +81,14 @@ function toGrayscale(imageData: ImageData): ImageData {
 /**
  * Apply contrast enhancement
  */
-function enhanceContrast(imageData: ImageData, level: number): ImageData {
+export function enhanceContrast(imageData: ImageData, level: number): ImageData {
   const { data, width, height } = imageData
   const result = new ImageData(width, height)
   
-  const factor = (259 * (level * 255 + 255)) / (255 * (259 - level * 255))
+  const factor = 0.5 + (level * (259 * 255) / (255 * 259))
+  // factor = 0.5 at level=0, 1.0 at level=0.5, 1.5 at level=1
+  // Standard contrast formula: output = (input-128) * factor + 128
+  // identity when factor=1 (level=0.5)
   
   for (let i = 0; i < data.length; i += 4) {
     result.data[i] = clamp(Math.round(factor * (data[i] - 128) + 128))
@@ -97,14 +100,14 @@ function enhanceContrast(imageData: ImageData, level: number): ImageData {
   return result
 }
 
-function clamp(value: number): number {
+export function clamp(value: number): number {
   return Math.max(0, Math.min(255, value))
 }
 
 /**
  * Simple box blur for noise reduction
  */
-function boxBlur(imageData: ImageData, radius: number = 1): ImageData {
+export function boxBlur(imageData: ImageData, radius: number = 1): ImageData {
   const { data, width, height } = imageData
   const result = new ImageData(width, height)
   
@@ -143,7 +146,7 @@ function boxBlur(imageData: ImageData, radius: number = 1): ImageData {
  * Adaptive thresholding - excellent for subtitles with transparent backgrounds
  * Converts to binary-like image for better OCR
  */
-function adaptiveThreshold(imageData: ImageData, blockSize: number = 11, C: number = 2): ImageData {
+export function adaptiveThreshold(imageData: ImageData, blockSize: number = 11, C: number = 2): ImageData {
   const { width, height } = imageData
   const result = new ImageData(width, height)
 
