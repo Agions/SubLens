@@ -163,13 +163,27 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   
   // Edit with history — type-safe field update
   function applyFieldEdit(sub: SubtitleItem, field: EditableField, value: EditableValue) {
-    if (field === 'text' && typeof value === 'string') {
+    if (field === 'text') {
+      if (typeof value !== 'string') {
+        console.error(`[SubtitleStore] applyFieldEdit: expected string for 'text', got ${typeof value}`)
+        return
+      }
       sub.text = value
       sub.edited = true
-    } else if (field === 'startTime' && typeof value === 'number') {
+    } else if (field === 'startTime') {
+      if (typeof value !== 'number') {
+        console.error(`[SubtitleStore] applyFieldEdit: expected number for 'startTime', got ${typeof value}`)
+        return
+      }
       sub.startTime = value
-    } else if (field === 'endTime' && typeof value === 'number') {
+    } else if (field === 'endTime') {
+      if (typeof value !== 'number') {
+        console.error(`[SubtitleStore] applyFieldEdit: expected number for 'endTime', got ${typeof value}`)
+        return
+      }
       sub.endTime = value
+    } else {
+      console.error(`[SubtitleStore] applyFieldEdit: unknown field '${field}'`)
     }
   }
 

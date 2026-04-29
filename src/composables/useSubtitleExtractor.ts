@@ -146,13 +146,26 @@ export function useSubtitleExtractor() {
       if (!frameData) continue
 
       // ── ROI 预检测：跳过全黑/低方差帧（无字幕概率高）───
-      if (isRoiRegionLikelyEmpty(frameData, roi)) {
-        prevFrameData = frameData
-        continue
+      let skipFrame = false
+      try {
+        if (_isRoiRegionLikelyEmpty(frameData, roi)) {
+          prevFrameData = frameData
+          skipFrame = true
+        }
+      } catch (e) {
+        console.warn(`[Extractor] ROI check failed for frame ${frameIndex}, skipping:`, e)
+        skipFrame = true
       }
+      if (skipFrame) continue
 
-      // ── 场景变化检测 ──────────────────────────────────
-      if (prevFrameData && !sceneDetector.detect(prevFrameData, frameData)) {
+      // ── 场景变化检测 ────────────────────────────────────
+      try {
+        if (prevFrameData && !sceneDetector.detect(prevFrameData, frameData)) {
+          prevFrameData = frameData
+          continue
+        }
+      } catch (e) {
+        console.warn(`[Extractor] Scene detection failed for frame ${frameIndex}, skipping:`, e)
         prevFrameData = frameData
         continue
       }
@@ -223,11 +236,18 @@ export function useSubtitleExtractor() {
 
       // 转换回 SubtitleItem（需要 id, index 等完整字段）
       // Build index once — O(n), then each map lookup is O(1) instead of O(n)
-      const rawIndex = new Map(rawSubs.map(r => [`${r.startTime}#${r.text}`, r]))
+      // Deduplicate rawSubs to avoid key collisions in the index
+      const seen = new Set<string>()
+      const deduped = rawSubs.filter(r => {
+        const key = `${r.startTime}#${r.text}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      const rawIndex = new Map(deduped.map(r => [`${r.startTime}#${r.text}`, r]))
       subtitleStore.setSubtitles(
         cleaned.map((s, i) => {
           const match = rawIndex.get(`${s.startTime}#${s.text}`)
-            ?? rawSubs.find(r => Math.abs(r.startTime - s.startTime) < 0.1 && r.text === s.text)
           return {
             id: match ? `sub-${s.startFrame}-${Date.now()}-${i}` : `sub-${i}`,
             index: i + 1,
