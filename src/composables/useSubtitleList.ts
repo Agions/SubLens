@@ -13,7 +13,7 @@
 import { ref, computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
-import { CONFIDENCE_HIGH, CONFIDENCE_MID, getConfidenceLevel as getConfLevel } from '@/types/video'
+import { getConfidenceLevel as getConfLevel } from '@/types/video'
 
 const BATCH_SIZE = 50
 

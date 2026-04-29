@@ -330,5 +330,6 @@ export function useSubtitleExtractor() {
     pauseExtraction,
     resumeExtraction,
     stopExtraction,
+    isRoiRegionLikelyEmpty,
   }
 }

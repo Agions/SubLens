@@ -84,7 +84,7 @@ describe('ConfidenceCalibrator', () => {
 
     it('clamps confidence to [0, 1] range', () => {
       // Chain many bonuses — result should still be clamped to 1.0
-      const result = calibrator.calibrateEnhanced('Hi.', 1.0, 'en')
+      const result = calibrator.calibrateEnhanced('Hi.', 1.0, 'latin')
       expect(result.confidence).toBeLessThanOrEqual(1.0)
       expect(result.confidence).toBeGreaterThanOrEqual(0.0)
     })
