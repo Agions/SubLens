@@ -63,9 +63,7 @@ class SimilarityCache {
       this._order.push(key)
       if (this._map.size > 3000) {
         const oldest = this._order.shift()
-        if (oldest) { this._map.delete(oldest); this._order.shift() }
-        this._map.delete(this._order.shift()!)  // trim second oldest too
-        this._order.shift()
+        if (oldest) this._map.delete(oldest)
       }
     }
   }

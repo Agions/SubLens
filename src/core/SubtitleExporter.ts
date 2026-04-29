@@ -12,7 +12,16 @@
 
 import type { SubtitleItem } from '@/types/subtitle'
 
-// ─── 辅助函数 ─────────────────────────────────────────────────────
+// ─── 模块级常量（避免每调用重建）───────────────────────────────
+const _ASS_ESCAPE_REGEXPS: Array<[RegExp, string]> = [
+  [/\\/g, '\\\\'],
+  [/\{/g, '\\{'],
+  [/\}/g, '\\}'],
+  [/,/g, '\\,'],
+  [/\n/g, '\\N'],
+]
+
+// ─── 辅助函数 ─────────────────────────────────────────────────
 function pad2(n: number): string {
   return n.toString().padStart(2, '0')
 }
@@ -29,6 +38,7 @@ function _decompose(seconds: number) {
   return { h, m, s, remainder }
 }
 
+// ─── 时间戳格式化（统一_decompose调用）──────────────────────────
 function tsSRT(seconds: number): string {
   const { h, m, s, remainder } = _decompose(seconds)
   return `${pad2(h)}:${pad2(m)}:${pad2(s)},${pad3(Math.floor(remainder * 1000))}`
@@ -70,14 +80,6 @@ function formatVTT(subs: SubtitleItem[]): string {
   return `WEBVTT\n\n${content}`
 }
 
-const _ASS_ESCAPE_MAP = new Map([
-  [/\\/g, '\\\\'],
-  [/\{/g, '\\{'],
-  [/\}/g, '\\}'],
-  [/,/g, '\\,'],
-  [/\n/g, '\\N'],
-])
-
 function formatASS(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
 
@@ -96,7 +98,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
 
   const events = subs.map(sub => {
     let text = sub.text
-    for (const [pattern, replacement] of _ASS_ESCAPE_MAP) {
+    for (const [pattern, replacement] of _ASS_ESCAPE_REGEXPS) {
       text = text.replace(pattern, replacement)
     }
     return `Dialogue: 0,${tsASS(sub.startTime)},${tsASS(sub.endTime)},Default,,0,0,0,,${text}`
@@ -122,7 +124,10 @@ Style: Default,Arial,20,16777215,65535,255,0,-1,0,1,2,2,2,10,10,10,0,1
 Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
 
   const events = subs.map(sub => {
-    const text = sub.text.replace(/,/g, '\\,')
+    let text = sub.text
+    for (const [pattern, replacement] of _ASS_ESCAPE_REGEXPS) {
+      text = text.replace(pattern, replacement)
+    }
     return `Dialogue: Marked=0,${tsSSA(sub.startTime)},${tsSSA(sub.endTime)},Default,NTP,0000,0000,0000,,${text}`
   }).join('\n')
 

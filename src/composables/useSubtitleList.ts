@@ -13,6 +13,7 @@
 import { ref, computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
+import { CONFIDENCE_HIGH, CONFIDENCE_MID, getConfidenceLevel as getConfLevel } from '@/types/video'
 
 const BATCH_SIZE = 50
 
@@ -132,9 +133,7 @@ export function useSubtitleList() {
   }
 
   function getConfidenceLevel(confidence: number): 'high' | 'mid' | 'low' {
-    if (confidence >= 0.85) return 'high'
-    if (confidence >= 0.60) return 'mid'
-    return 'low'
+    return getConfLevel(confidence)
   }
 
   /**
