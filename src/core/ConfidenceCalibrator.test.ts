@@ -17,7 +17,7 @@ describe('ConfidenceCalibrator', () => {
     })
 
     it('applies penalty for mixed scripts (chinese + latin)', () => {
-      const result = calibrator.calibrateEnhanced('Hello世界', 1.0, 'ch')
+      const result = calibrator.calibrateEnhanced('Hello世界', 1.0, 'chinese')
       const mixedPenalty = result.signals.find(s => s.reason === 'mixed scripts detected')
       expect(mixedPenalty).toBeDefined()
       expect(mixedPenalty!.type).toBe('penalty')
@@ -25,23 +25,21 @@ describe('ConfidenceCalibrator', () => {
     })
 
     it('applies penalty for orphaned CJK character (space before CJK)', () => {
-      // Code checks: /[一-鿿]/.test(text) && / [一-鿿]/.test(text)
-      // Both must be true: text has a CJK char AND has a space before it
-      const result = calibrator.calibrateEnhanced('Hello 中', 1.0, 'ch')
+      const result = calibrator.calibrateEnhanced('Hello 中', 1.0, 'chinese')
       const signal = result.signals.find(s => s.reason === 'orphaned CJK character')
       expect(signal).toBeDefined()
       expect(result.confidence).toBeLessThan(1.0)
     })
 
     it('applies penalty for unbalanced double quotes (chinese lang)', () => {
-      const result = calibrator.calibrateEnhanced('"Hello', 1.0, 'ch')
+      const result = calibrator.calibrateEnhanced('"Hello', 1.0, 'chinese')
       const signal = result.signals.find(s => s.reason === 'unbalanced quotation marks')
       expect(signal).toBeDefined()
       expect(result.confidence).toBeLessThan(1.0)
     })
 
     it('applies bonus for proper sentence ending (latin lang)', () => {
-      const result = calibrator.calibrateEnhanced('Hello world.', 1.0, 'en')
+      const result = calibrator.calibrateEnhanced('Hello world.', 1.0, 'latin')
       const signal = result.signals.find(s => s.reason === 'proper sentence ending')
       expect(signal).toBeDefined()
       expect(signal!.type).toBe('bonus')
@@ -49,21 +47,21 @@ describe('ConfidenceCalibrator', () => {
     })
 
     it('applies penalty for trailing comma (incomplete sentence)', () => {
-      const result = calibrator.calibrateEnhanced('Hello world,', 1.0, 'en')
+      const result = calibrator.calibrateEnhanced('Hello world,', 1.0, 'latin')
       const signal = result.signals.find(s => s.reason === 'trailing comma (incomplete sentence)')
       expect(signal).toBeDefined()
       expect(result.confidence).toBeLessThan(1.0)
     })
 
     it('applies penalty for repeated trailing punctuation', () => {
-      const result = calibrator.calibrateEnhanced('Hello...', 1.0, 'en')
+      const result = calibrator.calibrateEnhanced('Hello...', 1.0, 'latin')
       const signal = result.signals.find(s => s.reason === 'repeated trailing punctuation')
       expect(signal).toBeDefined()
       expect(result.confidence).toBeLessThan(1.0)
     })
 
     it('applies bonus for reasonable subtitle length (5-120 chars)', () => {
-      const result = calibrator.calibrateEnhanced('This is a reasonable length sentence.', 0.9, 'en')
+      const result = calibrator.calibrateEnhanced('This is a reasonable length sentence.', 0.9, 'latin')
       const signal = result.signals.find(s => s.reason === 'reasonable subtitle length')
       expect(signal).toBeDefined()
       expect(signal!.type).toBe('bonus')
@@ -71,15 +69,14 @@ describe('ConfidenceCalibrator', () => {
 
     it('applies penalty for suspiciously long subtitle (>200 chars)', () => {
       const longText = 'a'.repeat(201)
-      const result = calibrator.calibrateEnhanced(longText, 1.0, 'en')
+      const result = calibrator.calibrateEnhanced(longText, 1.0, 'latin')
       const signal = result.signals.find(s => s.reason === 'suspiciously long subtitle')
       expect(signal).toBeDefined()
       expect(result.confidence).toBeLessThan(1.0)
     })
 
     it('applies penalty for leading punctuation after trim', () => {
-      // After trim, if text starts with punctuation, it triggers
-      const result = calibrator.calibrateEnhanced('.Hello', 1.0, 'en')
+      const result = calibrator.calibrateEnhanced('.Hello', 1.0, 'latin')
       const signal = result.signals.find(s => s.reason === 'leading whitespace or punctuation')
       expect(signal).toBeDefined()
       expect(result.confidence).toBeLessThan(1.0)

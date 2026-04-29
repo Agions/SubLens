@@ -18,5 +18,5 @@ export type { SceneDetectorOptions } from './SceneDetector'
 export { SubtitleExporter, getExporter } from './SubtitleExporter'
 export type { ExportFormat, ExportResult } from './SubtitleExporter'
 
-export { ConfidenceCalibrator, getCalibrator } from './ConfidenceCalibrator'
-export type { CalibrationResult, CalibrationSignal } from './ConfidenceCalibrator'
+export { ConfidenceCalibrator, getCalibrator, langToScript } from './ConfidenceCalibrator'
+export type { CalibrationResult, CalibrationSignal, Script } from './ConfidenceCalibrator'

@@ -11,6 +11,8 @@
  * - 所有乘数范围 [0.7, 1.1]，避免过度惩罚
  */
 
+export type Script = 'chinese' | 'japanese' | 'korean' | 'latin' | 'other'
+
 export interface CalibrationResult {
   confidence: number          // 校准后的置信度 [0, 1]
   signals: CalibrationSignal[] // 触发哪些校准信号
@@ -83,7 +85,7 @@ export class ConfidenceCalibrator {
    * 增强校准（多通道 OCR / 后处理后的最终结果）
    * 包含语言特定规则和更多质量信号。
    */
-  calibrateEnhanced(text: string, raw: number, lang: string = 'ch'): CalibrationResult {
+  calibrateEnhanced(text: string, raw: number, script: Script = 'other'): CalibrationResult {
     if (!text) return { confidence: raw, signals: [] }
 
     const signals: CalibrationSignal[] = []
@@ -95,11 +97,11 @@ export class ConfidenceCalibrator {
     let quality = base.confidence
     signals.push(...base.signals)
 
-    // ── 语言特定规则 ──────────────────────────────────────
-    if (['ch', 'chi', 'ja', 'ko'].includes(lang)) {
+    // ── CJK 规则（中文/日文/韩文）──────────────────────────
+    if (script === 'chinese' || script === 'japanese' || script === 'korean') {
+      // Unicode扩展区B（U+20000-U+2A6DF）已在正则覆盖
       // 孤立 CJK 单字检测
-      // Isolated CJK: space immediately before a CJK character
-      if (/[一-鿿]/.test(text) && / [一-鿿]/.test(text)) {
+      if (/[\u4e00-\u9fff\u20000-\u2a6df]/.test(text) && / [\u4e00-\u9fff\u20000-\u2a6df]/.test(text)) {
         const factor = 0.80
         quality *= factor
         signals.push(PENALTY(factor, 'orphaned CJK character'))
@@ -204,6 +206,16 @@ export class ConfidenceCalibrator {
 
     return issues
   }
+}
+
+// ─── 语言码 → Script 类型映射 ─────────────────────────────────
+/** Map ISO 639-1/B script codes to Script enum */
+export function langToScript(lang: string): Script {
+  if (['zh', 'chi', 'ch', 'zho'].includes(lang)) return 'chinese'
+  if (['ja', 'jpn', 'jap'].includes(lang)) return 'japanese'
+  if (['ko', 'kor', 'korean'].includes(lang)) return 'korean'
+  if (['en', 'eng', 'latin'].includes(lang)) return 'latin'
+  return 'other'
 }
 
 // ─── 全局单例 ─────────────────────────────────────────────────────

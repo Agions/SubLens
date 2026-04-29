@@ -16,7 +16,7 @@
 import { ref, shallowRef } from 'vue'
 import type { OCRConfig, OCREngine } from '@/types/video'
 import { useImagePreprocessor } from './useImagePreprocessor'
-import { getCalibrator } from '@/core'
+import { getCalibrator, langToScript } from '@/core'
 
 // ─── 类型保留（供外部使用）───────────────────────────────────────
 export interface OCRResult {
@@ -261,7 +261,7 @@ export function useOCREngine() {
       : 0
 
     const lang = config.language?.[0] ?? 'ch'
-    const { confidence: finalConfidence } = calibrator.calibrateEnhanced(rawText, rawConfidence, lang)
+    const { confidence: finalConfidence } = calibrator.calibrateEnhanced(rawText, rawConfidence, langToScript(lang))
 
     return {
       text: rawText.trim(),

@@ -23,6 +23,7 @@ import {
   SubtitlePipeline,
   SceneDetector,
   getCalibrator,
+  langToScript,
 } from '@/core'
 
 
@@ -189,7 +190,7 @@ export function useSubtitleExtractor() {
 
           // 校准置信度
           const lang = opts.languages[0]
-          const { confidence: calibrated } = calibrator.calibrateEnhanced(fullText, avgConf, lang)
+          const { confidence: calibrated } = calibrator.calibrateEnhanced(fullText, avgConf, langToScript(lang))
 
           if (fullText.trim().length > 0 && calibrated >= opts.confidenceThreshold) {
             result = { text: fullText.trim(), confidence: calibrated }
@@ -200,7 +201,7 @@ export function useSubtitleExtractor() {
           if (singleResult.text.trim().length > 0 && singleResult.confidence >= opts.confidenceThreshold) {
             const lang = opts.languages[0]
             const { confidence: calibrated } = calibrator.calibrateEnhanced(
-              singleResult.text, singleResult.confidence, lang
+              singleResult.text, singleResult.confidence, langToScript(lang)
             )
             result = { text: singleResult.text.trim(), confidence: calibrated }
           }
