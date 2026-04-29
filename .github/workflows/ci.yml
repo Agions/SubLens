@@ -33,7 +33,7 @@ jobs:
             pnpm-${{ runner.os }}-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Type check
         run: pnpm exec vue-tsc --noEmit
@@ -90,7 +90,7 @@ jobs:
           workspaces: src-tauri
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build Tauri
         run: pnpm tauri build
