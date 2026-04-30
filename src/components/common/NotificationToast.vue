@@ -57,31 +57,31 @@ function getIcon(type: string) {
   gap: 10px;
   padding: 12px 16px;
   border-radius: 8px;
-  background: var(--color-bg-elevated, #2a2a2a);
-  border: 1px solid var(--color-border, #404040);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
   font-size: 14px;
-  color: var(--color-text, #e0e0e0);
+  color: var(--text-primary);
 
   &.notification-success {
-    border-left: 3px solid #4caf50;
-    .notification-icon { color: #4caf50; }
+    border-left: 3px solid $success;
+    .notification-icon { color: $success; }
   }
 
   &.notification-error {
-    border-left: 3px solid #f44336;
-    .notification-icon { color: #f44336; }
+    border-left: 3px solid $error;
+    .notification-icon { color: $error; }
   }
 
   &.notification-warning {
-    border-left: 3px solid #ff9800;
-    .notification-icon { color: #ff9800; }
+    border-left: 3px solid $warning;
+    .notification-icon { color: $warning; }
   }
 
   &.notification-info {
-    border-left: 3px solid #2196f3;
-    .notification-icon { color: #2196f3; }
+    border-left: 3px solid $info;
+    .notification-icon { color: $info; }
   }
 }
 
@@ -107,7 +107,7 @@ function getIcon(type: string) {
   flex-shrink: 0;
 
   &:hover {
-    color: var(--color-text, #e0e0e0);
+    color: var(--text-secondary);
   }
 }
 

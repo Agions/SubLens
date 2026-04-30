@@ -70,15 +70,15 @@ function close() {
       </div>
 
       <div class="links-section">
-        <a href="https://github.com/Agions/HardSubX" target="_blank" class="link-item">
+        <a href="https://github.com/Agions/HardSubX" target="_blank" rel="noopener noreferrer" class="link-item">
           <span class="link-icon">🐛</span>
           <span class="link-text">问题反馈</span>
         </a>
-        <a href="https://github.com/Agions/HardSubX/releases" target="_blank" class="link-item">
+        <a href="https://github.com/Agions/HardSubX/releases" target="_blank" rel="noopener noreferrer" class="link-item">
           <span class="link-icon">📦</span>
           <span class="link-text">发布版本</span>
         </a>
-        <a href="https://github.com/Agions/HardSubX/discussions" target="_blank" class="link-item">
+        <a href="https://github.com/Agions/HardSubX/discussions" target="_blank" rel="noopener noreferrer" class="link-item">
           <span class="link-icon">💬</span>
           <span class="link-text">讨论区</span>
         </a>
