@@ -58,6 +58,12 @@ pub enum ExportFormat {
     JSON,
     #[serde(rename = "txt")]
     TXT,
+    #[serde(rename = "lrc")]
+    LRC,
+    #[serde(rename = "sbv")]
+    SBV,
+    #[serde(rename = "csv")]
+    CSV,
 }
 
 impl ExportFormat {
@@ -68,6 +74,9 @@ impl ExportFormat {
             "ssa" => ExportFormat::SSA,
             "json" => ExportFormat::JSON,
             "txt" => ExportFormat::TXT,
+            "lrc" => ExportFormat::LRC,
+            "sbv" => ExportFormat::SBV,
+            "csv" => ExportFormat::CSV,
             _ => ExportFormat::SRT,
         }
     }
@@ -225,6 +234,67 @@ fn export_as_json(subtitles: &[SubtitleItem]) -> String {
     serde_json::to_string_pretty(&output).unwrap_or_default()
 }
 
+fn format_timestamp_sbv(seconds: f64) -> String {
+    let hours = (seconds / 3600.0).floor() as u32;
+    let minutes = ((seconds % 3600.0) / 60.0).floor() as u32;
+    let secs = (seconds % 60.0).floor() as u32;
+    let millis = ((seconds % 1.0) * 1000.0).floor() as u32;
+    format!("{:02}:{:02}:{:02}.{:03}", hours, minutes, secs, millis)
+}
+
+fn export_as_lrc(subtitles: &[SubtitleItem]) -> String {
+    let mut output = String::from(
+        "[ti:SubLens Export]\n\
+         [ar:SubLens]\n\
+         [al:Subtitle Export]\n\
+         [by:SubLens v3.0]\n\
+         [offset:0]\n\
+         [re:SubLens]\n\n\
+        ");
+    for sub in subtitles {
+        let mins = (sub.start_time / 60.0).floor() as u32;
+        let secs = (sub.start_time % 60.0).floor() as u32;
+        let centis = ((sub.start_time % 1.0) * 100.0).floor() as u32;
+        output.push_str(&format!(
+            "[{:02}:{:02}.{:02}]{}\n\n",
+            mins, secs, centis, sub.text
+        ));
+    }
+    output
+}
+
+fn export_as_sbv(subtitles: &[SubtitleItem]) -> String {
+    subtitles.iter()
+        .map(|sub| {
+            let start = format_timestamp_sbv(sub.start_time);
+            let end = format_timestamp_sbv(sub.end_time);
+            format!("{},{}\n{}\n", start, end, sub.text)
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn export_as_csv(subtitles: &[SubtitleItem]) -> String {
+    let mut output = String::from("Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence\n");
+    for sub in subtitles {
+        // CSV escape: wrap text in quotes, double any quotes inside
+        let escaped = format!("\"{}\"",
+            sub.text.replace("\"", "\"\"")
+        );
+        output.push_str(&format!(
+            "{},{:.3},{:.3},{},{},{},{:.3}\n",
+            sub.index,
+            sub.start_time,
+            sub.end_time,
+            sub.start_frame,
+            sub.end_frame,
+            escaped,
+            sub.confidence
+        ));
+    }
+    output
+}
+
 fn chrono_lite_now() -> String {
     chrono::Local::now().to_rfc3339()
 }
@@ -248,6 +318,9 @@ pub async fn export_subtitles(
         ExportFormat::SSA => export_as_ssa(&subtitles),
         ExportFormat::JSON => export_as_json(&subtitles),
         ExportFormat::TXT => export_as_txt(&subtitles),
+        ExportFormat::LRC => export_as_lrc(&subtitles),
+        ExportFormat::SBV => export_as_sbv(&subtitles),
+        ExportFormat::CSV => export_as_csv(&subtitles),
     };
     
     let path = Path::new(&output_path);

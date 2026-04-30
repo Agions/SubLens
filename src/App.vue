@@ -13,6 +13,7 @@ import KeyboardShortcutsHelp from '@/components/common/KeyboardShortcutsHelp.vue
 import ExportDialog from '@/components/subtitle/ExportDialog.vue'
 import BatchProcessView from '@/components/layout/BatchProcessView.vue'
 import SubtitleToast from '@/components/common/SubtitleToast.vue'
+import NotificationToast from '@/components/common/NotificationToast.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { watch } from 'vue'
 
@@ -108,6 +109,7 @@ onUnmounted(() => {
       :total="toastTotal"
       @hide="toastVisible = false"
     />
+    <NotificationToast />
   </div>
 </template>
 

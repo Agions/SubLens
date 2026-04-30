@@ -5,6 +5,9 @@ import Modal from '@/components/common/Modal.vue'
 import Button from '@/components/common/Button.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useFileOperations } from '@/composables/useFileOperations'
+import { useNotification } from '@/composables/useNotification'
+
+const { error: notifyError } = useNotification()
 
 defineProps<{
   open?: boolean
@@ -56,7 +59,7 @@ const formatDescriptions: Record<string, string> = {
 
 async function handleExport() {
   if (selectedFormats.value.length === 0) {
-    alert('请至少选择一种导出格式')
+    notifyError('请至少选择一种导出格式')
     return
   }
 

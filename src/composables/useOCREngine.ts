@@ -152,7 +152,7 @@ export function useOCREngine() {
           await (worker.value as { terminate: () => Promise<void> }).terminate()
         }
 
-        const workerNum = options.useGpu ?? true ? 2 : 1
+        const workerNum = (options.useGpu ?? false) ? 2 : 1
 
         worker.value = await Tesseract.createWorker(langs.join('+'), workerNum, {
           logger: (m: TesseractLoggerMessage) => {

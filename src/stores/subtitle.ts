@@ -234,6 +234,8 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     subtitles.value = subtitles.value.filter(s => s.confidence >= threshold)
     // Re-index
     subtitles.value.forEach((s, i) => { s.index = i + 1 })
+    // Rebuild index map to maintain O(1) lookup invariant
+    _rebuildIndexMap()
     if (selectedId.value && !subtitles.value.some(s => s.id === selectedId.value)) selectedId.value = null
   }
 

@@ -1,7 +1,7 @@
 //! Shared utilities for the SubLens commands layer.
 
 use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
 
 /// RAII guard: automatically removes a temp file when dropped.
 pub struct TempFileGuard(PathBuf);
@@ -46,23 +46,10 @@ impl Drop for TempFileGuard {
     }
 }
 
-/// Generate a unique ID based on current time and process ID.
-/// Used for temporary files that need a unique name.
+/// Generate a cryptographically random UUID v4 string.
+/// Used for unique temporary file names.
 pub fn uuid_v4() -> String {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-
-    let random_part = (now.as_nanos() ^ (std::process::id() as u128 * 0x5deece66d)) % 0xfffffffffffff;
-
-    format!(
-        "{:012x}-{:04x}-4{:03x}-{:04}-{:012x}",
-        (random_part >> 80) & 0xffffffffffff,
-        (random_part >> 64) & 0xffff,
-        (random_part >> 60) & 0xfff,
-        ((random_part >> 48) & 0x3fff) | 0x8000,
-        random_part & 0xffffffffffff
-    )
+    Uuid::new_v4().to_string()
 }
 
 /// Get the path to a temp directory for this application.

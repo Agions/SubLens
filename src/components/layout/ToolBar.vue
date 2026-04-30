@@ -6,10 +6,12 @@ import { useFileOperations } from '@/composables/useFileOperations'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useVideoMetadata } from '@/composables/useVideoMetadata'
 import { useTheme } from '@/composables/useTheme'
+import { useNotification } from '@/composables/useNotification'
 import AboutDialog from '@/components/common/AboutDialog.vue'
 
 const projectStore = useProjectStore()
 const subtitleStore = useSubtitleStore()
+const { error: notifyError } = useNotification()
 
 const projectName = ref('未命名项目')
 const showAbout = ref(false)
@@ -41,7 +43,7 @@ async function handleOpenFile() {
 
   } catch (e) {
     console.error('[ToolBar] Failed to open file:', e)
-    alert(`打开文件失败: ${e}`)
+    notifyError(`打开文件失败: ${e}`)
   } finally {
     isLoading.value = false
   }
@@ -83,7 +85,7 @@ async function handleSave() {
 
   } catch (e) {
     console.error('[ToolBar] Failed to save project:', e)
-    alert(`保存失败: ${e}`)
+    notifyError(`保存失败: ${e}`)
   } finally {
     isLoading.value = false
   }

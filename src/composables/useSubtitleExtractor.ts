@@ -46,8 +46,8 @@ export function _isRoiRegionLikelyEmpty(
   let sumSq = 0
   let count = 0
 
-  for (let y = y0; y < Math.min(y0 + rh, height - 1); y += 2) {
-    for (let x = x0; x < Math.min(x0 + rw, width - 1); x += 2) {
+  for (let y = y0; y < Math.min(y0 + rh, height); y += 2) {
+    for (let x = x0; x < Math.min(x0 + rw, width); x += 2) {
       const idx = (y * width + x) * 4
       // 灰度值 (Luminance formula)
       const gray = (data[idx] * 299 + data[idx + 1] * 587 + data[idx + 2] * 114) / 1000

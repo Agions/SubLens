@@ -133,10 +133,22 @@ export function useBatchProcessor() {
     for (let i = maxConcurrency; i < allPending.length && isProcessing.value; i++) {
       // Wait for at least one running job to finish before launching the next
       await new Promise<void>((resolve) => {
+        let resolved = false
         const check = setInterval(() => {
-          if (!isProcessing.value || running.size < maxConcurrency) {
-            clearInterval(check)
-            resolve()
+          if (!isProcessing.value) {
+            // Processing cancelled - resolve and stop checking
+            if (!resolved) {
+              resolved = true
+              clearInterval(check)
+              resolve()
+            }
+          } else if (running.size < maxConcurrency) {
+            // Slot available - resolve and stop checking
+            if (!resolved) {
+              resolved = true
+              clearInterval(check)
+              resolve()
+            }
           }
         }, 50)
       })
