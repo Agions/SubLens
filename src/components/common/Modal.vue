@@ -69,9 +69,10 @@ watch(() => props.open, (isOpen) => {
           :class="['modal', `modal-${size}`, { closing: isClosing }]"
           role="dialog"
           aria-modal="true"
+          :aria-labelledby="title ? 'modal-title' : undefined"
         >
           <header v-if="title || closable" class="modal-header">
-            <h3 v-if="title" class="modal-title">{{ title }}</h3>
+            <h3 v-if="title" id="modal-title" class="modal-title">{{ title }}</h3>
             <button v-if="closable" class="close-btn" @click="close" aria-label="关闭">
               <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
                 <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>

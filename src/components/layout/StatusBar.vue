@@ -138,9 +138,9 @@ const statusText = computed(() => {
   transition: all $duration-fast $ease-out-expo;
 
   &.active {
-    background: rgba(#0A84FF, 0.15);
+    background: rgba($primary, 0.15);
     color: var(--primary);
-    box-shadow: 0 0 8px rgba(#0A84FF, 0.2);
+    box-shadow: 0 0 8px rgba($primary, 0.2);
   }
 }
 

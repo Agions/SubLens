@@ -156,6 +156,9 @@ async fn detect_scenes_scenedetect(
 pub async fn calculate_frame_similarity(
     frame1_data: Vec<u8>,
     frame2_data: Vec<u8>,
+    // NOTE: width and height parameters are reserved for future histogram-based
+    // similarity calculation that considers spatial distribution. Currently using
+    // global histogram approach that doesn't require dimensions.
     _width: u32,
     _height: u32,
 ) -> Result<f32, String> {

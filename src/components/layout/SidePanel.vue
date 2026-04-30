@@ -21,6 +21,41 @@ const activeTab = ref<TabKey>('files')
 // Settings tab local state
 const localSettings = ref({ ...settingsStore.settings })
 
+// Tab keyboard navigation
+const tabs = [
+  { key: 'files', icon: 'file', label: '文件' },
+  { key: 'progress', icon: 'chart', label: '进度' },
+  { key: 'roi', icon: 'crop', label: '区域' },
+  { key: 'ocr', icon: 'ocr', label: 'OCR' },
+  { key: 'export', icon: 'export', label: '导出' },
+  { key: 'settings', icon: 'settings', label: '设置' },
+] as const
+
+const tabRefs = ref<HTMLElement[]>([])
+
+function handleTabKeydown(e: KeyboardEvent) {
+  const currentIndex = tabs.findIndex(t => t.key === activeTab.value)
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault()
+    const nextIndex = (currentIndex + 1) % tabs.length
+    activeTab.value = tabs[nextIndex].key
+    tabRefs.value[nextIndex]?.focus()
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length
+    activeTab.value = tabs[prevIndex].key
+    tabRefs.value[prevIndex]?.focus()
+  } else if (e.key === 'Home') {
+    e.preventDefault()
+    activeTab.value = tabs[0].key
+    tabRefs.value[0]?.focus()
+  } else if (e.key === 'End') {
+    e.preventDefault()
+    activeTab.value = tabs[tabs.length - 1].key
+    tabRefs.value[tabs.length - 1]?.focus()
+  }
+}
+
 onMounted(() => {
   checkDependencies()
 })
@@ -33,18 +68,19 @@ watch(localSettings, (newSettings) => {
 <template>
   <aside class="side-panel">
     <!-- Tab Bar -->
-    <div class="tab-bar">
+    <div
+      class="tab-bar"
+      role="tablist"
+      @keydown="handleTabKeydown"
+    >
       <button
-        v-for="tab in [
-          { key: 'files', icon: 'file', label: '文件' },
-          { key: 'progress', icon: 'chart', label: '进度' },
-          { key: 'roi', icon: 'crop', label: '区域' },
-          { key: 'ocr', icon: 'ocr', label: 'OCR' },
-          { key: 'export', icon: 'export', label: '导出' },
-          { key: 'settings', icon: 'settings', label: '设置' },
-        ] as const"
+        v-for="(tab, index) in tabs"
         :key="tab.key"
+        :ref="el => { if (el) tabRefs[index] = el as HTMLElement }"
         :class="['tab-item', { active: activeTab === tab.key }]"
+        role="tab"
+        :aria-selected="activeTab === tab.key"
+        :tabindex="activeTab === tab.key ? 0 : -1"
         @click="activeTab = tab.key"
       >
         <!-- File icon -->
