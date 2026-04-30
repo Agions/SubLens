@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 use super::types::{BoundingBox, ROI};
-use super::utils::{uuid_v4, TempFileGuard};
+use super::utils::{
+    parse_duration_from_ffmpeg_output, parse_fps_from_fraction, parse_stream_from_ffmpeg_output,
+    parse_time_to_seconds, uuid_v4, TempFileGuard,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoMetadata {
@@ -115,8 +118,8 @@ async fn get_video_metadata_ffmpeg(path: &str) -> Result<VideoMetadata, String> 
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     // Parse duration from ffmpeg output
-    let duration = parse_duration_from_ffmpeg(&stderr);
-    let (width, height, fps) = parse_stream_from_ffmpeg(&stderr);
+    let duration = parse_duration_from_ffmpeg_output(&stderr);
+    let (width, height, fps) = parse_stream_from_ffmpeg_output(&stderr);
 
     if duration <= 0.0 {
         return Err("Could not determine video duration".to_string());
@@ -139,94 +142,6 @@ async fn get_video_metadata_ffmpeg(path: &str) -> Result<VideoMetadata, String> 
     })
 }
 
-fn parse_duration_from_ffmpeg(output: &str) -> f64 {
-    // Look for "Duration: HH:MM:SS.ms" pattern
-    for line in output.lines() {
-        if line.contains("Duration:") {
-            if let Some(duration_str) = line.split("Duration:").nth(1) {
-                let time_part = duration_str.split(',').next().unwrap_or("").trim();
-                return parse_time_to_seconds(time_part);
-            }
-        }
-    }
-    0.0
-}
-
-fn parse_time_to_seconds(time_str: &str) -> f64 {
-    let parts: Vec<&str> = time_str.split(':').collect();
-    if parts.len() >= 3 {
-        let hours: f64 = match parts[0].parse() {
-            Ok(v) => v,
-            Err(_) => {
-                tracing::warn!("Failed to parse hours from duration string: {}", parts[0]);
-                0.0
-            }
-        };
-        let minutes: f64 = match parts[1].parse() {
-            Ok(v) => v,
-            Err(_) => {
-                tracing::warn!("Failed to parse minutes from duration string: {}", parts[1]);
-                0.0
-            }
-        };
-        let seconds: f64 = match parts[2].parse() {
-            Ok(v) => v,
-            Err(_) => {
-                tracing::warn!("Failed to parse seconds from duration string: {}", parts[2]);
-                0.0
-            }
-        };
-        // Compute in integer milliseconds to avoid floating-point accumulation error
-        // e.g., 0.1 + 0.2 != 0.3 in float, but (100 + 200) / 1000 == 0.3
-        let total_ms = (hours as u64) * 3_600_000
-            + (minutes as u64) * 60_000
-            + (seconds * 1000.0).round() as u64;
-        return total_ms as f64 / 1000.0;
-    }
-    tracing::warn!("Invalid time format (expected HH:MM:SS): {}", time_str);
-    0.0
-}
-
-fn parse_stream_from_ffmpeg(output: &str) -> (u32, u32, f64) {
-    let mut width = 1920u32;
-    let mut height = 1080u32;
-    let mut fps = 30.0f64;
-
-    for line in output.lines() {
-        if line.contains("Video:") {
-            for part in line.split(',') {
-                let part = part.trim();
-                if part.contains('x') {
-                    if let Some((w, h)) = part.split_once('x') {
-                        width = w.parse().unwrap_or_else(|_| {
-                            tracing::warn!("Failed to parse video width: {}", w);
-                            1920
-                        });
-                        height = h.parse().unwrap_or_else(|_| {
-                            tracing::warn!("Failed to parse video height: {}", h);
-                            1080
-                        });
-                    }
-                }
-                if part.contains("fps") {
-                    // "25fps", "29.97fps", "30000/1001 fps" → extract numeric portion
-                    let fps_candidate = part.split_whitespace().next().unwrap_or("30");
-                    // Strip non-numeric suffix like "fps"
-                    let numeric = fps_candidate.trim_end_matches(|c: char| !c.is_ascii_digit() && c != '.');
-                    fps = numeric.parse().unwrap_or_else(|_| {
-                        tracing::warn!("Failed to parse fps value: {}", numeric);
-                        30.0
-                    });
-                }
-            }
-            break;
-        }
-    }
-
-    (width, height, fps)
-}
-
-/// Get video metadata using ffprobe (async)
 async fn get_video_metadata_ffprobe(path: &str) -> Result<VideoMetadata, String> {
     let output = tokio::process::Command::new("ffprobe")
         .args([
@@ -261,18 +176,7 @@ async fn get_video_metadata_ffprobe(path: &str) -> Result<VideoMetadata, String>
 
     // Parse frame rate (e.g., "30000/1001" -> ~29.97)
     let fps_str = video_stream["r_frame_rate"].as_str().unwrap_or("30/1");
-    let fps_parts: Vec<&str> = fps_str.split('/').collect();
-    let fps = if fps_parts.len() == 2 {
-        let num: f64 = fps_parts[0].parse().unwrap_or(30.0);
-        let den: f64 = fps_parts[1].parse().unwrap_or(1.0);
-        if den > 0.0 {
-            num / den
-        } else {
-            30.0
-        }
-    } else {
-        fps_str.parse().unwrap_or(30.0)
-    };
+    let fps = parse_fps_from_fraction(fps_str);
 
     let duration = json["format"]["duration"]
         .as_str()

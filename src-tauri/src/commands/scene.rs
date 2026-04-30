@@ -23,7 +23,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::utils::{find_python_binary, find_script};
+use super::utils::{find_python_binary, find_script, parse_fps_from_fraction};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SceneDetectionConfig {
@@ -114,18 +114,7 @@ async fn get_video_fps(path: &str) -> Result<f64, String> {
 
     // Parse frame rate (e.g., "30000/1001" -> ~29.97)
     let fps_str = video_stream["r_frame_rate"].as_str().unwrap_or("30/1");
-    let fps_parts: Vec<&str> = fps_str.split('/').collect();
-    let fps = if fps_parts.len() == 2 {
-        let num: f64 = fps_parts[0].parse().unwrap_or(30.0);
-        let den: f64 = fps_parts[1].parse().unwrap_or(1.0);
-        if den > 0.0 {
-            num / den
-        } else {
-            30.0
-        }
-    } else {
-        fps_str.parse().unwrap_or(30.0)
-    };
+    let fps = parse_fps_from_fraction(fps_str);
 
     Ok(fps)
 }
