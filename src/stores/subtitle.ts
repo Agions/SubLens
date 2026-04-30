@@ -58,12 +58,12 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     return result
   })
 
-  // Confidence level statistics — respects active confidence filter (single pass O(n))
+  // Confidence level statistics — always computed from FULL subtitle list
+  // regardless of active filter, so stats accurately reflect overall quality distribution
   const confidenceStats = computed(() => {
     let low = 0, mid = 0, high = 0
-    const subs = confidenceFilter.value === 'all'
-      ? subtitles.value
-      : filteredSubtitles.value  // use filtered view so stats match visible list
+    // Always use full list to show accurate quality distribution
+    const subs = subtitles.value
     for (const s of subs) {
       if (s.confidence < CONFIDENCE_MID) low++
       else if (s.confidence < CONFIDENCE_HIGH) mid++
@@ -87,7 +87,10 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   const canRedo = computed(() => historyIndex.value < editHistory.value.length - 1)
   
   // Actions
-  // O(1) id → index lookup map (maintained in sync with subtitles.value)
+  // O(1) id → index lookup map
+  // ⚠️ INVARIANT: This map must be kept in sync whenever subtitles.value is mutated.
+  // Only mutate through the store's built-in methods (addSubtitle, deleteSubtitle, setSubtitles, batchDeleteLowConfidence, clearAll).
+  // Direct assignment to subtitles.value (e.g., subtitles.value = newArray) will break this map and cause incorrect lookups.
   const _subtitleIndexMap = new Map<string, number>()
 
   function _rebuildIndexMap() {
@@ -102,10 +105,10 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     historyIndex.value = -1
   }
   
-  // Insert in sorted position (avoids full sort + reindex on every add)
+  // Binary-search for O(log n) insertion point; rebuild index map once after splice.
+  // Maintains sorted order by startTime without full re-sort.
   function addSubtitle(sub: SubtitleItem) {
     const arr = subtitles.value
-    // Binary search for insertion point
     let lo = 0, hi = arr.length
     while (lo < hi) {
       const mid = (lo + hi) >>> 1
@@ -113,10 +116,10 @@ export const useSubtitleStore = defineStore('subtitle', () => {
       else hi = mid
     }
     arr.splice(lo, 0, sub)
-    // Re-index from insertion point — compute end once, avoid in-loop mutation of arr refs
     const newLen = arr.length
+    // Re-index from insertion point to end
     for (let i = lo; i < newLen; i++) arr[i].index = i + 1
-    // Rebuild map once after splice (avoids double-loop over shifted suffix)
+    // Rebuild lookup map once for O(1) id → index access
     for (let i = lo; i < newLen; i++) _subtitleIndexMap.set(arr[i].id, i)
   }
   

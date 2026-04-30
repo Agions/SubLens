@@ -1,3 +1,29 @@
+//! Subtitle export module.
+//!
+//! Exports subtitle data to various formats:
+//!
+//! | Format | Extension | Notes |
+//! |--------|-----------|-------|
+//! | SRT | `.srt` | Most compatible, widely supported |
+//! | WebVTT | `.vtt` | HTML5 standard, supports styling |
+//! | ASS/SSA | `.ass` / `.ssa` | Advanced formatting, karaoke effects |
+//! | JSON | `.json` | Machine-readable, includes metadata |
+//! | Plain Text | `.txt` | Text only, no timing info |
+//!
+//! ## Export Process
+//!
+//! 1. Validate subtitles are non-empty
+//! 2. Select format-specific exporter
+//! 3. Format timestamps according to format spec
+//! 4. Escape special characters (commas, newlines)
+//! 5. Write to output file
+//!
+//! ## Timestamp Formats
+//!
+//! - **SRT**: `HH:MM:SS,mmm` (comma separator)
+//! - **VTT**: `HH:MM:SS.mmm` (period separator)
+//! - **ASS/SSA**: `HH:MM:SS.cc` (centiseconds)
+
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -116,11 +142,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     for sub in subtitles {
         let start = format_timestamp_ass(sub.start_time);
         let end = format_timestamp_ass(sub.end_time);
+        // ASS escape order: backslash FIRST, then braces, then comma, then newline
         let text = sub.text
-            .replace(",", "\\,")
-            .replace("\n", "\\N")
+            .replace("\\", "\\\\")  // backslash first
             .replace("{", "\\{")
-            .replace("}", "\\}");
+            .replace("}", "\\}")
+            .replace(",", "\\,")
+            .replace("\n", "\\N");
         output.push_str(&format!(
             "Dialogue: 0,{},{},Default,,0,0,0,,{}\n",
             start, end, text
@@ -158,7 +186,11 @@ Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     for sub in subtitles {
         let start = format_timestamp_ass(sub.start_time);
         let end = format_timestamp_ass(sub.end_time);
+        // SSA escape: backslash first, then braces, then comma, then newline
         let text = sub.text
+            .replace("\\", "\\\\")
+            .replace("{", "\\{")
+            .replace("}", "\\}")
             .replace(",", "\\,")
             .replace("\n", "\\N");
         output.push_str(&format!(

@@ -1,16 +1,40 @@
 //! Tauri CLI-based OCR via Tesseract executable.
+//!
+//! **⚠️ Deprecation Warning**: This module uses Tesseract via CLI subprocess.
+//! For new implementations, prefer [`crate::commands::ocr_engine`] which provides
+//! a unified interface supporting both Tesseract and PaddleOCR.
+//!
+//! ## Architecture
+//!
 //! All OCR in this module goes through the system Tesseract CLI,
-//! using temp files to bridge Rust frame data with the external process.
+//! using temp files to bridge Rust frame data with the external process:
+//!
+//! ```text
+//! Frame Data (RGBA) -> PPM Temp File -> ImageMagick (optional) -> PNG Temp File
+//!                                                                      |
+//!                                           Tesseract CLI <-------------+
+//!                                           (outputs TSV format)
+//!                                           |
+//!                                           v
+//!                                       OCRProcessResult
+//! ```
+//!
+//! ## Confidence Threshold
+//!
+//! The `confidence_threshold` in `OCRConfig` is applied during processing.
+//! Words with confidence below this threshold are filtered out.
+//!
+//! ## Coordinate Systems
+//!
+//! - Input/output coordinates are in **pixels**
+//! - ROI coordinates support both **pixels** and **percentages** (via `ROI.unit`)
+//! - Use `BoundingBox::to_percent()` / `BoundingBox::to_pixels()` to convert
 
-use super::types::{map_lang_to_tesseract, BoundingBox, OCRConfig, ROI};
+use super::types::{map_lang_to_tesseract, BoundingBox, OCRConfig, OCRProcessResult, OCRResultItem, ROI};
 use super::utils::{uuid_v4, TempFileGuard};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct OCRResult {
-    pub text: String,
-    pub confidence: f32,
-    pub bounding_box: BoundingBox,
-}
+// Re-export unified types for backward compatibility
+pub use types::{OCRConfig as TesseractOCRConfig, OCRProcessResult, OCRResultItem};
 
 #[tauri::command]
 pub async fn process_frame(
@@ -18,7 +42,7 @@ pub async fn process_frame(
     width: u32,
     height: u32,
     config: OCRConfig,
-) -> Result<OCRResult, String> {
+) -> Result<OCRProcessResult, String> {
     tracing::info!(
         "Processing frame ({}x{}) with OCR engine: {}",
         width,
@@ -46,7 +70,7 @@ pub async fn process_roi(
     height: u32,
     roi: ROI,
     config: OCRConfig,
-) -> Result<OCRResult, String> {
+) -> Result<OCRProcessResult, String> {
     tracing::info!(
         "Processing ROI: {:?} with OCR engine: {}",
         roi,
@@ -114,11 +138,12 @@ async fn save_frame_to_temp_png(
     }
 }
 
-/// Process an image file with the Tesseract CLI, returning structured OCRResult (async).
+/// Process an image file with the Tesseract CLI, returning OCRProcessResult (async).
 async fn process_with_tesseract(
     image_path: &std::path::Path,
     config: &OCRConfig,
-) -> Result<OCRResult, String> {
+) -> Result<OCRProcessResult, String> {
+    let start = std::time::Instant::now();
     let tesseract_lang = config
         .language
         .iter()
@@ -144,6 +169,7 @@ async fn process_with_tesseract(
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut items = Vec::new();
     let mut full_text = String::new();
     let mut total_conf = 0.0f32;
     let mut word_count = 0;
@@ -172,6 +198,14 @@ async fn process_with_tesseract(
             tracing::debug!("Failed to parse confidence '{}' from tesseract TSV row, skipping", fields[10]);
             continue;
         }
+
+        // Filter by confidence threshold (config is passed but currently unused)
+        if conf / 100.0 < config.confidence_threshold {
+            tracing::debug!("Skipping word '{}' with confidence {:.2} below threshold {:.2}",
+                text, conf / 100.0, config.confidence_threshold);
+            continue;
+        }
+
         let left: u32 = fields[6].parse().unwrap_or(0);
         let top: u32 = fields[7].parse().unwrap_or(0);
         let w: u32 = fields[8].parse().unwrap_or(0);
@@ -190,6 +224,17 @@ async fn process_with_tesseract(
             max_y = max_y.max(top + h);
         }
 
+        items.push(OCRResultItem {
+            text: text.clone(),
+            confidence: conf / 100.0,
+            bounding_box: BoundingBox {
+                x: left,
+                y: top,
+                width: w,
+                height: h,
+            },
+        });
+
         if !full_text.is_empty() {
             full_text.push(' ');
         }
@@ -204,25 +249,36 @@ async fn process_with_tesseract(
         0.0
     };
 
+    let processing_time_ms = start.elapsed().as_millis() as u64;
+
     tracing::info!(
-        "OCR completed: {} words, avg confidence {:.1}%",
+        "OCR completed: {} words, avg confidence {:.1}%, time {}ms",
         word_count,
-        avg_confidence
+        avg_confidence,
+        processing_time_ms
     );
 
-    Ok(OCRResult {
-        text: full_text,
-        confidence: avg_confidence / 100.0,
-        bounding_box: BoundingBox {
-            x: min_x,
-            y: min_y,
-            width: max_x - min_x,
-            height: max_y - min_y,
-        },
+    // Detect language (best effort based on what was requested)
+    let language_detected = if config.language.iter().any(|l| l.contains("chi")) {
+        "chinese".to_string()
+    } else if config.language.iter().any(|l| l.contains("jpn")) {
+        "japanese".to_string()
+    } else if config.language.iter().any(|l| l.contains("kor")) {
+        "korean".to_string()
+    } else {
+        config.language.first().cloned().unwrap_or_else(|| "unknown".to_string())
+    };
+
+    Ok(OCRProcessResult {
+        items,
+        full_text,
+        language_detected,
+        processing_time_ms,
     })
 }
 
 /// Crop RGBA frame data to a sub-region defined by pixel coordinates.
+/// Returns an empty Vec if the ROI is completely outside the image bounds.
 fn crop_frame_to_roi(
     frame_data: &[u8],
     img_width: u32,
@@ -232,29 +288,43 @@ fn crop_frame_to_roi(
     roi_w: u32,
     roi_h: u32,
 ) -> Result<Vec<u8>, String> {
-    if roi_x + roi_w > img_width {
-        return Err(format!(
-            "ROI x+w ({} {}) exceeds image width {}",
-            roi_x, roi_w, img_width
-        ));
-    }
-    if roi_y + roi_h > img_height {
-        return Err(format!(
-            "ROI y+h ({} {}) exceeds image height {}",
-            roi_y, roi_h, img_height
-        ));
+    // Clamp ROI to image bounds (safe handling of out-of-bounds ROI)
+    // If ROI is entirely outside image, return empty result instead of error
+    if roi_x >= img_width || roi_y >= img_height {
+        tracing::debug!(
+            "ROI ({},{}) is outside image bounds ({}x{}), returning empty",
+            roi_x, roi_y, img_width, img_height
+        );
+        return Ok(Vec::new());
     }
 
-    let mut cropped = Vec::with_capacity((roi_w * roi_h * 4) as usize);
+    // Calculate actual intersection with image bounds
+    let effective_x = roi_x.min(img_width);
+    let effective_y = roi_y.min(img_height);
+    let effective_w = roi_w.min(img_width.saturating_sub(effective_x));
+    let effective_h = roi_h.min(img_height.saturating_sub(effective_y));
 
-    for y in roi_y..(roi_y + roi_h) {
-        for x in roi_x..(roi_x + roi_w) {
-            let src_idx = ((y * img_width + x) * 4) as usize;
-            if src_idx + 3 < frame_data.len() {
-                cropped.push(frame_data[src_idx]);
-                cropped.push(frame_data[src_idx + 1]);
-                cropped.push(frame_data[src_idx + 2]);
-                cropped.push(frame_data[src_idx + 3]);
+    // Check for zero-size ROI after clamping
+    if effective_w == 0 || effective_h == 0 {
+        return Ok(Vec::new());
+    }
+
+    // Use saturating arithmetic to prevent overflow in capacity calculation
+    let capacity = effective_w.saturating_mul(effective_h).saturating_mul(4) as usize;
+    let mut cropped = Vec::with_capacity(capacity);
+
+    let row_stride = img_width as usize * 4;
+
+    for y in effective_y..(effective_y + effective_h) {
+        let row_start = (y as usize) * row_stride;
+        for x in effective_x..(effective_x + effective_w) {
+            let pixel_start = row_start + (x as usize) * 4;
+            // Bounds check before access
+            if pixel_start + 3 < frame_data.len() {
+                cropped.push(frame_data[pixel_start]);
+                cropped.push(frame_data[pixel_start + 1]);
+                cropped.push(frame_data[pixel_start + 2]);
+                cropped.push(frame_data[pixel_start + 3]);
             }
         }
     }

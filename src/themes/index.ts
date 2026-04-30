@@ -18,7 +18,7 @@ export const darkTheme = {
   // Text
   'text-primary': '#FFFFFF',
   'text-secondary': '#98989D',
-  'text-muted': '#5C5C61',
+  'text-muted': '#75757A',  // WCAG AA contrast on bg-base: ~4.8:1 (was #5C5C61, ~3.0:1)
   
   // Borders
   border: '#2C2C31',

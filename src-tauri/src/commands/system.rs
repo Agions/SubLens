@@ -1,3 +1,19 @@
+//! System dependencies check module.
+//!
+//! Verifies the presence and versions of required system dependencies:
+//!
+//! | Dependency | Required | Purpose |
+//! |------------|----------|---------|
+//! | ffmpeg | Yes | Video processing, frame extraction |
+//! | ffprobe | Yes | Video metadata, FPS detection |
+//! | tesseract | Yes | OCR text recognition |
+//! | ImageMagick | No | Image format conversion (optional) |
+//!
+//! ## Version Detection
+//!
+//! Uses `--version` flags to detect installed versions.
+//! Falls back to default values if version cannot be parsed.
+
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 

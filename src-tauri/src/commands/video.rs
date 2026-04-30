@@ -155,11 +155,35 @@ fn parse_duration_from_ffmpeg(output: &str) -> f64 {
 fn parse_time_to_seconds(time_str: &str) -> f64 {
     let parts: Vec<&str> = time_str.split(':').collect();
     if parts.len() >= 3 {
-        let hours: f64 = parts[0].parse().unwrap_or(0.0);
-        let minutes: f64 = parts[1].parse().unwrap_or(0.0);
-        let seconds: f64 = parts[2].parse().unwrap_or(0.0);
-        return hours * 3600.0 + minutes * 60.0 + seconds;
+        let hours: f64 = match parts[0].parse() {
+            Ok(v) => v,
+            Err(_) => {
+                tracing::warn!("Failed to parse hours from duration string: {}", parts[0]);
+                0.0
+            }
+        };
+        let minutes: f64 = match parts[1].parse() {
+            Ok(v) => v,
+            Err(_) => {
+                tracing::warn!("Failed to parse minutes from duration string: {}", parts[1]);
+                0.0
+            }
+        };
+        let seconds: f64 = match parts[2].parse() {
+            Ok(v) => v,
+            Err(_) => {
+                tracing::warn!("Failed to parse seconds from duration string: {}", parts[2]);
+                0.0
+            }
+        };
+        // Compute in integer milliseconds to avoid floating-point accumulation error
+        // e.g., 0.1 + 0.2 != 0.3 in float, but (100 + 200) / 1000 == 0.3
+        let total_ms = (hours as u64) * 3_600_000
+            + (minutes as u64) * 60_000
+            + (seconds * 1000.0).round() as u64;
+        return total_ms as f64 / 1000.0;
     }
+    tracing::warn!("Invalid time format (expected HH:MM:SS): {}", time_str);
     0.0
 }
 
@@ -174,8 +198,14 @@ fn parse_stream_from_ffmpeg(output: &str) -> (u32, u32, f64) {
                 let part = part.trim();
                 if part.contains('x') {
                     if let Some((w, h)) = part.split_once('x') {
-                        width = w.parse().unwrap_or(1920);
-                        height = h.parse().unwrap_or(1080);
+                        width = w.parse().unwrap_or_else(|_| {
+                            tracing::warn!("Failed to parse video width: {}", w);
+                            1920
+                        });
+                        height = h.parse().unwrap_or_else(|_| {
+                            tracing::warn!("Failed to parse video height: {}", h);
+                            1080
+                        });
                     }
                 }
                 if part.contains("fps") {
@@ -183,7 +213,10 @@ fn parse_stream_from_ffmpeg(output: &str) -> (u32, u32, f64) {
                     let fps_candidate = part.split_whitespace().next().unwrap_or("30");
                     // Strip non-numeric suffix like "fps"
                     let numeric = fps_candidate.trim_end_matches(|c: char| !c.is_ascii_digit() && c != '.');
-                    fps = numeric.parse().unwrap_or(30.0);
+                    fps = numeric.parse().unwrap_or_else(|_| {
+                        tracing::warn!("Failed to parse fps value: {}", numeric);
+                        30.0
+                    });
                 }
             }
             break;
@@ -401,23 +434,17 @@ pub async fn extract_cropped_frame_at_time(
 
 /// Build ffmpeg crop filter string from ROI parameters
 fn build_roi_crop_filter(roi: &ROI, video_width: u32, video_height: u32) -> String {
-    // ROI coordinates are in percentage (0-100) by default
-    let (x, y, w, h) = match roi.unit.as_str() {
-        "percent" | "" => {
-            let x = (roi.x as f32 / 100.0 * video_width as f32) as u32;
-            let y = (roi.y as f32 / 100.0 * video_height as f32) as u32;
-            let w = (roi.width as f32 / 100.0 * video_width as f32) as u32;
-            let h = (roi.height as f32 / 100.0 * video_height as f32) as u32;
-            (x, y, w, h)
-        }
-        "pixel" => (roi.x, roi.y, roi.width, roi.height),
-        _ => {
-            let x = (roi.x as f32 / 100.0 * video_width as f32) as u32;
-            let y = (roi.y as f32 / 100.0 * video_height as f32) as u32;
-            let w = (roi.width as f32 / 100.0 * video_width as f32) as u32;
-            let h = (roi.height as f32 / 100.0 * video_height as f32) as u32;
-            (x, y, w, h)
-        }
+    // Determine if ROI is in pixel or percent coordinates
+    // Default to percent (0-100 range) for backward compatibility
+    let (x, y, w, h) = if roi.unit == "pixel" {
+        (roi.x, roi.y, roi.width, roi.height)
+    } else {
+        // Default: percent coordinates (0-100)
+        let x = (roi.x as f32 / 100.0 * video_width as f32) as u32;
+        let y = (roi.y as f32 / 100.0 * video_height as f32) as u32;
+        let w = (roi.width as f32 / 100.0 * video_width as f32) as u32;
+        let h = (roi.height as f32 / 100.0 * video_height as f32) as u32;
+        (x, y, w, h)
     };
 
     format!("crop={}:{}:{}:{}", w, h, x, y)

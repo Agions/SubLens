@@ -175,7 +175,15 @@ select {
   &:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: $glow-sm;
+  }
+
+  // Only show glow on keyboard focus, not mouse click
+  &:focus:not(:focus-visible) {
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    box-shadow: var(--focus-ring);
   }
   
   &::placeholder {

@@ -35,13 +35,26 @@ export function useVideoPlayer() {
       projectStore.setPlaying(false)
     })
     
-    // Update current frame on time update
-    element.addEventListener('timeupdate', () => {
+    // Throttled frame update — prevents store updates on every timeupdate event
+  // (browsers fire timeupdate at unpredictable rates, causing excess re-renders)
+  let _rafPending = false
+  let _lastFrameTime = 0
+
+  element.addEventListener('timeupdate', () => {
+    if (_rafPending) return
+    _rafPending = true
+    requestAnimationFrame(() => {
       if (projectStore.videoMeta && element.currentTime) {
         const frame = Math.floor(element.currentTime * projectStore.videoMeta.fps)
-        projectStore.setCurrentFrame(frame)
+        // Only update if frame actually changed (avoids unnecessary reactivity)
+        if (frame !== _lastFrameTime) {
+          _lastFrameTime = frame
+          projectStore.setCurrentFrame(frame)
+        }
       }
+      _rafPending = false
     })
+  })
   }
   
   // Load video

@@ -97,10 +97,12 @@ const exportFormatKeys = Object.keys(subtitleStore.exportFormats) as (keyof Expo
         <path d="M15 15l-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       <input
+        id="subtitle-search-input"
         v-model="subtitleStore.searchQuery"
         type="text"
         placeholder="搜索字幕内容..."
         class="search-input"
+        aria-label="搜索字幕内容"
       />
       <span v-if="subtitleStore.searchQuery" class="search-count">
         {{ filteredCount }} 条

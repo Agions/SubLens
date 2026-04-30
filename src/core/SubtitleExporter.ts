@@ -13,23 +13,17 @@
 import type { SubtitleItem } from '@/types/subtitle'
 
 // ─── 模块级常量（避免每调用重建）───────────────────────────────
+// ASS escape sequences — MUST process backslash FIRST to avoid double-escaping
+// Order: \\\\ → {, } → , → \n
 const _ASS_ESCAPE_REGEXPS: Array<[RegExp, string]> = [
-  [/\\/g, '\\\\'],
-  [/\{/g, '\\{'],
-  [/\}/g, '\\}'],
-  [/,/g, '\\,'],
-  [/\n/g, '\\N'],
+  [/\\/g, '\\\\'],  // backslash first — must be before other escapes
+  [/\}/g, '\\}'],   // closing brace before opening (visual grouping)
+  [/\{/g, '\\{'],  // opening brace
+  [/,/g, '\\,'],   // comma
+  [/\n/g, '\\N'],     // newline last — depends on \ not being double-escaped yet
 ]
 
-// ─── 辅助函数 ─────────────────────────────────────────────────
-function pad2(n: number): string {
-  return n.toString().padStart(2, '0')
-}
-
-function pad3(n: number): string {
-  return n.toString().padStart(3, '0')
-}
-
+// Shared timestamp helpers — extract common decomposition
 function _decompose(seconds: number) {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
@@ -38,7 +32,19 @@ function _decompose(seconds: number) {
   return { h, m, s, remainder }
 }
 
-// ─── 时间戳格式化（统一_decompose调用）──────────────────────────
+// Shared millisecond part formatting (used by SRT and VTT)
+function _msPart(seconds: number, padFn: (n: number) => string): string {
+  return padFn(Math.floor((seconds % 1) * 1000))
+}
+
+function pad2(n: number): string {
+  return n.toString().padStart(2, '0')
+}
+
+function pad3(n: number): string {
+  return n.toString().padStart(3, '0')
+}
+
 function tsSRT(seconds: number): string {
   const { h, m, s, remainder } = _decompose(seconds)
   return `${pad2(h)}:${pad2(m)}:${pad2(s)},${pad3(Math.floor(remainder * 1000))}`
@@ -54,9 +60,10 @@ function tsASS(seconds: number): string {
   return `${h}:${pad2(m)}:${pad2(s)}.${pad2(Math.floor(remainder * 100))}`
 }
 
+// SBV uses comma separator instead of period for milliseconds (SRT-style with comma)
 function tsSBV(seconds: number): string {
   const { h, m, s, remainder } = _decompose(seconds)
-  return `${pad2(h)}:${pad2(m)}:${pad2(s)},${String(Math.floor(remainder * 1000)).padStart(3, '0')}`
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)},${pad3(Math.floor(remainder * 1000))}`
 }
 
 function tsSSA(seconds: number): string {
@@ -192,7 +199,8 @@ function formatCSV(subs: SubtitleItem[]): string {
   const header = 'Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence\n'
   const rows = subs.map(sub => {
     const escaped = `"${sub.text.replace(/"/g, '""')}"`
-    return `${sub.index},${sub.startTime.toFixed(3)},${sub.endTime.toFixed(3)},${sub.startFrame},${sub.endFrame},${escaped},${(sub.confidence * 100).toFixed(1)}%`
+    // Use float [0-1] to match JSON format, consistent across all export formats
+    return `${sub.index},${sub.startTime.toFixed(3)},${sub.endTime.toFixed(3)},${sub.startFrame},${sub.endFrame},${escaped},${sub.confidence.toFixed(3)}`
   }).join('\n')
   return header + rows
 }

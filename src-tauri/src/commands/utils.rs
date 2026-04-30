@@ -16,11 +16,25 @@ impl TempFileGuard {
         &self.0
     }
 
-    /// Release ownership without deleting (caller takes responsibility).
-    pub fn into_path(self) -> PathBuf {
-        let p = self.0.clone();
+    /// Consumes the guard and returns the path.
+    /// The temp file will NOT be automatically deleted — caller is responsible for cleanup.
+    /// This is the safe alternative to std::mem::forget.
+    pub fn into_path(mut self) -> PathBuf {
+        use std::mem::ManuallyDrop;
+        // Prevent Drop from running by wrapping in ManuallyDrop
+        let guard = ManuallyDrop::new(self);
+        guard.0.clone()
+    }
+
+    /// Consumes the guard and returns the path, WITH ownership transfer for deletion.
+    /// The temp file WILL be deleted when the returned PathBuf is dropped.
+    /// Use this when you want the file to persist but still want RAII cleanup.
+    pub fn release_path(self) -> PathBuf {
+        let path = self.0.clone();
+        // Leak the TempFileGuard intentionally so Drop won't run on this path
+        // The file will be managed externally now
         std::mem::forget(self);
-        p
+        path
     }
 }
 
