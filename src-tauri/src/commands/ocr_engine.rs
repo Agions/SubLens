@@ -1,46 +1,45 @@
+//! OCR Engine unified interface.
+//!
+//! This module provides a **unified interface** for multiple OCR backends:
+//!
+//! | Engine | Type | Pros | Cons |
+//! |--------|------|------|------|
+//! | Tesseract.js | WASM (Browser) | No install required | Slower, less accurate |
+//! | Tesseract CLI | Native | Fast, accurate | Must install tesseract |
+//! | PaddleOCR | Native (Python) | Best accuracy for CJK | Requires Python |
+//!
+//! ## Usage
+//!
+//! 1. Call `init_ocr_engine()` to verify engine availability
+//! 2. Use `process_image_ocr()` or `process_roi_ocr()` for processing
+//! 3. All functions return `OCRProcessResult` with unified structure
+//!
+//! ## Language Codes
+//!
+//! - `ch` / `chi` / `chi_sim` → Chinese Simplified
+//! - `chi_tra` → Chinese Traditional
+//! - `ja` / `jpn` → Japanese
+//! - `ko` / `kor` → Korean
+//! - `en`, `fr`, `de`, `es`, `pt`, `it`, `ru`, `ar` → Other languages
+//!
+//! ## PaddleOCR Setup
+//!
+//! Requires `src-tauri/scripts/paddle_ocr.py` and:
+//! ```bash
+//! pip install paddlepaddle paddleocr
+//! ```
+
 use base64::Engine;
 use image::{ImageBuffer, Rgba};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
 use tokio::io::AsyncWriteExt;
 
-use super::types::BoundingBox;
+use super::types::{BoundingBox, OCRConfig, OCRProcessResult, OCRResultItem};
 use super::utils::{find_python_binary, find_script, uuid_v4};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OCREngineConfig {
-    pub engine: String,
-    pub language: Vec<String>,
-    pub confidence_threshold: f32,
-    pub use_gpu: bool,
-}
-
-impl Default for OCREngineConfig {
-    fn default() -> Self {
-        Self {
-            engine: "tesseract".to_string(),
-            language: vec!["eng".to_string()],
-            confidence_threshold: 0.7,
-            use_gpu: false,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OCRResultItem {
-    pub text: String,
-    pub confidence: f32,
-    pub bounding_box: BoundingBox,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OCRProcessResult {
-    pub items: Vec<OCRResultItem>,
-    pub full_text: String,
-    pub language_detected: String,
-    pub processing_time_ms: u64,
-}
+// Re-export for backward compatibility
+pub use types::{OCRConfig as OCREngineConfig};
 
 #[tauri::command]
 pub async fn init_ocr_engine(config: OCREngineConfig) -> Result<String, String> {
@@ -325,14 +324,21 @@ pub async fn ocr_image_tesseract(
 
 /// Try native Rust tesseract bindings (requires tesseract-sys crate)
 /// Returns Ok with (items, full_text) or Err if not available
+#[allow(dead_code)]
 fn try_native_tesseract(image_path: &str, language: &str) -> Result<(Vec<OCRResultItem>, String), String> {
-    // Try to use tesseract crate if compiled with TESSERACT_SUPPORT
-    // This is a compile-time feature, so we check at runtime instead
-    
-    // For now, just return error to use CLI fallback
-    // In production, you would enable the "tesseract" feature in Cargo.toml
-    // and use the tesseract crate directly
-    Err("Native tesseract not enabled".to_string())
+    // Native tesseract requires the "tesseract" feature flag in Cargo.toml
+    // and tesseract-sys + tesseract crates to be available.
+    //
+    // To enable native tesseract:
+    // 1. Add to Cargo.toml: tesseract = { version = "0.4", optional = true }
+    // 2. Enable in src-tauri: tesseract = ["tesseract"]
+    //
+    // For now, this always falls back to CLI tesseract.
+    tracing::debug!(
+        "Native tesseract not available for {} with lang {}. Using CLI fallback.",
+        image_path, language
+    );
+    Err("Native tesseract feature not enabled. Set `tesseract = ["tesseract"]` in Cargo.toml".to_string())
 }
 
 /// Process an image with PaddleOCR via Python bridge script.
@@ -388,12 +394,15 @@ pub async fn process_paddle_ocr(
 
     // Add ROI if specified (as percentage values)
     if let (Some(x), Some(y), Some(w), Some(h)) = (roi_x, roi_y, roi_width, roi_height) {
-        // Convert pixel ROI to percentage
+        // Clamp values to prevent overflow and out-of-bounds
+        let img_w = width.max(1) as f64;
+        let img_h = height.max(1) as f64;
+
         let roi_json = serde_json::json!({
-            "x": (x as f64 / width as f64) * 100.0,
-            "y": (y as f64 / height as f64) * 100.0,
-            "width": (w as f64 / width as f64) * 100.0,
-            "height": (h as f64 / height as f64) * 100.0,
+            "x": ((x as f64 / img_w) * 100.0).clamp(0.0, 100.0),
+            "y": ((y as f64 / img_h) * 100.0).clamp(0.0, 100.0),
+            "width": ((w as f64 / img_w) * 100.0).clamp(0.0, 100.0),
+            "height": ((h as f64 / img_h) * 100.0).clamp(0.0, 100.0),
         });
         input_json["roi"] = roi_json;
     }

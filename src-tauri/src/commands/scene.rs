@@ -1,3 +1,25 @@
+//! Scene detection module.
+//!
+//! Detects scene changes (shot transitions) in video files using the
+//! [scenedetect](https://github.com/Breakthrough/PySceneDetect) Python library.
+//!
+//! ## Architecture
+//!
+//! ```text
+//! Video File -> ffprobe (get FPS) -> scenedetect.py -> SceneChange[]
+//! ```
+//!
+//! ## Scene Detection Algorithm
+//!
+//! Uses adaptive threshold detection via scenedetect:
+//! - `threshold`: 0.05-0.95 (higher = less sensitive)
+//! - `min_scene_length`: minimum frames between cuts
+//!
+//! ## Frame Similarity
+//!
+//! The `calculate_frame_similarity()` function provides histogram-based
+//! comparison for frames that don't involve scene cuts.
+
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 

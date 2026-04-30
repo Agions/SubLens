@@ -82,6 +82,14 @@ export function useOCRTab() {
   const sceneThreshold = ref(0.3)
   const frameInterval = ref(1)
 
+  // Confidence threshold - synchronized with store
+  const confidenceThreshold = computed({
+    get: () => Math.round(projectStore.extractOptions.confidenceThreshold * 100),
+    set: (val: number) => {
+      projectStore.extractOptions.confidenceThreshold = val / 100
+    }
+  })
+
   // Computed: estimated accuracy
   const estimatedAccuracy = computed(() => {
     const engine = projectStore.extractOptions.ocrEngine

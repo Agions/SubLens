@@ -249,8 +249,13 @@ export function useSubtitleExtractor() {
       subtitleStore.setSubtitles(
         cleaned.map((s, i) => {
           const match = rawIndex.get(`${s.startTime}#${s.text}`)
+          // Use crypto.randomUUID() to avoid ID collisions in batch processing
+          // Fallback format: sub-{startFrame}-{startTimeMs}-{cleanIndex}
+          const id = match
+            ? `sub-${s.startFrame}-${Math.round(s.startTime * 1000)}-${i}`
+            : `sub-${i}`
           return {
-            id: match ? `sub-${s.startFrame}-${Date.now()}-${i}` : `sub-${i}`,
+            id,
             index: i + 1,
             startTime: s.startTime,
             endTime: s.endTime,

@@ -1,5 +1,13 @@
 //! Shared types for the SubLens commands layer.
+//!
 //! All cross-cutting data structures live here to avoid duplication.
+//! These types are used across multiple command modules (video, ocr, scene, export).
+//!
+//! ## Unification Note
+//!
+//! This module consolidates types that were previously duplicated across
+//! `ocr.rs` and `ocr_engine.rs`. The unified `OCRProcessResult` and
+//! `OCRResultItem` types should be used for all OCR operations.
 
 use serde::{Deserialize, Serialize};
 
@@ -18,22 +26,26 @@ impl BoundingBox {
     }
 
     /// Convert from pixel coordinates to percentage of image dimensions.
+    /// Uses rounding to avoid floating point precision issues.
     pub fn to_percent(&self, img_width: u32, img_height: u32) -> Self {
+        let img_width = img_width.max(1);
+        let img_height = img_height.max(1);
         Self {
-            x: (self.x as f32 / img_width as f32 * 100.0) as u32,
-            y: (self.y as f32 / img_height as f32 * 100.0) as u32,
-            width: (self.width as f32 / img_width as f32 * 100.0) as u32,
-            height: (self.height as f32 / img_height as f32 * 100.0) as u32,
+            x: ((self.x as f64 / img_width as f64) * 100.0).round() as u32,
+            y: ((self.y as f64 / img_height as f64) * 100.0).round() as u32,
+            width: ((self.width as f64 / img_width as f64) * 100.0).round() as u32,
+            height: ((self.height as f64 / img_height as f64) * 100.0).round() as u32,
         }
     }
 
     /// Convert from percentage coordinates to pixel coordinates.
+    /// Uses rounding to avoid floating point precision issues.
     pub fn to_pixels(&self, img_width: u32, img_height: u32) -> Self {
         Self {
-            x: (self.x as f32 / 100.0 * img_width as f32) as u32,
-            y: (self.y as f32 / 100.0 * img_height as f32) as u32,
-            width: (self.width as f32 / 100.0 * img_width as f32) as u32,
-            height: (self.height as f32 / 100.0 * img_height as f32) as u32,
+            x: ((self.x as f64 / 100.0) * img_width as f64).round() as u32,
+            y: ((self.y as f64 / 100.0) * img_height as f64).round() as u32,
+            width: ((self.width as f64 / 100.0) * img_width as f64).round() as u32,
+            height: ((self.height as f64 / 100.0) * img_height as f64).round() as u32,
         }
     }
 }
@@ -96,6 +108,8 @@ pub struct OCRConfig {
     pub engine: String,
     pub language: Vec<String>,
     pub confidence_threshold: f32,
+    #[serde(default)]
+    pub use_gpu: bool,
 }
 
 impl Default for OCRConfig {
@@ -104,6 +118,37 @@ impl Default for OCRConfig {
             engine: "tesseract".to_string(),
             language: vec!["eng".to_string()],
             confidence_threshold: 0.7,
+            use_gpu: false,
+        }
+    }
+}
+
+/// A single OCR result item with text, confidence, and bounding box.
+/// This is the unified type used across all OCR engines.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OCRResultItem {
+    pub text: String,
+    pub confidence: f32,
+    pub bounding_box: BoundingBox,
+}
+
+/// The result of a complete OCR processing operation.
+/// Contains all detected items plus metadata about the processing.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OCRProcessResult {
+    pub items: Vec<OCRResultItem>,
+    pub full_text: String,
+    pub language_detected: String,
+    pub processing_time_ms: u64,
+}
+
+impl Default for OCRProcessResult {
+    fn default() -> Self {
+        Self {
+            items: Vec::new(),
+            full_text: String::new(),
+            language_detected: "unknown".to_string(),
+            processing_time_ms: 0,
         }
     }
 }

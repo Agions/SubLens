@@ -2,7 +2,9 @@
 import { ref, computed } from 'vue'
 import { useOCRTab } from '@/composables/useOCRTab'
 import { useSubtitleStore } from '@/stores/subtitle'
+import { useProjectStore } from '@/stores/project'
 
+const projectStore = useProjectStore()
 const {
   ocrEngines,
   languageOptions,
@@ -13,6 +15,7 @@ const {
   mergeThreshold,
   sceneThreshold,
   frameInterval,
+  confidenceThreshold,
   estimatedAccuracy,
   setLanguage,
   toggleMultiPass,
@@ -24,7 +27,6 @@ const {
 } = useOCRTab()
 
 const subtitleStore = useSubtitleStore()
-const confidenceThreshold = ref(70)
 
 const belowThresholdCount = computed(() =>
   subtitleStore.subtitles.filter(s => s.confidence < confidenceThreshold.value / 100).length
@@ -65,7 +67,8 @@ const belowThresholdCount = computed(() =>
         <button
           v-for="engine in ocrEngines"
           :key="engine.id"
-          class="engine-card"
+          :class="['engine-card', { active: projectStore.extractOptions.ocrEngine === engine.id }]"
+          @click="projectStore.extractOptions.ocrEngine = engine.id"
         >
           <div class="engine-header">
             <div class="engine-avatar" :class="'avatar-' + engine.id">
@@ -108,7 +111,7 @@ const belowThresholdCount = computed(() =>
         <button
           v-for="lang in languageOptions"
           :key="lang.value"
-          :class="['lang-chip', { active: languageOptions.includes(lang) }]"
+          :class="['lang-chip', { active: projectStore.extractOptions.languages.includes(lang.value) }]"
           @click="setLanguage(lang.value)"
         >
           <span>{{ lang.abbr }}</span>

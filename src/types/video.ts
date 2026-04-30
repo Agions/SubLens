@@ -1,3 +1,25 @@
+/**
+ * Video and OCR Types for SubLens
+ *
+ * ## Key Types
+ *
+ * - `VideoMetadata` - Video file information (dimensions, fps, duration)
+ * - `ROI` - Region of Interest for subtitle detection
+ * - `ExtractOptions` - Extraction configuration
+ * - `OCRConfig` - OCR engine configuration
+ *
+ * ## ROI Coordinate System
+ *
+ * Coordinates can be in 'percent' (0-100) or 'pixel' units.
+ * Percentages are relative to video dimensions.
+ *
+ * ## Confidence Levels
+ *
+ * - High (≥85%): Auto-accepted, reliable
+ * - Mid (60-85%): Needs review
+ * - Low (<60%): Likely OCR error
+ */
+
 // Video Types
 
 export interface VideoMetadata {

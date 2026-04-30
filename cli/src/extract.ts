@@ -184,6 +184,7 @@ async function main() {
     const rawSubs: RawSubtitle[] = []
     let lastPct = -1
     let framesProcessed = 0
+    let framesFailed = 0
 
     for (let fi = 0; fi < info.totalFrames; fi += frameInterval) {
       const pct = Math.round((fi / info.totalFrames) * 100)
@@ -212,8 +213,13 @@ async function main() {
           }
         }
         framesProcessed++
-      } catch {
-        // Skip frame on error
+      } catch (err) {
+        framesFailed++
+        if (framesFailed <= 5) {
+          process.stderr.write(`\n   ⚠️  Frame ${fi} failed: ${err instanceof Error ? err.message : String(err)}\n`)
+        } else if (framesFailed === 6) {
+          process.stderr.write(`\n   ⚠️  Additional frame failures suppressed...\n`)
+        }
       }
     }
 
@@ -221,7 +227,7 @@ async function main() {
     process.stdout.write(progressBar(info.totalFrames, info.totalFrames, `#${info.totalFrames}`))
     process.stdout.write('\n')
 
-    console.log(`\n✅ Processed ${framesProcessed} frames → ${rawSubs.length} raw subtitles`)
+    console.log(`\n✅ Processed ${framesProcessed} frames → ${rawSubs.length} raw subtitles${framesFailed > 0 ? ` (${framesFailed} frames failed)` : ''}`)
 
     // ── Merge ──────────────────────────────────────────────────────────────
     let finalSubs = rawSubs
