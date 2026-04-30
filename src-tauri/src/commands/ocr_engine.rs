@@ -38,6 +38,24 @@ use tokio::io::AsyncWriteExt;
 use super::types::{BoundingBox, OCRConfig, OCRProcessResult, OCRResultItem};
 use super::utils::{find_python_binary, find_script, uuid_v4};
 
+/// Language code mapper: application code -> Tesseract code.
+fn map_lang_to_tesseract(lang: &str) -> &'static str {
+    match lang {
+        "ch" | "chi" | "chi_sim" => "chi_sim",
+        "chi_tra" => "chi_tra",
+        "ja" | "jpn" => "jpn",
+        "ko" | "kor" => "kor",
+        "fr" | "fra" => "fra",
+        "de" | "deu" => "deu",
+        "es" | "spa" => "spa",
+        "pt" | "por" => "por",
+        "it" | "ita" => "ita",
+        "ru" | "rus" => "rus",
+        "ar" => "ara",
+        _ => "eng",
+    }
+}
+
 // Re-export for backward compatibility
 pub use types::{OCRConfig as OCREngineConfig};
 

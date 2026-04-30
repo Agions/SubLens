@@ -104,7 +104,11 @@ pub fn find_script(script_name: &str) -> Result<PathBuf, String> {
             .parent()
             .map(|p| p.join("src-tauri/scripts").join(script_name)),
         // Absolute development path
-        Some(PathBuf::from("/root/.openclaw/workspace/HardSubX/src-tauri/scripts").join(script_name)),
+        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("src-tauri/scripts")
+            .join(script_name)),
     ];
 
     for candidate in candidates.into_iter().flatten() {

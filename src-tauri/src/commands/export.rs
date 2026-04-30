@@ -27,7 +27,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::types::{BoundingBox, ROI};
+use super::types::ROI;
+use chrono::Local;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubtitleItem {
@@ -82,20 +83,24 @@ impl ExportFormat {
     }
 }
 
-fn format_timestamp_srt(seconds: f64) -> String {
+fn format_timestamp(seconds: f64, separator: &str, precision: u32) -> String {
     let hours = (seconds / 3600.0).floor() as u32;
     let minutes = ((seconds % 3600.0) / 60.0).floor() as u32;
     let secs = (seconds % 60.0).floor() as u32;
-    let millis = ((seconds % 1.0) * 1000.0).floor() as u32;
-    format!("{:02}:{:02}:{:02},{:03}", hours, minutes, secs, millis)
+    let fraction = ((seconds % 1.0) * 10_f64.powi(precision as i32)).floor() as u32;
+    if precision == 3 {
+        format!("{:02}:{:02}:{:02}{}{:03}", hours, minutes, secs, separator, fraction)
+    } else {
+        format!("{:02}:{:02}:{:02}{}{:02}", hours, minutes, secs, separator, fraction)
+    }
+}
+
+fn format_timestamp_srt(seconds: f64) -> String {
+    format_timestamp(seconds, ",", 3)
 }
 
 fn format_timestamp_vtt(seconds: f64) -> String {
-    let hours = (seconds / 3600.0).floor() as u32;
-    let minutes = ((seconds % 3600.0) / 60.0).floor() as u32;
-    let secs = (seconds % 60.0).floor() as u32;
-    let millis = ((seconds % 1.0) * 1000.0).floor() as u32;
-    format!("{:02}:{:02}:{:02}.{:03}", hours, minutes, secs, millis)
+    format_timestamp(seconds, ".", 3)
 }
 
 fn export_as_srt(subtitles: &[SubtitleItem]) -> String {
@@ -132,9 +137,7 @@ fn export_as_txt(subtitles: &[SubtitleItem]) -> String {
 }
 
 fn export_as_ass(subtitles: &[SubtitleItem]) -> String {
-    // ASS/SSA Advanced Substation Alpha format
-    let mut output = String::from(
-        "[Script Info]
+    let header = r#"[Script Info]
 Title: SubLens Export
 ScriptType: v4.00+
 Collisions: Normal
@@ -146,39 +149,27 @@ Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-");
-    
+"#;
+    let mut output = String::from(header);
     for sub in subtitles {
         let start = format_timestamp_ass(sub.start_time);
         let end = format_timestamp_ass(sub.end_time);
-        // ASS escape order: backslash FIRST, then braces, then comma, then newline
-        let text = sub.text
-            .replace("\\", "\\\\")  // backslash first
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-            .replace(",", "\\,")
-            .replace("\n", "\\N");
-        output.push_str(&format!(
-            "Dialogue: 0,{},{},Default,,0,0,0,,{}\n",
-            start, end, text
-        ));
+        let text = escape_ass_text(&sub.text);
+        output.push_str(&format!("Dialogue: 0,{},{},Default,,0,0,0,,{}\n", start, end, text));
     }
-    
     output
 }
 
-fn format_timestamp_ass(seconds: f64) -> String {
-    let hours = (seconds / 3600.0).floor() as u32;
-    let minutes = ((seconds % 3600.0) / 60.0).floor() as u32;
-    let secs = (seconds % 60.0).floor() as u32;
-    let centisecs = ((seconds % 1.0) * 100.0).floor() as u32;
-    format!("{}:{:02}:{:02}.{:02}", hours, minutes, secs, centisecs)
+fn escape_ass_text(text: &str) -> String {
+    text.replace("\\", "\\\\")
+        .replace("{", "\\{")
+        .replace("}", "\\}")
+        .replace(",", "\\,")
+        .replace("\n", "\\N")
 }
 
 fn export_as_ssa(subtitles: &[SubtitleItem]) -> String {
-    // SSA (SubStation Alpha) - older format with v4.00
-    let mut output = String::from(
-        "[Script Info]
+    let header = r#"[Script Info]
 Title: SubLens Export
 ScriptType:v4.00
 Collisions:Normal
@@ -190,24 +181,14 @@ Style: Default,Arial,20,16777215,65535,255,0,-1,0,1,2,2,2,10,10,10,0,1
 
 [Events]
 Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-");
-    
+"#;
+    let mut output = String::from(header);
     for sub in subtitles {
         let start = format_timestamp_ass(sub.start_time);
         let end = format_timestamp_ass(sub.end_time);
-        // SSA escape: backslash first, then braces, then comma, then newline
-        let text = sub.text
-            .replace("\\", "\\\\")
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-            .replace(",", "\\,")
-            .replace("\n", "\\N");
-        output.push_str(&format!(
-            "Dialogue: Marked=0,{},{},Default,,0000,0000,0000,,{}\n",
-            start, end, text
-        ));
+        let text = escape_ass_text(&sub.text);
+        output.push_str(&format!("Dialogue: Marked=0,{},{},Default,,0000,0000,0000,,{}\n", start, end, text));
     }
-    
     output
 }
 
@@ -296,7 +277,7 @@ fn export_as_csv(subtitles: &[SubtitleItem]) -> String {
 }
 
 fn chrono_lite_now() -> String {
-    chrono::Local::now().to_rfc3339()
+    Local::now().to_rfc3339()
 }
 
 #[tauri::command]

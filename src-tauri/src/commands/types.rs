@@ -152,21 +152,3 @@ impl Default for OCRProcessResult {
         }
     }
 }
-
-/// Language code mapper: application code -> Tesseract code.
-pub fn map_lang_to_tesseract(lang: &str) -> &'static str {
-    match lang {
-        "ch" | "chi" | "chi_sim" => "chi_sim",
-        "chi_tra" => "chi_tra",
-        "ja" | "jpn" => "jpn",
-        "ko" | "kor" => "kor",
-        "fr" | "fra" => "fra",
-        "de" | "deu" => "deu",
-        "es" | "spa" => "spa",
-        "pt" | "por" => "por",
-        "it" | "ita" => "ita",
-        "ru" | "rus" => "rus",
-        "ar" => "ara",
-        _ => "eng",
-    }
-}
