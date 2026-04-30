@@ -3,6 +3,90 @@
 use std::path::PathBuf;
 use uuid::Uuid;
 
+/// Parse frame rate from ffprobe's "30000/1001" fraction string.
+/// Returns fps as f64, or 30.0 as fallback.
+pub fn parse_fps_from_fraction(fps_str: &str) -> f64 {
+    let parts: Vec<&str> = fps_str.split('/').collect();
+    if parts.len() == 2 {
+        let num: f64 = parts[0].parse().unwrap_or(30.0);
+        let den: f64 = parts[1].parse().unwrap_or(1.0);
+        if den > 0.0 {
+            return num / den;
+        }
+    }
+    fps_str.parse().unwrap_or(30.0)
+}
+
+/// Parse video stream info from ffmpeg stderr output ("Video: ... WxH ... fps, ...").
+/// Returns (width, height, fps).
+pub fn parse_stream_from_ffmpeg_output(output: &str) -> (u32, u32, f64) {
+    let mut width = 1920u32;
+    let mut height = 1080u32;
+    let mut fps = 30.0f64;
+
+    for line in output.lines() {
+        if line.contains("Video:") {
+            for part in line.split(',') {
+                let part = part.trim();
+                if part.contains('x') {
+                    if let Some((w, h)) = part.split_once('x') {
+                        width = w.parse().unwrap_or_else(|_| {
+                            tracing::warn!("Failed to parse video width: {}", w);
+                            1920
+                        });
+                        height = h.parse().unwrap_or_else(|_| {
+                            tracing::warn!("Failed to parse video height: {}", h);
+                            1080
+                        });
+                    }
+                }
+                if part.contains("fps") {
+                    let fps_candidate = part.split_whitespace().next().unwrap_or("30");
+                    let numeric = fps_candidate.trim_end_matches(|c: char| !c.is_ascii_digit() && c != '.');
+                    fps = numeric.parse().unwrap_or_else(|_| {
+                        tracing::warn!("Failed to parse fps value: {}", numeric);
+                        30.0
+                    });
+                }
+            }
+            break;
+        }
+    }
+
+    (width, height, fps)
+}
+
+/// Parse duration from ffmpeg stderr ("Duration: HH:MM:SS.ms, ...").
+/// Returns total seconds, or 0.0 if not found.
+pub fn parse_duration_from_ffmpeg_output(output: &str) -> f64 {
+    for line in output.lines() {
+        if line.contains("Duration:") {
+            if let Some(duration_str) = line.split("Duration:").nth(1) {
+                let time_part = duration_str.split(',').next().unwrap_or("").trim();
+                return parse_time_to_seconds(time_part);
+            }
+        }
+    }
+    0.0
+}
+
+/// Parse "HH:MM:SS.ms" time string to seconds.
+pub fn parse_time_to_seconds(time_str: &str) -> f64 {
+    let parts: Vec<&str> = time_str.split(':').collect();
+    if parts.len() >= 3 {
+        let hours: f64 = parts[0].parse().unwrap_or(0.0);
+        let minutes: f64 = parts[1].parse().unwrap_or(0.0);
+        let seconds: f64 = parts[2].parse().unwrap_or(0.0);
+        // Compute in integer milliseconds to avoid floating-point accumulation error
+        let total_ms = (hours as u64) * 3_600_000
+            + (minutes as u64) * 60_000
+            + (seconds * 1000.0).round() as u64;
+        return total_ms as f64 / 1000.0;
+    }
+    tracing::warn!("Invalid time format (expected HH:MM:SS): {}", time_str);
+    0.0
+}
+
 /// RAII guard: automatically removes a temp file when dropped.
 pub struct TempFileGuard(PathBuf);
 
