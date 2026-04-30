@@ -449,6 +449,10 @@ pub async fn process_paddle_ocr(
         tokio::io::AsyncWriteExt::write_all(&mut stdin, input_str.as_bytes())
             .await
             .map_err(|e| format!("Failed to write to Python stdin: {}", e))?;
+        // Explicitly shutdown stdin to signal EOF to Python process
+        tokio::io::AsyncWriteExt::shutdown(&mut stdin)
+            .await
+            .map_err(|e| format!("Failed to shutdown Python stdin: {}", e))?;
     }
 
     // Read stdout

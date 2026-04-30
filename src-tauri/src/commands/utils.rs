@@ -186,13 +186,11 @@ pub fn find_script(script_name: &str) -> Result<PathBuf, String> {
         // CARGO_MANIFEST_DIR path
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
-            .map(|p| p.join("src-tauri/scripts").join(script_name)),
+            .and_then(|p| Some(p.join("src-tauri/scripts").join(script_name))),
         // Absolute development path
-        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
-            .unwrap()
-            .join("src-tauri/scripts")
-            .join(script_name)),
+            .and_then(|p| Some(p.join("src-tauri/scripts").join(script_name))),
     ];
 
     for candidate in candidates.into_iter().flatten() {

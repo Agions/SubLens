@@ -231,12 +231,15 @@ export const useSubtitleStore = defineStore('subtitle', () => {
 
   function batchDeleteLowConfidence() {
     const threshold = CONFIDENCE_MID
-    subtitles.value = subtitles.value.filter(s => s.confidence >= threshold)
-    // Re-index
-    subtitles.value.forEach((s, i) => { s.index = i + 1 })
-    // Rebuild index map to maintain O(1) lookup invariant
-    _rebuildIndexMap()
-    if (selectedId.value && !subtitles.value.some(s => s.id === selectedId.value)) selectedId.value = null
+    // Filter and re-index using setSubtitles to maintain proper state
+    const filtered = subtitles.value
+        .filter(s => s.confidence >= threshold)
+        .map((s, i) => ({ ...s, index: i + 1 }))
+    setSubtitles(filtered)
+    // Clear selected if it was deleted
+    if (selectedId.value && !subtitles.value.some(s => s.id === selectedId.value)) {
+      selectedId.value = null
+    }
   }
 
   function clearAll() {

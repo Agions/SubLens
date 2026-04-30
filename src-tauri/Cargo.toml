@@ -38,6 +38,7 @@ clap = { version = "4.0", features = ["derive"] }
 base64 = { version = "0.22", default-features = false, features = ["std"] }
 chrono = "0.4"
 uuid = { version = "1.0", features = ["v4"] }
+dirs = "5.0"  # For path validation in file commands
 image = "0.25"  # For image processing in OCR
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

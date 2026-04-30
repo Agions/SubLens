@@ -72,8 +72,38 @@ pub async fn open_file_dialog(
     }
 }
 
+/// Validate that the path is within allowed directories and is safe.
+/// Prevents path traversal attacks (e.g., ../../../etc/passwd).
+fn validate_path(path: &str) -> Result<(), String> {
+    // Canonicalize the path and verify it's within the app data directory
+    let canonical = std::path::Path::new(path)
+        .canonicalize()
+        .map_err(|e| format!("Invalid path {}: {}", path, e))?;
+
+    // For security, we only allow paths within the app's data directory or temp directory
+    let allowed_dirs = [
+        std::env::temp_dir(),
+        dirs::data_local_dir().unwrap_or_else(|| std::path::PathBuf::from(".")),
+        dirs::document_dir().unwrap_or_else(|| std::path::PathBuf::from(".")),
+    ];
+
+    let is_allowed = allowed_dirs.iter().any(|allowed| {
+        canonical.starts_with(allowed)
+    });
+
+    if !is_allowed {
+        return Err(format!(
+            "Path {} is outside allowed directories (path traversal attempt?)",
+            path
+        ));
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn write_text_file(path: String, content: String) -> Result<(), String> {
+    validate_path(&path)?;
     tokio::fs::write(&path, &content)
         .await
         .map_err(|e| format!("Failed to write file {}: {}", path, e))
@@ -81,6 +111,7 @@ pub async fn write_text_file(path: String, content: String) -> Result<(), String
 
 #[tauri::command]
 pub async fn read_text_file(path: String) -> Result<String, String> {
+    validate_path(&path)?;
     tokio::fs::read_to_string(&path)
         .await
         .map_err(|e| format!("Failed to read file {}: {}", path, e))

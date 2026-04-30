@@ -104,5 +104,9 @@ pub fn run() {
             commands::system::get_tesseract_languages,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .unwrap_or_else(|e| {
+            tracing::error!("Failed to run Tauri application: {}", e);
+            eprintln!("ERROR: Failed to start SubLens application: {}", e);
+            std::process::exit(1);
+        });
 }
