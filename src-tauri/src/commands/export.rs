@@ -99,6 +99,10 @@ fn format_timestamp_srt(seconds: f64) -> String {
     format_timestamp(seconds, ",", 3)
 }
 
+fn format_timestamp_ass(seconds: f64) -> String {
+    format_timestamp(seconds, ".", 2)
+}
+
 fn format_timestamp_vtt(seconds: f64) -> String {
     format_timestamp(seconds, ".", 3)
 }

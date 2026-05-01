@@ -57,7 +57,7 @@ fn map_lang_to_tesseract(lang: &str) -> &'static str {
 }
 
 // Re-export for backward compatibility
-pub use types::{OCRConfig as OCREngineConfig};
+pub use super::types::{OCRConfig as OCREngineConfig};
 
 #[tauri::command]
 pub async fn init_ocr_engine(config: OCREngineConfig) -> Result<String, String> {
@@ -366,7 +366,7 @@ fn try_native_tesseract(image_path: &str, language: &str) -> Result<(Vec<OCRResu
         "Native tesseract not available for {} with lang {}. Using CLI fallback.",
         image_path, language
     );
-    Err("Native tesseract feature not enabled. Set `tesseract = ["tesseract"]` in Cargo.toml".to_string())
+    Err("Native tesseract feature not enabled. Set `tesseract = [\"tesseract\"]` in Cargo.toml".to_string())
 }
 
 /// Process an image with PaddleOCR via Python bridge script.

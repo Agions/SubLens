@@ -129,12 +129,15 @@ async fn detect_scenes_scenedetect(
     let python = find_python_binary().await?;
     let script = find_script("scene_detect.py")?;
 
+    let threshold_arg = format!("{:.3}", threshold.clamp(0.05, 0.95));
+    let min_scene_arg = min_scene_len.to_string();
+
     let output = tokio::process::Command::new(&python)
         .args([
-            &script.to_string_lossy(),
+            script.to_str().unwrap_or_default(),
             path,
-            &format!("{}", threshold.clamp(0.05, 0.95)),
-            &min_scene_len.to_string(),
+            &threshold_arg,
+            &min_scene_arg,
         ])
         .output()
         .await
