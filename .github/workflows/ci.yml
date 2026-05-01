@@ -82,7 +82,7 @@ jobs:
             ffmpeg
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.88.0
+        uses: dtolnay/rust-toolchain@1.89.0
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2
@@ -115,7 +115,7 @@ jobs:
             ffmpeg
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.88.0
+        uses: dtolnay/rust-toolchain@1.89.0
 
       - name: Cache Rust cargo
         uses: Swatinem/rust-cache@v2
@@ -130,7 +130,7 @@ jobs:
           cd src-tauri
           cargo test --lib --bins
 
-      # cargo-audit skipped: smol_str@0.3.6 requires Rust 1.89, toolchain is 1.88
+      # cargo-audit skipped: smol_str@0.3.6 requires Rust 1.89+, toolchain updated to 1.89
       # - name: Cargo audit
       #   run: |
       #     cargo install cargo-audit@0.22.1 --locked
