@@ -33,7 +33,7 @@ defineProps<{
 
 .empty-state {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   padding: $space-10 $space-4;

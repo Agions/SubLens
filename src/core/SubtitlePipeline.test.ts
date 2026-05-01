@@ -188,13 +188,13 @@ describe('SubtitlePipeline', () => {
       expect(result[1].endTime).toBe(4.0) // no next → preserved
     })
 
-    it('caps endTime at startTime + 10s maximum', () => {
+    it('caps endTime at next subtitle start (no artificial 10s limit)', () => {
       const input = [
         sub(0.0, 99.0, 'First', 0.9),
-        sub(20.0, 25.0, 'Second', 0.9), // gap=20 > 10 → cap at 10
+        sub(20.0, 25.0, 'Second', 0.9), // next starts at 20.0 → cap at 20.0
       ]
       const result = pipeline.processStage(input, 4)
-      expect(result[0].endTime).toBe(10.0)
+      expect(result[0].endTime).toBe(20.0)
     })
 
     it('handles single subtitle (preserves endTime)', () => {

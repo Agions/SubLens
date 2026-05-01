@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import type { SubtitleItem } from '@/types/subtitle'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useSubtitleList } from '@/composables/useSubtitleList'
+import { getConfidenceLevel } from '@/utils/confidence'
 
 const props = defineProps<{
   subtitle: SubtitleItem
@@ -23,7 +24,6 @@ const {
   cancelEdit,
   saveEdit,
   formatTimeShort,
-  getConfidenceLevel,
   getConfidenceHeatmap,
 } = useSubtitleList()
 
@@ -49,7 +49,7 @@ function handleMouseLeave() {
 
 function handleDelete(e: Event) {
   e.stopPropagation()
-  subtitleStore.removeSubtitle(props.subtitle.id)
+  subtitleStore.deleteSubtitle(props.subtitle.id)
 }
 
 function handleEditStart(e: Event) {
@@ -315,30 +315,11 @@ function handleEditStart(e: Event) {
 
 // ── Confidence Pill ─────────────────────────────────────────
 .conf-pill {
-  font-family: $font-mono;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: $radius-full;
-  letter-spacing: 0.02em;
+  @include conf-pill-base;
 
-  &.conf-high {
-    background: rgba($conf-high, 0.12);
-    color: $conf-high;
-    border: 1px solid rgba($conf-high, 0.25);
-  }
-
-  &.conf-mid {
-    background: rgba($conf-mid, 0.12);
-    color: $conf-mid;
-    border: 1px solid rgba($conf-mid, 0.25);
-  }
-
-  &.conf-low {
-    background: rgba($conf-low, 0.12);
-    color: $conf-low;
-    border: 1px solid rgba($conf-low, 0.25);
-  }
+  &.conf-high { @include conf-badge('high'); }
+  &.conf-mid  { @include conf-badge('mid');  }
+  &.conf-low  { @include conf-badge('low');  }
 }
 
 .frame-tag {
@@ -394,7 +375,7 @@ function handleEditStart(e: Event) {
   padding-top: $space-3;
   border-top: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 

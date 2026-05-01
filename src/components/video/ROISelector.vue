@@ -235,7 +235,7 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   gap: $space-2;

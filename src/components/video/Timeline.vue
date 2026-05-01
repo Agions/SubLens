@@ -232,8 +232,8 @@ function resetZoom() {
   zoomLevel.value = 1
 }
 
-const currentTime = computed(() => formatFrameToTime(projectStore.currentFrame, fps))
-const totalTime = computed(() => formatFrameToTime(totalFrames.value, fps))
+const currentTime = computed(() => formatFrameToTime(projectStore.currentFrame, fps.value))
+const totalTime = computed(() => formatFrameToTime(totalFrames.value, fps.value))
 const currentFrame = computed(() => projectStore.currentFrame)
 const subtitleCount = computed(() => subtitleStore.totalCount)
 </script>
@@ -306,6 +306,7 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
         <div
           v-for="marker in subtitleMarkers"
           :key="marker.id"
+          v-memo="[marker.id, marker.frame, marker.endFrame]"
           class="subtitle-marker"
           :class="{ selected: subtitleStore.selectedId === marker.id }"
           :style="{
@@ -377,7 +378,7 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
   background: var(--bg-surface);
   border-top: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
+  @include flex-column;
 }
 
 .timeline-header {
@@ -668,7 +669,7 @@ const subtitleCount = computed(() => subtitleStore.totalCount)
   border: 1px solid $border;
   border-radius: $radius-md;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   gap: 2px;
   pointer-events: none;

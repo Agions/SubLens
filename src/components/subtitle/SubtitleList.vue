@@ -169,7 +169,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
   background: var(--bg-surface);
   border-left: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   overflow: hidden;
 }
 
@@ -196,26 +196,11 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
 }
 
 .count-badge {
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba($primary, 0.1);
-  color: var(--primary);
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  border: 1px solid rgba($primary, 0.2);
+  @include badge;
 }
 
 .alert-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba($warning, 0.1);
-  color: $warning;
-  padding: 2px 8px;
-  border-radius: $radius-full;
-  border: 1px solid rgba($warning, 0.2);
+  @include badge(rgba($warning, 0.1), $warning);
   cursor: pointer;
   @include pressable;
 
@@ -309,7 +294,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
   overflow-y: auto;
   padding: $space-3;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
   @include custom-scrollbar;
 }
@@ -349,7 +334,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
   border-top: 1px solid var(--border);
   @include entrance(100ms);
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 </style>

@@ -14,7 +14,7 @@ import { ref, computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
 import { formatTimeShort, formatTimeSrt, parseTime } from '@/utils/time'
-import { getConfidenceHeatmap, getConfidenceLevel as getConfLevel } from '@/utils/confidence'
+import { getConfidenceHeatmap } from '@/utils/confidence'
 
 const BATCH_SIZE = 50
 
@@ -60,14 +60,14 @@ export function useSubtitleList() {
   // ── Methods ────────────────────────────────────────────────
   function handleSubtitleClick(id: string) {
     subtitleStore.selectSubtitle(id)
-    const sub = subtitleStore.subtitles.find(s => s.id === id)
+    const sub = subtitleStore.getSubtitleById(id)
     if (sub) {
       projectStore.setCurrentFrame(sub.startFrame)
     }
   }
 
   function startEdit(id: string) {
-    const sub = subtitleStore.subtitles.find(s => s.id === id)
+    const sub = subtitleStore.getSubtitleById(id)
     if (!sub) return
     editingId.value = id
     editText.value = sub.text
@@ -84,7 +84,7 @@ export function useSubtitleList() {
 
   function saveEdit() {
     if (!editingId.value) return
-    const sub = subtitleStore.subtitles.find(s => s.id === editingId.value)
+    const sub = subtitleStore.getSubtitleById(editingId.value)
     if (!sub) return
 
     if (editText.value !== sub.text) {
@@ -111,13 +111,7 @@ export function useSubtitleList() {
   }
 
   // ── Time Formatters ────────────────────────────────────────
-  // Now using centralized utilities from @/utils/time
-
-  function getConfidenceLevel(confidence: number): 'high' | 'mid' | 'low' {
-    return getConfLevel(confidence)
-  }
-
-  // getConfidenceHeatmap is now imported from @/utils/confidence
+  // Using centralized utilities from @/utils/time
 
   return {
     // State
@@ -149,7 +143,6 @@ export function useSubtitleList() {
     formatTimeShort,
     formatTimeSrt,
     parseTime,
-    getConfidenceLevel,
     getConfidenceHeatmap,
   }
 }

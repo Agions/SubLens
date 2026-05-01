@@ -63,7 +63,7 @@ defineExpose({ open, close })
 <style lang="scss" scoped>
 .shortcuts-content {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-6;
 }
 
@@ -82,7 +82,7 @@ defineExpose({ open, close })
 
 .shortcut-list {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 

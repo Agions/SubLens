@@ -6,7 +6,7 @@ SubLens 内置系统诊断工具：**Settings → System Check**
 
 可检测以下依赖是否正确安装：
 
-| Dependency | 用途 | 检测命令 |
+| 依赖 | 用途 | 检测命令 |
 |:---|:---|:---|
 | FFmpeg | 视频解码、帧提取 | `ffmpeg -version` |
 | Tesseract | OCR 引擎 | `tesseract --version` |
@@ -22,6 +22,7 @@ SubLens 内置系统诊断工具：**Settings → System Check**
 **原因**：ROI 区域选择不正确，或视频无硬字幕。
 
 **解决**：
+
 1. 确认字幕确实在视频画面内（不是软字幕）
 2. 尝试不同的 ROI 预设（Bottom / Top / Custom）
 3. 降低置信度阈值到 50%
@@ -32,13 +33,12 @@ SubLens 内置系统诊断工具：**Settings → System Check**
 **原因**：指定的 OCR 引擎未安装或路径错误。
 
 **解决**：
-- Tesseract: `sudo apt install tesseract-ocr`（Linux）
-- PaddleOCR: `pip install paddleocr`
-- EasyOCR: `pip install easyocr`
+
+- **Tesseract**：Ubuntu/Debian 上运行 `sudo apt install tesseract-ocr`
+- **PaddleOCR**：`pip install paddleocr`
+- **EasyOCR**：`pip install easyocr`
 
 ### "ffmpeg not found"
-
-**解决**：
 
 ```bash
 # Linux (Ubuntu/Debian)
@@ -54,8 +54,8 @@ scoop install ffmpeg
 ### "Permission denied"（Linux/macOS）
 
 ```bash
-chmod +x SubLens    # 赋予执行权限
-xattr -cr ./SubLens # macOS Gatekeeper 白名单
+chmod +x SubLens          # 赋予执行权限
+xattr -cr ./SubLens       # macOS Gatekeeper 白名单
 ```
 
 ### "pkg-config: gobject-2.0 was not found"
@@ -74,9 +74,9 @@ sudo dnf install glib2-devel
 
 GUI 内日志路径：
 
-- **Windows**: `%APPDATA%\SubLens\logs\`
-- **macOS**: `~/Library/Logs/SubLens/`
-- **Linux**: `~/.config/SubLens/logs/`
+- **Windows**：`%APPDATA%\SubLens\logs\`
+- **macOS**：`~/Library/Logs/SubLens/`
+- **Linux**：`~/.config/SubLens/logs/`
 
 CLI 日志（debug 模式）：
 
@@ -90,13 +90,14 @@ sublens-cli extract video.mp4 --verbose 2>&1 | tee debug.log
 
 ### 内存占用过高
 
-- 减少 **Frame interval**（帧间隔），默认 1 帧
-- 关闭 **Multi-pass OCR**（耗内存）
+- 增大 **Frame interval**（帧间隔），默认 1 帧
+- 关闭 **Multi-pass OCR**（内存密集）
 - 降低视频分辨率（720p 而非 1080p）
 
 ### UI 卡顿
 
-SubLens 在提取过程中 UI 保持响应（Rust 后端已 async 化）。如遇卡顿，可能是：
+SubLens 在提取过程中 UI 保持响应（Rust 后端已异步化）。如遇卡顿，可能是：
+
 - 系统内存不足（建议 8GB+）
 - 视频文件过大（> 2GB）
-- 开启太多后台应用
+- 后台应用过多

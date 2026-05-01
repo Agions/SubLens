@@ -71,22 +71,22 @@ function addToBatchAndStart() {
   startBatch(options.value)
 }
 
+// ── Job Status Info (single source of truth) ─────────────────
+type JobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+const JOB_STATUS_INFO: Record<JobStatus, { color: string, label: string }> = {
+  pending:    { color: 'var(--text-muted)', label: '等待中' },
+  processing: { color: 'var(--primary)',    label: '处理中' },
+  completed:  { color: 'var(--success)',   label: '已完成' },
+  failed:     { color: 'var(--error)',      label: '失败' },
+  cancelled:  { color: 'var(--warning)',    label: '已取消' },
+}
+
 function getStatusColor(status: BatchJob['status']): string {
-  switch (status) {
-    case 'completed': return 'var(--success)'
-    case 'failed': return 'var(--error)'
-    case 'processing': return 'var(--primary)'
-    case 'cancelled': return 'var(--warning)'
-    default: return 'var(--text-muted)'
-  }
+  return JOB_STATUS_INFO[status as JobStatus]?.color ?? 'var(--text-muted)'
 }
 
 function getStatusText(status: BatchJob['status']): string {
-  const map: Record<string, string> = {
-    pending: '等待中', processing: '处理中', completed: '已完成',
-    failed: '失败', cancelled: '已取消'
-  }
-  return map[status] ?? status
+  return JOB_STATUS_INFO[status as JobStatus]?.label ?? status
 }
 
 const s = computed(() => stats())
@@ -403,7 +403,7 @@ defineExpose({ open: openDialog, close: closeDialog })
   z-index: $z-modal;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   background: $bg-base;
   animation: fade-up 0.3s ease-out both;
 }
@@ -432,13 +432,8 @@ defineExpose({ open: openDialog, close: closeDialog })
 }
 
 .job-count-badge {
-  font-size: $text-xs;
-  font-weight: 600;
-  background: rgba($primary, 0.1);
-  color: $primary;
+  @include badge;
   padding: 3px 10px;
-  border-radius: $radius-full;
-  border: 1px solid rgba($primary, 0.2);
 }
 
 .overall-progress-wrap {
@@ -515,7 +510,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 
   &--danger {
     background: $bg-elevated;
-    border: 1.5px solid rgba($error, 0.3);
+    @include card-border-error;
     color: $error;
 
     &:hover { background: rgba($error, 0.08); border-color: rgba($error, 0.5); }
@@ -537,7 +532,7 @@ defineExpose({ open: openDialog, close: closeDialog })
   overflow-y: auto;
   padding: $space-5;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-5;
   border-right: 1px solid $border;
   @include custom-scrollbar;
@@ -546,14 +541,14 @@ defineExpose({ open: openDialog, close: closeDialog })
 .jobs-col {
   overflow: hidden;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
 }
 
 .jobs-section {
   flex: 1;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   height: 100%;
 }
 
@@ -588,7 +583,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 // ── Drop Zone ────────────────────────────────────────────────
 .drop-zone {
   position: relative;
-  border: 1.5px dashed $border;
+  @include card-border-dashed;
   border-radius: $radius-xl;
   background: rgba($primary, 0.02);
   cursor: pointer;
@@ -606,7 +601,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 
 .drop-content {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   padding: $space-8 $space-4;
   text-align: center;
@@ -643,7 +638,7 @@ defineExpose({ open: openDialog, close: closeDialog })
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   gap: $space-2;
@@ -661,7 +656,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 // ── File List ────────────────────────────────────────────────
 .file-list {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
   margin-top: $space-3;
 }
@@ -738,7 +733,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 
 .option-item {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
   margin-bottom: $space-3;
 }
@@ -784,7 +779,7 @@ defineExpose({ open: openDialog, close: closeDialog })
   gap: 5px;
   padding: $space-1 $space-3;
   background: $bg-elevated;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-full;
   font-size: $text-xs;
   font-weight: 600;
@@ -804,30 +799,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 }
 
 .slider-track {
-  position: relative;
-  height: 6px;
-  background: $bg-overlay;
-  border-radius: $radius-full;
-
-  .slider-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(90deg, $primary, $accent);
-    border-radius: $radius-full;
-    pointer-events: none;
-    transition: width 0.1s;
-  }
-
-  .slider {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
+  @include slider-track;
 }
 
 // ── Stats Row ────────────────────────────────────────────────
@@ -860,7 +832,7 @@ defineExpose({ open: openDialog, close: closeDialog })
   flex: 1;
   overflow-y: auto;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
   padding-right: $space-1;
   @include custom-scrollbar;
@@ -934,7 +906,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 
 .job-info {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: 2px;
   min-width: 0;
 }
@@ -955,7 +927,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 
 .job-right {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: flex-end;
   gap: $space-2;
   flex-shrink: 0;
@@ -1031,7 +1003,7 @@ defineExpose({ open: openDialog, close: closeDialog })
 .jobs-empty {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   padding: $space-8 $space-4;

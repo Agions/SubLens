@@ -3,10 +3,7 @@
  * BatchActionBar - 批量操作栏组件
  */
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/useSubtitleList'
-
 const subtitleStore = useSubtitleStore()
-const { lowConfCount } = useSubtitleList()
 </script>
 
 <template>
@@ -17,7 +14,7 @@ const { lowConfCount } = useSubtitleList()
           <path d="M8 3v5l3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
           <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/>
         </svg>
-        <strong>{{ lowConfCount }}</strong> 条低置信度待检查
+        <strong>{{ subtitleStore.confidenceStats.low }}</strong> 条低置信度待检查
       </span>
       <div class="batch-actions">
         <button

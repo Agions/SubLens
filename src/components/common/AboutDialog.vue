@@ -95,7 +95,7 @@ function close() {
 <style lang="scss" scoped>
 .about-content {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-5;
 }
 

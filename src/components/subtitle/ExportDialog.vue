@@ -144,7 +144,7 @@ async function handleExport() {
 <style lang="scss" scoped>
 .export-content {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-4;
 }
 
@@ -189,7 +189,7 @@ async function handleExport() {
 
 .format-info {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: 2px;
 }
 

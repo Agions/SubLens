@@ -6,191 +6,196 @@
 
 <div align="center">
 
-SubLens - 视频字幕提取工具，从视频中提取硬编码字幕，支持多种格式输出。基于 Tauri + Vue 3 + Rust 构建。
+**视频字幕提取工具** — 从视频中提取硬编码字幕，输出 SRT / VTT / ASS / JSON 等多种格式。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/Agions/SubLens?style=social)](https://github.com/Agions/SubLens/stargazers)
-[![GitHub Actions](https://img.shields.io/badge/GitHub-Actions-blue.svg)](https://github.com/Agions/SubLens/actions)
 [![Tauri](https://img.shields.io/badge/Tauri-FFC131?style=flat-square&logo=tauri&logoColor=FFC131)](https://tauri.app)
 [![Vue](https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org)
 [![Rust](https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org)
-[![简体中文](https://img.shields.io/badge/简体中文-中文-blue.svg)
 
 </div>
 
 ---
 
-## Key Features
+## 功能特性
 
-### 🎯 Frame-Accurate Extraction
-Every subtitle maps to exact video frames. **Timeline thumbnail preview** shows actual video frames on hover.
+### 🎯 帧级精度
+每个字幕精确映射到视频帧，时间线悬停预览实际画面。
 
-### 🔍 Smart Subtitle Navigation
-- **j/k keys** for quick subtitle jumping with toast preview
-- **Confidence filter** (All / High / Medium / Low)
-- **Search** within subtitle text
-- **Virtual scrolling** for smooth performance with 1000+ subtitles
+### 🔍 智能导航
+- `j` / `k` 键快速跳转，带预览浮层
+- 置信度过滤（全部 / 高 / 中 / 低）
+- 字幕文本搜索
+- 1000+ 字幕虚拟滚动，流畅不卡顿
 
-### 🎨 Professional UI
-- **OKLCH design system** — perceptually uniform colors, consistent visual experience
-- **Dark/light theme** — professional video editing aesthetics
-- **Tab-based interface** — Files / Progress / ROI / OCR / Export / Settings
-- **Micro-interactions** — hover effects, transitions, toast notifications
+### 🤖 多引擎 OCR
 
-### 🤖 Multi-Engine OCR
-
-| Engine | Technology | Accuracy | Speed | Languages |
+| 引擎 | 技术 | 精度 | 速度 | 语言 |
 |:---|:---|:---:|:---:|:---:|
-| **PaddleOCR** | PP-OCRv5 Deep Learning | Excellent | Fast | 80+ |
-| **EasyOCR** | PyTorch | Good | Medium | 80+ |
-| **Tesseract.js** | LSTM + WASM | Good | Fastest | 100+ |
+| **PaddleOCR** | PP-OCRv5 深度学习 | 优秀 | 快（GPU）| 80+ |
+| **EasyOCR** | PyTorch | 优秀 | 中等 | 80+ |
+| **Tesseract.js** | LSTM + WASM | 良好 | 最快 | 100+ |
 
-### ✨ Smart Post-Processing
-- **Multi-pass OCR** — recognize multiple times, take the best result
-- **Text normalization** — full-width to half-width punctuation, Chinese typo correction
-- **Confidence calibration** — mixed language / short text / repeated chars auto-degraded
-- **Subtitle merge** — Levenshtein similarity auto-deduplication
-- **Scene detection** — histogram + chi-square test for intelligent frame sampling
+### ✨ 智能后处理
+- **多轮 OCR** — 同一区域识别多次，取最优结果
+- **文本正则化** — 全角/半角标点规范化
+- **置信度校准** — 混语/短文本/重复字符自动降权
+- **字幕合并** — Levenshtein 相似度智能去重
+- **场景检测** — 直方图 + 卡方检验跳过无字幕帧
 
-### 📦 12 Export Formats
+### 📦 12 种导出格式
 
-| Format | Frame-Mapped | Best For |
+| 格式 | 帧映射 | 适用场景 |
 |:---|:---:|:---|
-| **SRT** | No | Universal subtitle players |
-| **WebVTT** | No | Web video |
-| **ASS** | No | Anime fansub, advanced styling |
-| **SSA** | No | Legacy subtitle format |
-| **JSON** | Yes | Frame-accurate editing |
-| **CSV** | Yes | Spreadsheet analysis |
-| **TXT** | No | Plain text |
-| **LRC** | No | Lyrics sync |
-| **SBV** | No | YouTube subtitles |
-| **MD** | No | Markdown documentation |
-| **STL** | No | Spruce subtitle format |
-| **TTML** | No | Timed Text ML |
+| **SRT** | — | 通用播放器 |
+| **WebVTT** | — | Web 视频 |
+| **ASS** | — | 动漫字幕，高级样式 |
+| **SSA** | — | 传统字幕格式 |
+| **JSON** | ✅ | 帧级精确编辑 |
+| **CSV** | ✅ | 电子表格分析 |
+| **TXT** | — | 纯文本 |
+| **LRC** | — | 歌词同步 |
+| **SBV** | — | YouTube 字幕 |
+| **MD** | — | Markdown 文档 |
+| **STL** | — | Spruce 字幕 |
+| **TTML** | — | Timed Text ML |
 
-### 📋 ROI Presets
-Bottom · Top · Left · Right · Center · Custom — one-click selection
+### 📋 ROI 预设
+底部 · 顶部 · 左侧 · 右侧 · 中间 · 自定义 — 一键切换
 
-### 🎬 Supported Input Video
-MP4 · MKV · AVI · MOV · WebM
+### 🎬 支持输入格式
+MP4 · MKV · AVI · MOV · WebM · M4V · WMV · FLV · 3GP
 
 ---
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Clone the repo
+# 克隆仓库
 git clone https://github.com/Agions/SubLens.git
 cd SubLens
 
-# Install frontend dependencies
+# 安装前端依赖
 pnpm install
 
-# Run in development mode
+# 开发模式运行（Rust 后端首次自动编译）
 pnpm tauri dev
 
-# Build production package
+# 构建生产包
 pnpm tauri build
 ```
 
----
+### 前置依赖
 
-## CLI Usage
-
-```bash
-# Basic extraction
-hardsubx-cli extract video.mp4 --output ./subs
-
-# Multi-format output
-hardsubx-cli extract video.mp4 --format srt,vtt,json --output ./subs
-
-# Specify ROI region + OCR engine
-hardsubx-cli extract video.mp4 --roi bottom --ocr paddle --lang ch,en
-
-# Custom confidence threshold
-hardsubx-cli extract video.mp4 --confidence 80
-
-# Preview a specific frame
-hardsubx-cli preview video.mp4 --frame 1500
-
-# Show video metadata
-hardsubx-cli info video.mp4
-
-# Display help
-hardsubx-cli --help
-```
+| 依赖 | 版本 | 说明 |
+|:---|:---|:---|
+| Node.js | 18+ | 前端构建 |
+| Rust | 1.70+ | Tauri 后端 |
+| pnpm | 8+ | 包管理器 |
+| FFmpeg | 最新 | 视频帧提取 |
 
 ---
 
-## Tech Stack
+## 技术栈
 
-| Layer | Technology |
+| 层级 | 技术 |
 |:---|:---|
-| Desktop Framework | Tauri 2.x |
-| Frontend | Vue 3 + TypeScript |
-| Backend | Rust |
-| OCR Engines | Tesseract.js (WASM), PaddleOCR (Native), EasyOCR |
-| State Management | Pinia |
-| Build Tool | Vite |
+| 桌面框架 | Tauri 2.x |
+| 前端 | Vue 3 + TypeScript |
+| 后端 | Rust |
+| OCR 引擎 | Tesseract.js (WASM)、PaddleOCR (Native)、EasyOCR |
+| 状态管理 | Pinia |
+| 构建工具 | Vite |
 
 ---
 
-## Project Structure
+## 项目结构
 
 ```
 SubLens/
-├── src/                         # Vue 3 frontend
-│   ├── components/              # Vue components
-│   │   ├── common/             # Button, Modal, Tooltip, SubtitleToast
-│   │   ├── layout/             # ToolBar, SidePanel, VideoPreview
-│   │   │   ├── tabs/           # Tab components (Files/Progress/ROI/OCR/Export/Settings)
-│   │   │   ├── BatchProcessView.vue
-│   │   │   └── StatusBar.vue
-│   │   ├── video/              # ROISelector, Timeline (with thumbnail preview)
-│   │   └── subtitle/           # SubtitleList, ExportDialog
-│   ├── composables/            # 17 composables (logic/UI separation)
-│   │   ├── useSubtitleList.ts  # Subtitle filtering, search, pagination
-│   │   ├── useVideoPlayer.ts   # Video playback, captureFrame
-│   │   ├── useOCREngine.ts     # OCR engine abstraction + post-processing
+├── src/                         # Vue 3 前端
+│   ├── components/             # Vue 组件
+│   │   ├── common/             # Button、Modal、Tooltip 等通用组件
+│   │   ├── layout/             # ToolBar、SidePanel、VideoPreview
+│   │   │   └── tabs/           # Files/Progress/ROI/OCR/Export/Settings 标签页
+│   │   ├── video/              # ROISelector、Timeline（缩略图预览）
+│   │   └── subtitle/           # SubtitleList、ExportDialog
+│   ├── composables/            # 17 个组合式函数（逻辑/UI 分离）
+│   │   ├── useSubtitleList.ts  # 字幕过滤、搜索、分页
+│   │   ├── useVideoPlayer.ts   # 播放控制、帧捕获
+│   │   ├── useOCREngine.ts    # OCR 引擎抽象 + 后处理
 │   │   ├── useSubtitleExtractor.ts
-│   │   ├── useBatchProcessor.ts
-│   │   └── use*.ts             # Tab-specific composables
-│   ├── stores/                 # Pinia stores
-│   │   ├── subtitle.ts         # Subtitle list + export formats
-│   │   ├── project.ts          # Project file state + video metadata
-│   │   └── settings.ts         # Theme, language, OCR preferences
-│   ├── core/                   # Business logic
-│   │   ├── SubtitlePipeline.ts # 4-stage OCR post-processing
-│   │   ├── SubtitleExporter.ts # 12 format writers
-│   │   ├── SceneDetector.ts    # Histogram + chi-square scene detection
-│   │   └── ConfidenceCalibrator.ts
-│   └── types/                  # TypeScript type definitions
+│   │   └── useBatchProcessor.ts
+│   ├── stores/                 # Pinia 状态管理
+│   │   ├── subtitle.ts         # 字幕列表、导出格式、过滤器
+│   │   ├── project.ts          # 视频状态、元数据、ROI
+│   │   └── settings.ts         # 主题、语言、OCR 偏好
+│   └── core/                   # 核心业务逻辑（纯函数，无 Vue 依赖）
+│       ├── SubtitlePipeline.ts # 4 阶段 OCR 后处理管道
+│       ├── SubtitleExporter.ts # 12 格式导出器
+│       ├── SceneDetector.ts    # 直方图 + 卡方场景检测
+│       └── ConfidenceCalibrator.ts
 │
-├── src-tauri/                  # Rust backend
+├── src-tauri/                  # Rust 后端
 │   └── src/
-│       ├── commands/           # Tauri IPC commands
-│       │   ├── video.rs        # Frame extraction, metadata, ffmpeg
-│       │   ├── ocr_engine.rs   # PaddleOCR Python bridge
+│       ├── commands/           # Tauri IPC 命令
+│       │   ├── video.rs        # FFmpeg 帧提取、元数据
 │       │   ├── ocr.rs          # EasyOCR / Tesseract.js
-│       │   ├── scene.rs        # Scene detection
-│       │   ├── export.rs       # Format writers
-│       │   ├── file.rs         # File dialogs
-│       │   └── system.rs       # System diagnostics
-│       └── main.rs             # Tauri app entry
+│       │   ├── ocr_engine.rs   # PaddleOCR Python 桥接
+│       │   ├── scene.rs        # 场景检测
+│       │   ├── export.rs       # 格式写入
+│       │   ├── file.rs         # 文件对话框
+│       │   └── system.rs       # 系统依赖诊断
+│       └── main.rs             # Tauri 应用入口
 │
-├── docs/                       # Documentation
-│   ├── index.md               # Documentation hub
-│   ├── getting-started.md      # Installation and first extraction
-│   ├── architecture.md        # Project structure and design
-│   └── cli.md                 # CLI reference
+├── docs/                       # 在线文档（VitePress）
+│   ├── index.md                # 文档首页
+│   ├── guide/
+│   │   ├── getting-started.md  # 安装与首次提取
+│   │   ├── architecture.md     # 项目架构与设计
+│   │   ├── cli.md              # CLI 参考
+│   │   ├── export-formats.md    # 导出格式详解
+│   │   ├── keyboard-shortcuts.md
+│   │   ├── faq.md              # 常见问题
+│   │   └── troubleshooting.md  # 故障排除
+│   └── .vitepress/             # VitePress 配置
 │
-└── cli/                        # Node.js CLI tool
+└── cli/                        # Node.js CLI 工具
     └── src/
         ├── extract.ts
         ├── formats.ts
         └── index.ts
 ```
+
+---
+
+## 核心架构设计
+
+### OCR 后处理管道（SubtitlePipeline）
+
+四阶段纯函数管道，输入原始 OCR 结果，输出清洗后的字幕：
+
+```
+Stage 0: normalize      → 文本正则化（CRLF 合并、全角/半角规范化）
+Stage 1: filterJitter   → 移除单帧 OCR 噪声
+Stage 2: mergeSplit     → 合并因场景跳跃而分裂的相同字幕
+Stage 3: mergeSimilar   → 合并时间接近的相似字幕
+Stage 4: computeEndTime  → 根据下一条字幕计算精确 endTime
+```
+
+每阶段独立可测试，`textSimilarity` 结果按 (文本长度前缀 + 首尾各4字) 缓存，O(n log n) 复杂度。
+
+### 置信度校准（ConfidenceCalibrator）
+
+基于语言脚本（CJK / Latin）的多信号加权校准：
+
+- **惩罚信号**：混语、短文本（<3字）、重复字符、孤立 CJK 字符、引号不平衡、大写误识、尾随逗号
+- **奖励信号**：字符多样性、句子完整结尾、合理字幕长度
+
+### 场景检测（SceneDetector）
+
+基于量化 RGB 直方图 + 卡方距离，每帧 O(n) 时间复杂度和 48 计数器内存占用，对光照渐变鲁棒。
 
 ---
 

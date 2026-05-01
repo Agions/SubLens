@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, EditableField, EditableValue, ExportFormats } from '@/types/subtitle'
 import { CONFIDENCE_HIGH, CONFIDENCE_MID } from '@/types/video'
+import { type ConfidenceFilterValue } from '@/utils/confidence'
 import { getExporter, type ExportFormat } from '@/core'
 
 export const useSubtitleStore = defineStore('subtitle', () => {
@@ -16,7 +17,7 @@ export const useSubtitleStore = defineStore('subtitle', () => {
   const searchQuery = ref('')
 
   // Confidence filter: 'all' | 'low' (<60%) | 'mid' (60-85%) | 'high' (≥85%)
-  const confidenceFilter = ref<'all' | 'low' | 'mid' | 'high'>('all')
+  const confidenceFilter = ref<ConfidenceFilterValue>('all')
   
   // Export Options
   const exportFormats = ref<ExportFormats>({
@@ -129,6 +130,11 @@ export const useSubtitleStore = defineStore('subtitle', () => {
       Object.assign(subtitles.value[index], updates)
     }
   }
+
+  function getSubtitleById(id: string): SubtitleItem | undefined {
+    const index = _subtitleIndexMap.get(id)
+    return index !== undefined ? subtitles.value[index] : undefined
+  }
   
   function deleteSubtitle(id: string) {
     const index = _subtitleIndexMap.get(id)
@@ -164,30 +170,40 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     extractProgress.value = 100
   }
   
-  // Edit with history — type-safe field update
-  function applyFieldEdit(sub: SubtitleItem, field: EditableField, value: EditableValue) {
-    if (field === 'text') {
+  // Edit with history — type-safe field update (handler-map pattern)
+  type FieldHandlers = Record<EditableField, (sub: SubtitleItem, value: EditableValue) => void>
+  const fieldHandlers: FieldHandlers = {
+    text: (sub, value) => {
       if (typeof value !== 'string') {
         console.error(`[SubtitleStore] applyFieldEdit: expected string for 'text', got ${typeof value}`)
         return
       }
       sub.text = value
       sub.edited = true
-    } else if (field === 'startTime') {
+    },
+    startTime: (sub, value) => {
       if (typeof value !== 'number') {
         console.error(`[SubtitleStore] applyFieldEdit: expected number for 'startTime', got ${typeof value}`)
         return
       }
       sub.startTime = value
-    } else if (field === 'endTime') {
+    },
+    endTime: (sub, value) => {
       if (typeof value !== 'number') {
         console.error(`[SubtitleStore] applyFieldEdit: expected number for 'endTime', got ${typeof value}`)
         return
       }
       sub.endTime = value
-    } else {
+    },
+  }
+
+  function applyFieldEdit(sub: SubtitleItem, field: EditableField, value: EditableValue) {
+    const handler = fieldHandlers[field]
+    if (!handler) {
       console.error(`[SubtitleStore] applyFieldEdit: unknown field '${field}'`)
+      return
     }
+    handler(sub, value)
   }
 
   function editSubtitle(id: string, field: EditableField, oldValue: EditableValue, newValue: EditableValue) {
@@ -231,13 +247,17 @@ export const useSubtitleStore = defineStore('subtitle', () => {
 
   function batchDeleteLowConfidence() {
     const threshold = CONFIDENCE_MID
-    // Filter and re-index using setSubtitles to maintain proper state
+    // Build Set during filter pass for O(1) selectedId check
+    const keptIds = new Set<string>()
     const filtered = subtitles.value
-        .filter(s => s.confidence >= threshold)
-        .map((s, i) => ({ ...s, index: i + 1 }))
+      .filter(s => s.confidence >= threshold)
+      .map((s, i) => {
+        keptIds.add(s.id)
+        return { ...s, index: i + 1 }
+      })
     setSubtitles(filtered)
-    // Clear selected if it was deleted
-    if (selectedId.value && !subtitles.value.some(s => s.id === selectedId.value)) {
+    // Clear selected if it was deleted — O(1) Set lookup
+    if (selectedId.value && !keptIds.has(selectedId.value)) {
       selectedId.value = null
     }
   }
@@ -279,6 +299,7 @@ export const useSubtitleStore = defineStore('subtitle', () => {
     setSubtitles,
     addSubtitle,
     updateSubtitle,
+    getSubtitleById,
     deleteSubtitle,
     selectSubtitle,
     startExtraction,

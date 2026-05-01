@@ -48,25 +48,21 @@ export const DEFAULT_PIPELINE_OPTIONS: PipelineOptions = {
 const SIMILARITY_CACHE_MAX_SIZE = 3000
 const SIMILARITY_CACHE_TRIM_TO  = 2500
 
-// Levenshtein similarity thresholds — used by stage3_mergeSimilar via opts.similarSimilarityThreshold
-
 // ─── Levenshtein 距离（带缓存 per-pipeline 实例）───────────────────────
 // 每个 SubtitlePipeline 实例拥有独立缓存，避免不同配置（threshold）互相干扰。
 // 3000 条缓存、LRU淘汰策略（同 original）。
 
-interface CacheEntry { sim: number; ts: number }
-
 class SimilarityCache {
-  private _map = new Map<string, CacheEntry>()
+  private _map = new Map<string, number>()
   private _order: string[] = []  // insertion order for LRU
 
-  get(key: string): number | undefined { return this._map.get(key)?.sim }
+  get(key: string): number | undefined { return this._map.get(key) }
 
   set(key: string, sim: number): void {
     if (this._map.has(key)) {
-      this._map.get(key)!.sim = sim
+      this._map.set(key, sim)
     } else {
-      this._map.set(key, { sim, ts: Date.now() })
+      this._map.set(key, sim)
       this._order.push(key)
       // Batch delete when exceeding limit (removes multiple entries to avoid O(n) repeated shifts)
       if (this._map.size > SIMILARITY_CACHE_MAX_SIZE) {
@@ -87,10 +83,13 @@ export function textSimilarity(a: string, b: string, cache?: SimilarityCache): n
   if (a === b) return 1
   if (!a.length || !b.length) return 0
 
-  // 缓存键：取短串在前 + 长度前缀（避免长键）
-  const short = a.length <= b.length ? a : b
-  const long = a.length <= b.length ? b : a
-  const cacheKey = `${short.length}:${short.slice(0, 4)}|${long.slice(0, 8)}:${a}|${b}`
+  // 缓存键：短串在前 + 长度前缀（确保对称性）。
+  // 短文本（≤4字）直接用完整文本；较长文本取首尾各4字确保唯一性。
+  // 使用字符串拼接而非 hash 函数，零依赖且确定性输出。
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a]
+  const cacheKey = short.length <= 4
+    ? `${short.length}:${short}|${long.slice(0, 8)}`
+    : `${short.length}:${short.slice(0, 4)}..${short.slice(-4)}|${long.slice(0, 8)}`
   const activeCache = cache ?? _fallbackCache
   if (cacheKey) { const hit = activeCache.get(cacheKey); if (hit !== undefined) return hit }
 
@@ -133,7 +132,7 @@ function stage0_normalize(subs: SubtitleLite[]): SubtitleLite[] {
 
 // ─── Stage 1: 过滤 OCR 噪声 ───────────────────────────────────────
 function stage1_filterJitter(subs: SubtitleLite[], opts: PipelineOptions, cache: SimilarityCache): SubtitleLite[] {
-  if (subs.length < 2) return subs
+  if (subs.length < 2) return stage0_normalize(subs)
 
   const result: SubtitleLite[] = []
   let i = 0
@@ -252,18 +251,19 @@ function stage3_mergeSimilar(subs: SubtitleLite[], opts: PipelineOptions, cache:
 }
 
 // ─── Stage 4: 计算 endTime（基于下一条字幕）────────────────────────
+// NOTE: 不再强制截断最大时长上限，保留原始 endTime。
+// 如有超长单字幕需求，由调用方在 pipeline 外自行处理。
 function stage4_computeEndTime(subs: SubtitleLite[]): SubtitleLite[] {
   if (subs.length === 0) return subs
 
   return subs.map((sub, i) => {
     const next = subs[i + 1]
-    // 最后一条字幕的 endTime 用 startTime + 10（默认值），
-    // 避免原始 OCR 估算值不准确（如截断视频的 endTime 超出范围）
-    const defaultEndTime = sub.startTime + 10
-    return {
-      ...sub,
-      endTime: next ? Math.min(next.startTime, defaultEndTime) : defaultEndTime,
+    if (next) {
+      // 有下一条：取原始 endTime 与下一条 startTime 的较小值
+      return { ...sub, endTime: Math.min(sub.endTime, next.startTime) }
     }
+    // 无下一条：保留原始 endTime
+    return { ...sub }
   })
 }
 

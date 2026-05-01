@@ -245,7 +245,7 @@ function getDepIcon(dep: { name: string, installed: boolean }) {
 .settings-view {
   height: 100%;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   background: $bg-base;
 }
 
@@ -468,7 +468,7 @@ function getDepIcon(dep: { name: string, installed: boolean }) {
 
 .dependency-list {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
   margin-bottom: $space-4;
 }
@@ -483,7 +483,7 @@ function getDepIcon(dep: { name: string, installed: boolean }) {
   
   .dep-info {
     display: flex;
-    flex-direction: column;
+    @include flex-column;
     gap: 2px;
   }
   

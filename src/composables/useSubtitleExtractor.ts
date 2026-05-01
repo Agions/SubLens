@@ -15,6 +15,7 @@
 import { ref } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
+import { ERR_NO_VIDEO } from '@/utils/constants'
 import { useVideoPlayer } from './useVideoPlayer'
 import { useOCREngine } from './useOCREngine'
 import type { OCRConfig } from '@/types'
@@ -103,7 +104,7 @@ export function useSubtitleExtractor() {
   // ─── 提取主循环 ───────────────────────────────────────────
   async function startExtraction() {
     if (!projectStore.videoMeta) {
-      throw new Error('No video loaded')
+      throw new Error(ERR_NO_VIDEO)
     }
 
     const opts = projectStore.extractOptions
@@ -224,7 +225,7 @@ export function useSubtitleExtractor() {
         }
 
         if (result) {
-          const fps = projectStore.videoMeta?.fps ?? 30
+          const fps = projectStore.videoMeta.fps
           const timestamp = frameIndex / fps
 
           rawSubs.push({

@@ -70,7 +70,7 @@ function getProgress(n: { duration?: number }) {
   right: 16px;
   z-index: 9999;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: 10px;
   max-width: 380px;
   pointer-events: none;

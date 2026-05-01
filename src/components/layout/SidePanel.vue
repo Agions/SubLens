@@ -142,7 +142,7 @@ watch(localSettings, (newSettings) => {
   background: $bg-surface;
   border-right: 1px solid $border;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   overflow: hidden;
 }
 
@@ -158,7 +158,7 @@ watch(localSettings, (newSettings) => {
 .tab-item {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   gap: 3px;
   padding: $space-2 $space-1;
@@ -245,7 +245,7 @@ watch(localSettings, (newSettings) => {
 
 .video-meta {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 
@@ -276,7 +276,7 @@ watch(localSettings, (newSettings) => {
 // ── Empty Card ──────────────────────────────────────────────
 .empty-card {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   padding: $space-8 $space-4;
@@ -470,11 +470,11 @@ watch(localSettings, (newSettings) => {
 .roi-card {
   position: relative;
   background: $bg-elevated;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-lg;
   padding: $space-3;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   gap: $space-2;
   transition: all $transition-base;
@@ -537,7 +537,7 @@ watch(localSettings, (newSettings) => {
   border-radius: $radius-md;
   padding: $space-3;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 
@@ -563,13 +563,13 @@ watch(localSettings, (newSettings) => {
 
 .engine-list {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 
 .engine-card {
   background: $bg-elevated;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-lg;
   padding: $space-3;
   transition: all $transition-base;
@@ -650,7 +650,7 @@ watch(localSettings, (newSettings) => {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1.5px solid $border;
+  @include card-border;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -747,7 +747,7 @@ watch(localSettings, (newSettings) => {
   gap: 5px;
   padding: $space-1 $space-3;
   background: $bg-elevated;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-full;
   font-size: 12px;
   font-weight: 500;
@@ -854,7 +854,7 @@ watch(localSettings, (newSettings) => {
 
 .advanced-panel {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-3;
   padding: $space-3;
   background: rgba($bg-overlay, 0.5);
@@ -881,7 +881,7 @@ watch(localSettings, (newSettings) => {
 
 .option-info {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: 2px;
   flex: 1;
   min-width: 0;
@@ -927,7 +927,7 @@ watch(localSettings, (newSettings) => {
   width: 36px;
   height: 20px;
   background: $bg-overlay;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-full;
   padding: 2px;
   cursor: pointer;
@@ -1022,37 +1022,11 @@ watch(localSettings, (newSettings) => {
 }
 
 .slider-track {
-  position: relative;
-  height: 6px;
-  background: $bg-overlay;
-  border-radius: $radius-full;
+  @include slider-track;
   margin-bottom: $space-2;
 
   &.small { height: 4px; margin-bottom: 0; }
-
-  .slider-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(90deg, $primary, $accent);
-    border-radius: $radius-full;
-    pointer-events: none;
-    transition: width 0.1s;
-
-    &.fill-green { background: linear-gradient(90deg, var(--success), color-mix(in oklch, var(--success) 85%, white)); }
-    &.fill-yellow { background: linear-gradient(90deg, var(--warning), color-mix(in oklch, var(--warning) 85%, white)); }
-    &.fill-red { background: linear-gradient(90deg, var(--error), color-mix(in oklch, var(--error) 85%, white)); }
-  }
-
-  .slider {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-  }
+  @include slider-fill-colors;
 }
 
 .slider-labels {
@@ -1067,14 +1041,14 @@ watch(localSettings, (newSettings) => {
 // ── Export ───────────────────────────────────────────────────
 .export-list {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
   margin-bottom: $space-4;
 }
 
 .export-card {
   background: $bg-elevated;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-lg;
   padding: $space-3;
   display: flex;
@@ -1103,7 +1077,7 @@ watch(localSettings, (newSettings) => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1.5px solid $border;
+  @include card-border;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1120,7 +1094,7 @@ watch(localSettings, (newSettings) => {
 
 .export-info {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: 1px;
 
   .export-name {
@@ -1154,7 +1128,7 @@ watch(localSettings, (newSettings) => {
   gap: $space-2;
   padding: 12px;
   background: $bg-elevated;
-  border: 1.5px solid $border;
+  @include card-border;
   border-radius: $radius-lg;
   font-weight: 700;
   font-size: $text-base;
@@ -1299,7 +1273,7 @@ watch(localSettings, (newSettings) => {
 
 .system-status {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   gap: $space-2;
 }
 

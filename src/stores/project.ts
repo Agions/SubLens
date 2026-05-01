@@ -2,6 +2,17 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { VideoMetadata, ROI, ExtractOptions, OCREngine } from '@/types/video'
 import { ROI_PRESETS } from '@/types/video'
+import {
+  DEFAULT_OCR_ENGINE,
+  DEFAULT_LANGUAGES,
+  DEFAULT_CONFIDENCE_THRESHOLD,
+  DEFAULT_MERGE_THRESHOLD,
+  DEFAULT_SCENE_THRESHOLD,
+  DEFAULT_FRAME_INTERVAL,
+  DEFAULT_ROI_NAME,
+  DEFAULT_ROI_Y,
+  DEFAULT_ROI_HEIGHT,
+} from '@/utils/constants'
 
 export const useProjectStore = defineStore('project', () => {
   // State
@@ -15,27 +26,27 @@ export const useProjectStore = defineStore('project', () => {
   // ROI State
   const selectedROI = ref<ROI>({
     id: 'bottom',
-    name: '底部字幕',
+    name: DEFAULT_ROI_NAME,
     type: 'bottom',
     x: 0,
-    y: 85,
+    y: DEFAULT_ROI_Y,
     width: 100,
-    height: 15,
+    height: DEFAULT_ROI_HEIGHT,
     unit: 'percent',
     enabled: true
   })
-  
+
   // Extract Options
   const extractOptions = ref<ExtractOptions>({
-    ocrEngine: 'paddle',
-    languages: ['ch'],
-    confidenceThreshold: 0.7,
+    ocrEngine: DEFAULT_OCR_ENGINE,
+    languages: [...DEFAULT_LANGUAGES],
+    confidenceThreshold: DEFAULT_CONFIDENCE_THRESHOLD,
     multiPass: true,
     postProcess: true,
     mergeSubtitles: true,
-    mergeThreshold: 0.80,
-    sceneThreshold: 0.3,
-    frameInterval: 1,
+    mergeThreshold: DEFAULT_MERGE_THRESHOLD,
+    sceneThreshold: DEFAULT_SCENE_THRESHOLD,
+    frameInterval: DEFAULT_FRAME_INTERVAL,
   })
   
   // Computed

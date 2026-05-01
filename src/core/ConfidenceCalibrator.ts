@@ -1,6 +1,6 @@
 /**
  * ConfidenceCalibrator — 置信度校准引擎
- * ======================================
+ * ========================================
  * 统一所有置信度校准逻辑：
  * - 基础校准（calibrate）
  * - 增强校准（calibrateEnhanced）
@@ -10,6 +10,8 @@
  * - 加权乘法：quality = base * multipliers
  * - 所有乘数范围 [0.7, 1.1]，避免过度惩罚
  */
+
+import { clamp } from '@/utils/math'
 
 export type Script = 'chinese' | 'japanese' | 'korean' | 'latin' | 'other'
 
@@ -27,11 +29,7 @@ export interface CalibrationSignal {
 const PENALTY = (f: number, r: string): CalibrationSignal => ({ type: 'penalty', factor: f, reason: r })
 const BONUS   = (f: number, r: string): CalibrationSignal => ({ type: 'bonus',   factor: f, reason: r })
 
-function clamp(v: number): number {
-  return Math.max(0, Math.min(1, v))
-}
-
-// ── Quality factor constants ────────────────────────────────────
+// ── Quality factor constants
 const F_MIXED_SCRIPTS    = 0.80
 const F_TEXT_TOO_SHORT   = 0.85
 const F_REPEATED_CHAR    = 0.75
@@ -122,9 +120,15 @@ export class ConfidenceCalibrator {
 
     // ── CJK 规则（中文/日文/韩文）──────────────────────────
     if (script === 'chinese' || script === 'japanese' || script === 'korean') {
-      // Unicode扩展区B（U+20000-U+2A6DF）已在正则覆盖
-      // 孤立 CJK 单字检测
-      if (/[\u4e00-\u9fff\u20000-\u2a6df]/.test(text) && / [\u4e00-\u9fff\u20000-\u2a6df]/.test(text)) {
+      // CJK Unified Ideographs (BMP): U+4E00–U+9FFF
+      // CJK Unified Ideographs Extension B: U+20000–U+2A6DF
+      // NOTE: plain `\u20000` in a regex is parsed as `\u2000` + literal `0` (NOT a valid range).
+      // Use explicit code point array union to avoid this JS regex parsing trap.
+      const cjkBMP = /[\u4e00-\u9fff]/
+      const cjkExtB = /[\uD840-\uD869][\uDC00-\uDEDF]/
+      const orphanedCJK = cjkBMP.test(text) && / [\u4e00-\u9fff]/.test(text) ||
+                          cjkExtB.test(text) && / [\uD840-\uD869][\uDC00-\uDEDF]/.test(text)
+      if (orphanedCJK) {
         const factor = F_ORPHANED_CJK
         quality *= factor
         signals.push(PENALTY(factor, 'orphaned CJK character'))

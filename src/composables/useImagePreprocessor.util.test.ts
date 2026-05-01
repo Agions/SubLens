@@ -45,20 +45,22 @@ function avgPixel(frame: ImageData, x: number, y: number, w: number, h: number):
 }
 
 describe('clamp', () => {
+  const pixelClamp = (v: number) => clamp(v, 0, 255)
+
   it('returns value unchanged when in [0, 255]', () => {
-    expect(clamp(128)).toBe(128)
-    expect(clamp(0)).toBe(0)
-    expect(clamp(255)).toBe(255)
+    expect(pixelClamp(128)).toBe(128)
+    expect(pixelClamp(0)).toBe(0)
+    expect(pixelClamp(255)).toBe(255)
   })
 
   it('clamps values below 0 to 0', () => {
-    expect(clamp(-10)).toBe(0)
-    expect(clamp(-255)).toBe(0)
+    expect(pixelClamp(-10)).toBe(0)
+    expect(pixelClamp(-255)).toBe(0)
   })
 
   it('clamps values above 255 to 255', () => {
-    expect(clamp(300)).toBe(255)
-    expect(clamp(256)).toBe(255)
+    expect(pixelClamp(300)).toBe(255)
+    expect(pixelClamp(256)).toBe(255)
   })
 })
 

@@ -3,22 +3,20 @@
  * ConfidenceFilter - 置信度筛选标签组件
  */
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/useSubtitleList'
+import { CONFIDENCE_FILTER_LEVELS, type ConfidenceFilterValue } from '@/utils/confidence'
 
 const subtitleStore = useSubtitleStore()
-const { totalCount } = useSubtitleList()
 
-const levels = ['all', 'high', 'mid', 'low'] as const
-type ConfidenceLevel = typeof levels[number]
+const levels = CONFIDENCE_FILTER_LEVELS
 
-function getCount(level: ConfidenceLevel): number {
-  if (level === 'all') return totalCount.value
+function getCount(level: ConfidenceFilterValue): number {
+  if (level === 'all') return subtitleStore.subtitles.length
   if (level === 'high') return subtitleStore.confidenceStats.high
   if (level === 'mid') return subtitleStore.confidenceStats.mid
   return subtitleStore.confidenceStats.low
 }
 
-function getLabel(level: ConfidenceLevel): string {
+function getLabel(level: ConfidenceFilterValue): string {
   if (level === 'all') return '全部'
   if (level === 'high') return '高'
   if (level === 'mid') return '中'
@@ -97,53 +95,9 @@ function getLabel(level: ConfidenceLevel): string {
     }
   }
 
-  &.tab-high {
-    color: $conf-high;
-    background: rgba($conf-high, 0.08);
-    border-color: rgba($conf-high, 0.2);
-
-    &:hover {
-      background: rgba($conf-high, 0.14);
-    }
-
-    &.active {
-      background: rgba($conf-high, 0.18);
-      border-color: $conf-high;
-      box-shadow: 0 0 0 1px rgba($conf-high, 0.2);
-    }
-  }
-
-  &.tab-mid {
-    color: $conf-mid;
-    background: rgba($conf-mid, 0.08);
-    border-color: rgba($conf-mid, 0.2);
-
-    &:hover {
-      background: rgba($conf-mid, 0.14);
-    }
-
-    &.active {
-      background: rgba($conf-mid, 0.18);
-      border-color: $conf-mid;
-      box-shadow: 0 0 0 1px rgba($conf-mid, 0.2);
-    }
-  }
-
-  &.tab-low {
-    color: $conf-low;
-    background: rgba($conf-low, 0.08);
-    border-color: rgba($conf-low, 0.2);
-
-    &:hover {
-      background: rgba($conf-low, 0.14);
-    }
-
-    &.active {
-      background: rgba($conf-low, 0.18);
-      border-color: $conf-low;
-      box-shadow: 0 0 0 1px rgba($conf-low, 0.2);
-    }
-  }
+  &.tab-high { @include conf-tab('high'); }
+  &.tab-mid  { @include conf-tab('mid');  }
+  &.tab-low  { @include conf-tab('low');  }
 
   .tab-dot {
     width: 5px;

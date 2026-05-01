@@ -15,8 +15,15 @@
 
 import { ref, shallowRef } from 'vue'
 import type { OCRConfig, OCREngine } from '@/types/video'
+import { CANVAS_CONTEXT_2D, ERR_OCR_NOT_READY, MIME_IMAGE_PNG } from '@/utils/constants'
 import { useImagePreprocessor } from './useImagePreprocessor'
 import { getCalibrator, langToScript } from '@/core'
+
+// ─── Canvas context guard ────────────────────────────────────────────
+// Throws if canvas 2D context is unavailable (critical — OCR cannot proceed without it)
+function requireCanvasContext(ctx: CanvasRenderingContext2D | null, message = 'Failed to get canvas context'): asserts ctx is CanvasRenderingContext2D {
+  if (!ctx) throw new Error(message)
+}
 
 // ─── 类型保留（供外部使用）───────────────────────────────────────
 export interface OCRResult {
@@ -50,8 +57,8 @@ interface TesseractRecognizeResult {
 }
 
 interface TesseractWorkerInterface {
-  terminate(): Promise<void>
-  setParameters(p: Record<string, string>): Promise<void>
+  terminate(): Promise<unknown>
+  setParameters(p: Record<string, string>): Promise<unknown>
   recognize(img: string): Promise<TesseractRecognizeResult>
 }
 
@@ -163,7 +170,7 @@ export function useOCREngine() {
         if (!cachedTesseractModule) {
           cachedTesseractModule = await import('tesseract.js')
         }
-        const Tesseract = cachedTesseractModule!
+        const Tesseract = cachedTesseractModule
 
         if (worker.value) {
           await worker.value.terminate()
@@ -171,7 +178,7 @@ export function useOCREngine() {
 
         const workerNum = (options.useGpu ?? false) ? 2 : 1
 
-        worker.value = await Tesseract.createWorker(langs.join('+'), workerNum, {
+        const newWorker = await Tesseract.createWorker(langs.join('+'), workerNum, {
           logger: (m: TesseractLoggerMessage) => {
             if (m.status === 'recognizing text') {
               progress.value = Math.round(m.progress * 100)
@@ -180,6 +187,7 @@ export function useOCREngine() {
           gzip: true,
         })
 
+        worker.value = newWorker
         await worker.value.setParameters({
           tessedit_pageseg_mode: '3',
           preserve_interword_spaces: '1',
@@ -201,7 +209,7 @@ export function useOCREngine() {
     options: OCRProcessingOptions = {}
   ): Promise<OCRResult[]> {
     if (!isReady.value || !worker.value) {
-      throw new Error('OCR engine not initialized')
+      throw new Error(ERR_OCR_NOT_READY)
     }
 
     isProcessing.value = true
@@ -217,11 +225,11 @@ export function useOCREngine() {
       const canvas = document.createElement('canvas')
       canvas.width = processedImage.width
       canvas.height = processedImage.height
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Failed to get canvas context')
+      const ctx = canvas.getContext(CANVAS_CONTEXT_2D)
+      requireCanvasContext(ctx)
 
       ctx.putImageData(processedImage, 0, 0)
-      const imageUrl = canvas.toDataURL('image/png')
+      const imageUrl = canvas.toDataURL(MIME_IMAGE_PNG)
 
       const result = await worker.value.recognize(imageUrl)
 
@@ -289,7 +297,7 @@ export function useOCREngine() {
     }
 
     if (!isReady.value || !worker.value) {
-      throw new Error('OCR engine not initialized')
+      throw new Error(ERR_OCR_NOT_READY)
     }
 
     isProcessing.value = true

@@ -1,6 +1,6 @@
 /**
  * Image preprocessing for OCR accuracy improvement
- * 
+ *
  * Key techniques:
  * 1. Grayscale conversion
  * 2. Contrast enhancement
@@ -11,6 +11,12 @@
  * 7. Multi-pass OCR with different configurations
  * 8. GPU-accelerated operations where available
  */
+
+import { clamp } from '@/utils/math'
+import { CANVAS_CONTEXT_2D, MIME_IMAGE_PNG, ERR_CANVAS_CTX_2D } from '@/utils/constants'
+
+// Re-export for backwards compatibility (used by test files)
+export { clamp }
 
 export interface PreprocessorConfig {
   /** Scale factor for upscaling small images (default: 2.0) */
@@ -91,17 +97,13 @@ export function enhanceContrast(imageData: ImageData, level: number): ImageData 
   // identity when factor=1 (level=0.5)
   
   for (let i = 0; i < data.length; i += 4) {
-    result.data[i] = clamp(Math.round(factor * (data[i] - 128) + 128))
-    result.data[i + 1] = clamp(Math.round(factor * (data[i + 1] - 128) + 128))
-    result.data[i + 2] = clamp(Math.round(factor * (data[i + 2] - 128) + 128))
+    result.data[i] = clamp(Math.round(factor * (data[i] - 128) + 128), 0, 255)
+    result.data[i + 1] = clamp(Math.round(factor * (data[i + 1] - 128) + 128), 0, 255)
+    result.data[i + 2] = clamp(Math.round(factor * (data[i + 2] - 128) + 128), 0, 255)
     result.data[i + 3] = data[i + 3]
   }
   
   return result
-}
-
-export function clamp(value: number): number {
-  return Math.max(0, Math.min(255, value))
 }
 
 /**
@@ -369,10 +371,11 @@ function rotateImage(imageData: ImageData, angle: number): ImageData {
       if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
         const srcIdx = (srcY * width + srcX) * 4
         const dstIdx = (y * newWidth + x) * 4
-        result.data[dstIdx] = data[srcIdx]
+        result.data[dstIdx]     = data[srcIdx]
         result.data[dstIdx + 1] = data[srcIdx + 1]
         result.data[dstIdx + 2] = data[srcIdx + 2]
-        result.data[dstIdx + 3] = 255
+        // Preserve source alpha, defaulting to opaque if fully transparent (edge pixels)
+        result.data[dstIdx + 3] = data[srcIdx + 3] || 255
       }
     }
   }
@@ -521,7 +524,7 @@ export function useImagePreprocessor() {
       processedData: current,
       canvas,
       toDataURL(): string {
-        return canvas.toDataURL('image/png')
+        return canvas.toDataURL(MIME_IMAGE_PNG)
       },
       toBlob(): Promise<Blob> {
         return new Promise((resolve, reject) => {
@@ -589,8 +592,8 @@ function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = imageData.width
   canvas.height = imageData.height
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Failed to get 2D canvas context')
+  const ctx = canvas.getContext(CANVAS_CONTEXT_2D)
+  if (!ctx) throw new Error(ERR_CANVAS_CTX_2D)
   ctx.putImageData(imageData, 0, 0)
   return canvas
 }
@@ -599,6 +602,7 @@ function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
  * Helper: Convert canvas to ImageData
  */
 export function canvasToImageData(canvas: HTMLCanvasElement): ImageData {
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext(CANVAS_CONTEXT_2D)
+  if (!ctx) throw new Error(ERR_CANVAS_CTX_2D)
   return ctx.getImageData(0, 0, canvas.width, canvas.height)
 }

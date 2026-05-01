@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch, computed, provide } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
+import { formatTimeShort, formatTimePrecise } from '@/utils/time'
 import ROISelector from '@/components/video/ROISelector.vue'
 
 const projectStore = useProjectStore()
@@ -122,21 +123,6 @@ function handleFileSelect() {
     }
   }
   input.click()
-}
-
-function formatTime(seconds: number): string {
-  const hrs = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = Math.floor(seconds % 60)
-  if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-}
-
-function formatTimePrecise(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  const ms = Math.floor((seconds % 1) * 1000)
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`
 }
 
 const currentSubtitle = computed(() => {
@@ -326,9 +312,9 @@ const hasVideo = computed(() => projectStore.hasVideo)
 
       <!-- Time display -->
       <div class="time-display">
-        <span class="time-current">{{ formatTime(projectStore.currentTime) }}</span>
+        <span class="time-current">{{ formatTimeShort(projectStore.currentTime) }}</span>
         <span class="time-sep">/</span>
-        <span class="time-total">{{ formatTime(projectStore.duration) }}</span>
+        <span class="time-total">{{ formatTimeShort(projectStore.duration) }}</span>
       </div>
 
       <!-- Frame counter -->
@@ -344,7 +330,7 @@ const hasVideo = computed(() => projectStore.hasVideo)
 .video-preview {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   background: var(--bg-base);
   overflow: hidden;
 }
@@ -447,7 +433,7 @@ const hasVideo = computed(() => projectStore.hasVideo)
 
 .drop-inner {
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   gap: $space-3;
 }
@@ -511,7 +497,7 @@ const hasVideo = computed(() => projectStore.hasVideo)
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   gap: $space-4;
@@ -559,7 +545,7 @@ const hasVideo = computed(() => projectStore.hasVideo)
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   align-items: center;
   justify-content: center;
   gap: $space-3;

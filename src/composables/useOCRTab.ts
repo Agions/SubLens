@@ -83,7 +83,6 @@ export function useOCRTab() {
   const frameInterval = ref(1)
 
   // Confidence threshold - synchronized with store
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const confidenceThreshold = computed({
     get: () => Math.round(projectStore.extractOptions.confidenceThreshold * 100),
     set: (val: number) => {
@@ -151,6 +150,7 @@ export function useOCRTab() {
     mergeThreshold,
     sceneThreshold,
     frameInterval,
+    confidenceThreshold,
     estimatedAccuracy,
     setLanguage,
     toggleMultiPass,

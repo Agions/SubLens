@@ -9,6 +9,11 @@
   justify-content: center;
 }
 
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
 @mixin flex-between {
   display: flex;
   align-items: center;
@@ -212,8 +217,8 @@
   box-shadow: $glow-md;
 }
 
-// ── Badge ────────────────────────────────────────────────────
-@mixin badge {
+// ── Badge ───────────────────────────────────────────────────
+@mixin badge($bg: rgba($primary, 0.1), $color: var(--primary)) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -222,4 +227,93 @@
   font-size: 11px;
   font-weight: 600;
   line-height: 1.4;
+  background: $bg;
+  color: $color;
+  border: 1px solid transparent;
+}
+
+// ── Confidence Level Badge ─────────────────────────────────
+@mixin conf-badge($level) {
+  $color: if($level == 'high', $conf-high, if($level == 'mid', $conf-mid, $conf-low));
+  background: rgba($color, 0.12);
+  color: $color;
+  border: 1px solid rgba($color, 0.25);
+}
+
+// ── Confidence Level Pill (compact version) ────────────────
+@mixin conf-pill-base {
+  font-family: $font-mono;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: $radius-full;
+  letter-spacing: 0.02em;
+}
+
+// ── Confidence Level Tab ──────────────────────────────────
+@mixin conf-tab($level) {
+  $color: if($level == 'high', $conf-high, if($level == 'mid', $conf-mid, $conf-low));
+  color: $color;
+  background: rgba($color, 0.08);
+  border-color: rgba($color, 0.2);
+
+  &:hover {
+    background: rgba($color, 0.14);
+  }
+
+  &.active {
+    background: rgba($color, 0.18);
+    border-color: $color;
+    box-shadow: 0 0 0 1px rgba($color, 0.2);
+  }
+}
+
+// ── Slider Track ─────────────────────────────────────────────
+@mixin slider-track {
+  position: relative;
+  height: 6px;
+  background: $bg-overlay;
+  border-radius: $radius-full;
+
+  .slider-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, $primary, $accent);
+    border-radius: $radius-full;
+    pointer-events: none;
+    transition: width 0.1s;
+  }
+
+  .slider {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+// Slider fill color variants
+@mixin slider-fill-colors {
+  .slider-fill {
+    &.fill-green { background: linear-gradient(90deg, var(--success), color-mix(in oklch, var(--success) 85%, white)); }
+    &.fill-yellow { background: linear-gradient(90deg, var(--warning), color-mix(in oklch, var(--warning) 85%, white)); }
+    &.fill-red { background: linear-gradient(90deg, var(--error), color-mix(in oklch, var(--error) 85%, white)); }
+  }
+}
+
+// ── Card Border Variants ───────────────────────────────────────
+@mixin card-border {
+  border: 1.5px solid $border;
+}
+
+@mixin card-border-error {
+  border: 1.5px solid rgba($error, 0.3);
+}
+
+@mixin card-border-dashed {
+  border: 1.5px dashed $border;
 }

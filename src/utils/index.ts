@@ -2,6 +2,9 @@
  * Utility functions barrel export
  */
 
+// Math utilities
+export * from './math'
+
 // Time utilities
 export * from './time'
 

@@ -1,5 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
+import {
+  LOCALSTORAGE_KEY_SETTINGS,
+  LOCALSTORAGE_KEY_THUMBNAILS,
+  LOCALSTORAGE_KEY_CACHE,
+  LOCALSTORAGE_KEY_TEMP,
+  LOCALSTORAGE_SIZE_LIMIT,
+} from '@/utils/constants'
 
 export type Theme = 'dark' | 'light'
 export type Language = 'zh-CN' | 'en-US'
@@ -31,12 +38,12 @@ const DEFAULT_SETTINGS: Settings = {
 function cleanupLocalStorage(keys: string[]) {
   try {
     const allKeys = Object.keys(localStorage)
+    const keySet = new Set(keys)
     for (const key of allKeys) {
-      // 清理指定的 key 和带有这些前缀的 key
-      if (keys.includes(key) || keys.some(k => key.startsWith(k))) {
+      if (keySet.has(key) || keys.some(k => key.startsWith(k))) {
         try {
           localStorage.removeItem(key)
-          console.debug('[HardSubX Settings] Cleaned up:', key)
+          console.warn('[HardSubX Settings] Cleaned up:', key)
         } catch {
           // 单个 key 删除失败不影响其他
         }
@@ -51,7 +58,7 @@ export const useSettingsStore = defineStore('settings', () => {
   // Load from localStorage
   function loadSettings(): Settings {
     try {
-      const saved = localStorage.getItem('hardsubx-settings')
+      const saved = localStorage.getItem(LOCALSTORAGE_KEY_SETTINGS)
       if (saved) {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) }
       }
@@ -63,43 +70,42 @@ export const useSettingsStore = defineStore('settings', () => {
   
   const settings = ref<Settings>(loadSettings())
   
-  // Persist on change
+  // Persist on change (debounced to avoid per-property serialization)
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
   watch(settings, (newSettings) => {
-    try {
-      const serialized = JSON.stringify(newSettings)
-      // 检查 localStorage 容量
-      if (serialized.length > 5 * 1024 * 1024) { // 5MB 限制
-        console.warn('[HardSubX Settings] Settings too large to save:', serialized.length, 'bytes')
-        return
-      }
-      localStorage.setItem('hardsubx-settings', serialized)
-    } catch (e: unknown) {
-      const err = e as { name?: string; code?: number; message?: string }
-      if (err.name === 'QuotaExceededError' || err.code === 22) {
-        console.warn('[HardSubX Settings] localStorage quota exceeded, attempting cleanup')
-        // 渐进式清理：先尝试清理其他非必要数据
-        cleanupLocalStorage(['hardsubx-thumbnails', 'hardsubx-cache', 'hardsubx-temp'])
-        
-        // 重试保存
-        try {
-          localStorage.setItem('hardsubx-settings', JSON.stringify(newSettings))
-          console.info('[HardSubX Settings] Successfully saved after cleanup')
-        } catch {
-          // 如果还是失败，保存最小可用配置
-          console.warn('[HardSubX Settings] Cleanup insufficient, saving minimal config')
-          try {
-            localStorage.setItem('hardsubx-settings', JSON.stringify({
-              theme: newSettings.theme,
-              language: newSettings.language
-            }))
-          } catch {
-            console.error('[HardSubX Settings] Failed to save even minimal config')
-          }
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => {
+      try {
+        const serialized = JSON.stringify(newSettings)
+        if (serialized.length > LOCALSTORAGE_SIZE_LIMIT) {
+          console.warn('[HardSubX Settings] Settings too large to save:', serialized.length, 'bytes')
+          return
         }
-      } else {
-        console.warn('[HardSubX Settings] Failed to save settings:', err)
+        localStorage.setItem(LOCALSTORAGE_KEY_SETTINGS, serialized)
+      } catch (e: unknown) {
+        const err = e as { name?: string }
+        if (err.name === 'QuotaExceededError') {
+          console.warn('[HardSubX Settings] localStorage quota exceeded, attempting cleanup')
+          cleanupLocalStorage([LOCALSTORAGE_KEY_THUMBNAILS, LOCALSTORAGE_KEY_CACHE, LOCALSTORAGE_KEY_TEMP])
+          try {
+            localStorage.setItem(LOCALSTORAGE_KEY_SETTINGS, JSON.stringify(newSettings))
+            console.info('[HardSubX Settings] Successfully saved after cleanup')
+          } catch {
+            console.warn('[HardSubX Settings] Cleanup insufficient, saving minimal config')
+            try {
+              localStorage.setItem(LOCALSTORAGE_KEY_SETTINGS, JSON.stringify({
+                theme: newSettings.theme,
+                language: newSettings.language
+              }))
+            } catch {
+              console.error('[HardSubX Settings] Failed to save even minimal config')
+            }
+          }
+        } else {
+          console.warn('[HardSubX Settings] Failed to save settings:', err)
+        }
       }
-    }
+    }, 100)
   }, { deep: true })
   
   function updateSetting<K extends keyof Settings>(key: K, value: Settings[K]) {

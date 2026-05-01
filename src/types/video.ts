@@ -48,12 +48,19 @@ export interface ROIPreset {
   rect: ROI
 }
 
+// ROI preset display labels — deduplicated to avoid inline magic strings
+const _ROI_BOTTOM = '底部字幕'
+const _ROI_TOP    = '顶部字幕'
+const _ROI_LEFT   = '左侧字幕'
+const _ROI_RIGHT  = '右侧字幕'
+const _ROI_CENTER = '中心字幕'
+
 export const ROI_PRESETS: ROIPreset[] = [
-  { id: 'bottom', name: '底部字幕', icon: '⬇️', rect: { id: 'bottom', name: '底部字幕', type: 'bottom', x: 0, y: 85, width: 100, height: 15, unit: 'percent', enabled: true } },
-  { id: 'top', name: '顶部字幕', icon: '⬆️', rect: { id: 'top', name: '顶部字幕', type: 'top', x: 0, y: 0, width: 100, height: 15, unit: 'percent', enabled: true } },
-  { id: 'left', name: '左侧字幕', icon: '⬅️', rect: { id: 'left', name: '左侧字幕', type: 'left', x: 0, y: 30, width: 40, height: 40, unit: 'percent', enabled: true } },
-  { id: 'right', name: '右侧字幕', icon: '➡️', rect: { id: 'right', name: '右侧字幕', type: 'right', x: 60, y: 30, width: 40, height: 40, unit: 'percent', enabled: true } },
-  { id: 'center', name: '中心字幕', icon: '⭕', rect: { id: 'center', name: '中心字幕', type: 'center', x: 20, y: 40, width: 60, height: 20, unit: 'percent', enabled: true } },
+  { id: 'bottom', name: _ROI_BOTTOM, icon: '⬇️', rect: { id: 'bottom', name: _ROI_BOTTOM, type: 'bottom', x: 0, y: 85, width: 100, height: 15, unit: 'percent', enabled: true } },
+  { id: 'top',    name: _ROI_TOP,    icon: '⬆️', rect: { id: 'top',    name: _ROI_TOP,    type: 'top',    x: 0, y: 0,  width: 100, height: 15, unit: 'percent', enabled: true } },
+  { id: 'left',   name: _ROI_LEFT,   icon: '⬅️', rect: { id: 'left',   name: _ROI_LEFT,   type: 'left',   x: 0, y: 30, width: 40,  height: 40, unit: 'percent', enabled: true } },
+  { id: 'right',  name: _ROI_RIGHT,  icon: '➡️', rect: { id: 'right',  name: _ROI_RIGHT,  type: 'right',  x: 60, y: 30, width: 40,  height: 40, unit: 'percent', enabled: true } },
+  { id: 'center', name: _ROI_CENTER, icon: '⭕', rect: { id: 'center', name: _ROI_CENTER, type: 'center', x: 20, y: 40, width: 60,  height: 20, unit: 'percent', enabled: true } },
 ]
 
 export interface ROI {

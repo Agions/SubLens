@@ -48,23 +48,26 @@ export function useBatchProcessor() {
   // Overall queue progress (0-100)
   const overallProgress = computed(() => {
     if (jobs.value.length === 0) return 0
-    const total = jobs.value.length
-    const completed = jobs.value.filter(j =>
-      j.status === 'completed' || j.status === 'failed' || j.status === 'cancelled'
-    ).length
-    const processing = jobs.value.filter(j => j.status === 'processing')
-    const inProgress = processing.reduce((sum, j) => sum + j.progress, 0)
-    return Math.round((completed * 100 + inProgress) / total)
+    let completed = 0, inProgress = 0
+    for (const job of jobs.value) {
+      if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
+        completed++
+      } else if (job.status === 'processing') {
+        inProgress += job.progress
+      }
+    }
+    return Math.round((completed * 100 + inProgress) / jobs.value.length)
   })
 
   // Estimated seconds remaining
   const estimatedTimeRemaining = computed(() => {
     if (!isProcessing.value || jobs.value.length === 0) return null
-    const remaining = jobs.value.filter(j =>
-      j.status === 'pending' || j.status === 'processing'
-    ).length
+    let remaining = 0
+    for (const job of jobs.value) {
+      if (job.status === 'pending' || job.status === 'processing') remaining++
+    }
     if (remaining === 0) return null
-    const avgMs = avgProcessingTime.value || 30000 // default 30s per job
+    const avgMs = avgProcessingTime.value || 30000
     return Math.ceil((remaining * avgMs) / 1000)
   })
 
@@ -91,7 +94,8 @@ export function useBatchProcessor() {
     return newJobs
   }
 
-  // Start batch processing with concurrency control
+  // Start batch processing with concurrency control.
+  // Callback-driven slot manager replaces the previous setInterval polling.
   async function startBatch(options: BatchOptions) {
     if (isProcessing.value) return
 
@@ -100,72 +104,59 @@ export function useBatchProcessor() {
 
     const maxConcurrency = options.maxConcurrency || 2
     const allPending = jobs.value.filter(j => j.status === 'pending')
-    const running: Set<BatchJob> = new Set()
+    let running = 0       // active job count
+    let pendingIndex = 0  // next job to enqueue from allPending
 
-    // True sliding-window concurrency: fill window, replenish as jobs complete
-    const enqueue = (job: BatchJob) => {
-      running.add(job)
+    // Mutable callback invoked whenever a job slot frees up.
+    // Initial no-op; replaced by the drain Promise once that is created.
+    let onSlotFree: () => void = () => {}
+
+    function enqueue(job: BatchJob) {
+      running++
       job.status = 'processing'
       job.startedAt = new Date()
       const start = Date.now()
       processJob(job, options)
-        .then(() => {
-          job.status = 'completed'
-          job.progress = 100
-        })
+        .then(() => { job.status = 'completed'; job.progress = 100 })
         .catch((e) => {
+          const msg = e instanceof Error ? e.message : String(e)
           job.status = 'failed'
-          job.error = e instanceof Error ? e.message : String(e)
+          job.error = msg
+          console.error(`[Batch] Job ${job.id} failed:`, msg)
         })
         .finally(() => {
-          running.delete(job)
+          running--
           job.completedAt = new Date()
           updateAvgProcessingTime(Date.now() - start)
+          onSlotFree() // signal slot availability — drives the next enqueue
         })
     }
 
-    // Fill initial window
-    for (const job of allPending.slice(0, maxConcurrency)) {
-      enqueue(job)
+    // Kick off the initial window
+    for (let i = 0; i < Math.min(maxConcurrency, allPending.length); i++) {
+      enqueue(allPending[i])
+      pendingIndex++
     }
 
-    // Replenish as slots free up, until cancelled or queue empty
-    for (let i = maxConcurrency; i < allPending.length && isProcessing.value; i++) {
-      // Wait for at least one running job to finish before launching the next
-      await new Promise<void>((resolve) => {
-        let resolved = false
-        const check = setInterval(() => {
-          if (!isProcessing.value) {
-            // Processing cancelled - resolve and stop checking
-            if (!resolved) {
-              resolved = true
-              clearInterval(check)
-              resolve()
-            }
-          } else if (running.size < maxConcurrency) {
-            // Slot available - resolve and stop checking
-            if (!resolved) {
-              resolved = true
-              clearInterval(check)
-              resolve()
-            }
-          }
-        }, 50)
-      })
-      if (isProcessing.value) enqueue(allPending[i])
-    }
-
-    // Wait for all running jobs to finish
-    while (running.size > 0 && isProcessing.value) {
-      await new Promise<void>((resolve) => setTimeout(resolve, 50))
-    }
+    // Drain: resolves when the queue is exhausted AND all running jobs finish.
+    // While active, onSlotFree keeps the pipeline topped up.
+    await new Promise<void>(resolve => {
+      onSlotFree = () => {
+        if (!isProcessing.value) { resolve(); return }
+        if (pendingIndex >= allPending.length && running === 0) { resolve(); return }
+        if (running < maxConcurrency && pendingIndex < allPending.length) {
+          enqueue(allPending[pendingIndex++])
+        }
+      }
+      // Check immediately in case the queue was already small enough
+      onSlotFree()
+    })
 
     isProcessing.value = false
     batchStartTime.value = null
     currentJob.value = null
   }
 
-  // Process single job - actual implementation
   async function processJob(job: BatchJob, options: BatchOptions) {
     const jobStart = Date.now()
     try {
@@ -296,14 +287,18 @@ export function useBatchProcessor() {
     }
   }
 
-  // Get statistics
-  const stats = () => ({
-    total: jobs.value.length,
-    pending: jobs.value.filter(j => j.status === 'pending').length,
-    processing: jobs.value.filter(j => j.status === 'processing').length,
-    completed: jobs.value.filter(j => j.status === 'completed').length,
-    failed: jobs.value.filter(j => j.status === 'failed').length,
-    cancelled: jobs.value.filter(j => j.status === 'cancelled').length
+  // Get statistics (single-pass memoized computed)
+  const stats = computed(() => {
+    let total = 0, pending = 0, processing = 0, completed = 0, failed = 0, cancelled = 0
+    for (const job of jobs.value) {
+      total++
+      if (job.status === 'pending') pending++
+      else if (job.status === 'processing') processing++
+      else if (job.status === 'completed') completed++
+      else if (job.status === 'failed') failed++
+      else if (job.status === 'cancelled') cancelled++
+    }
+    return { total, pending, processing, completed, failed, cancelled }
   })
 
   return {

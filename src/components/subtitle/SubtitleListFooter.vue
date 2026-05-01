@@ -4,11 +4,15 @@
  */
 import { computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/useSubtitleList'
 import type { ExportFormats } from '@/types/subtitle'
 
 const subtitleStore = useSubtitleStore()
-const { deleteSelected } = useSubtitleList()
+
+function deleteSelected() {
+  if (subtitleStore.selectedId) {
+    subtitleStore.deleteSubtitle(subtitleStore.selectedId)
+  }
+}
 
 const exportFormatKeys = computed(() => 
   Object.keys(subtitleStore.exportFormats) as (keyof ExportFormats)[]

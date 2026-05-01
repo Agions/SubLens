@@ -2,42 +2,39 @@
 
 ## 环境要求 {#prerequisites}
 
-| Requirement | Version | Notes |
+| 依赖 | 版本 | 说明 |
 |:---|:---|:---|
-| Node.js | 18+ | Frontend build |
-| Rust | 1.70+ | Tauri backend |
-| pnpm | 8+ | Package manager |
-| FFmpeg | Latest | Video frame extraction |
-| Git | Any | Source clone |
+| Node.js | 18+ | 前端构建 |
+| Rust | 1.70+ | Tauri 后端 |
+| pnpm | 8+ | 包管理器 |
+| FFmpeg | 最新 | 视频帧提取 |
 
 ## 安装 {#installation}
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/Agions/SubLens.git
 cd SubLens
 
-# Install frontend dependencies
+# 安装前端依赖
 pnpm install
 
-# Run in development mode (Rust backend auto-builds on first run)
+# 开发模式运行（Rust 后端首次自动编译）
 pnpm tauri dev
 
-# Build production package
+# 构建生产包
 pnpm tauri build
 ```
 
 ## OCR 引擎 {#ocr-engines}
 
-SubLens 支持三种 OCR 引擎：
+SubLens 支持三种 OCR 引擎，可根据场景自由切换：
 
-| Engine | Technology | Accuracy | Speed | Languages |
-|:---|:---|:---:|:---:|:---:|
-| **EasyOCR** | PyTorch | ⭐⭐⭐ Best（字幕场景）| Medium | 80+ |
-| **PaddleOCR** | PP-OCRv5 Deep Learning | ⭐⭐⭐ 高精度 | Fast（GPU）| 80+ |
-| **Tesseract.js** | LSTM + WASM | ⭐⭐ Good | Fastest | 100+ |
-
-字幕属于「自然场景文字」，**EasyOCR** 在这类场景表现最优，推荐优先使用。**PaddleOCR** 适合 GPU 用户追求极限精度；**Tesseract.js** 适合无 Python 环境的快速上手。
+| 引擎 | 技术 | 推荐场景 |
+|:---|:---|:---|
+| **EasyOCR** | PyTorch | 自然场景字幕，推荐首选 |
+| **PaddleOCR** | PP-OCRv5 深度学习 | GPU 用户追求极限精度 |
+| **Tesseract.js** | LSTM + WASM | 无 Python 环境，快速上手 |
 
 ### GPU 加速（可选） {#gpu-acceleration}
 
@@ -49,21 +46,19 @@ conda install cudatoolkit=11.8 -c nvidia
 pip install paddlepaddle-gpu
 ```
 
-切换到 PaddleOCR 引擎后，SubLens UI 会自动使用 GPU（需已安装 GPU 版 PaddleOCR）。
-
 ## 首次提取 {#first-extraction}
 
 ### 第一步 — 打开视频
 
 点击工具栏 **Open**，或直接将视频文件拖入窗口。
 
-支持格式：**MP4** · **MKV** · **AVI** · **MOV** · **WebM**
+支持格式：**MP4** · **MKV** · **AVI** · **MOV** · **WebM** · **M4V** · **WMV** · **FLV** · **3GP**
 
 ### 第二步 — 选择字幕区域（ROI）
 
 选择一个预设或拖动定义字幕区域：
 
-| Preset | 适用场景 |
+| 预设 | 适用场景 |
 |:---|:---|
 | **Bottom** | 大多数硬字幕 |
 | **Top** | 片头/片尾字幕 |
@@ -73,14 +68,14 @@ pip install paddlepaddle-gpu
 
 ### 第三步 — 配置 OCR
 
-| Setting | 推荐 |
-|:---|:---|
-| **OCR Engine** | PaddleOCR（精度最高） |
-| **Languages** | 选择字幕对应语言 |
-| **Confidence threshold** | 70% — 根据效果调整 |
-| **Multi-pass OCR** | 启用（复杂字幕效果更好） |
-| **Text post-processing** | 启用（输出更干净） |
-| **Subtitle merge** | 启用（80% 相似度去重） |
+| 设置 | 推荐值 | 说明 |
+|:---|:---|:---|
+| **OCR 引擎** | EasyOCR 或 PaddleOCR | 字幕场景精度最优 |
+| **语言** | 选择字幕对应语言 | 多语字幕可多选 |
+| **置信度阈值** | 70% | 根据效果调整，越低越宽松 |
+| **多轮 OCR** | 启用 | 复杂字幕效果更好 |
+| **文本后处理** | 启用 | 输出更干净 |
+| **字幕合并** | 启用（相似度 80%）| 自动去重 |
 
 ### 第四步 — 开始提取
 
@@ -88,13 +83,4 @@ pip install paddlepaddle-gpu
 
 ### 第五步 — 导出
 
-点击字幕面板的 **Export**，选择导出格式：
-
-| Format | Frame-mapped | Best for |
-|:---|:---:|:---|
-| **SRT** | No | 通用字幕播放器 |
-| **WebVTT** | No | Web 视频 |
-| **ASS** | No | 动漫字幕（高级样式） |
-| **JSON** | Yes | 帧级精确编辑 |
-| **CSV** | Yes | 电子表格分析 |
-| **TXT** | No | 纯文本 |
+点击字幕面板的 **Export**，选择导出格式。帧级精确编辑推荐 **JSON**，通用播放推荐 **SRT**。

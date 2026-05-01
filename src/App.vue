@@ -70,15 +70,17 @@ onMounted(() => {
   })
   
   // Register ? for shortcuts help
-  window.addEventListener('keydown', (e) => {
+  function handleQuestionMark(e: KeyboardEvent) {
     if (e.key === '?' || (e.shiftKey && e.key === '/')) {
       shortcutsHelpRef.value?.open()
     }
-  })
+  }
+  window.addEventListener('keydown', handleQuestionMark)
 })
 
 onUnmounted(() => {
   cleanupShortcuts()
+  window.removeEventListener('keydown', handleQuestionMark)
 })
 </script>
 

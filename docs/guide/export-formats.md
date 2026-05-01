@@ -2,24 +2,24 @@
 
 SubLens 支持 12 种字幕/文本导出格式。
 
-## 格式总览 {#overview}
+## 格式总览
 
-| Format | Frame-Mapped | Recommended For |
+| 格式 | 帧映射 | 推荐场景 |
 |:---|:---:|:---|
-| **SRT** | No | 通用字幕播放器 |
-| **WebVTT** | No | Web 视频 |
-| **ASS** | No | 动漫字幕，高级样式 |
-| **SSA** | No | 传统字幕格式 |
-| **JSON** | ✅ Yes | 帧级精确编辑 |
-| **CSV** | ✅ Yes | 电子表格分析 |
-| **TXT** | No | 纯文本 |
-| **LRC** | No | 歌词同步 |
-| **SBV** | No | YouTube 字幕 |
-| **MD** | No | Markdown 文档 |
-| **STL** | No | Spruce 字幕格式 |
-| **TTML** | No | Timed Text ML |
+| **SRT** | — | 通用播放器 |
+| **WebVTT** | — | Web 视频 |
+| **ASS** | — | 动漫字幕，高级样式 |
+| **SSA** | — | 传统字幕格式 |
+| **JSON** | ✅ | 帧级精确编辑 |
+| **CSV** | ✅ | 电子表格分析 |
+| **TXT** | — | 纯文本 |
+| **LRC** | — | 歌词同步 |
+| **SBV** | — | YouTube 字幕 |
+| **MD** | — | Markdown 文档 |
+| **STL** | — | Spruce 字幕 |
+| **TTML** | — | Timed Text ML |
 
-## JSON 格式（帧级精确） {#json-format}
+## JSON 格式（帧级精确）
 
 JSON 格式包含帧级映射信息，适合精确编辑：
 
@@ -46,20 +46,20 @@ JSON 格式包含帧级映射信息，适合精确编辑：
 }
 ```
 
-## LRC 格式（歌词同步） {#lrc-format}
+## LRC 格式（歌词同步）
 
-```json
+```lrc
 [ti:SubLens Export]
 [ar:SubLens]
 [al:Subtitle Export]
 [by:SubLens v3.0]
-[re:SubLens]
+[offset:0]
 
 [00:05.00]Hello, World!
 [00:07.00]欢迎使用 SubLens
 ```
 
-## 多格式批量导出 {#batch-export}
+## 多格式批量导出
 
 ```bash
 sublens-cli extract video.mp4 --format srt,vtt,ass,json,csv --output ./exports

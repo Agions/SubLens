@@ -95,6 +95,17 @@ export function secondsToFrame(seconds: number, fps: number): number {
 }
 
 /**
+ * Format seconds to MM:SS.mmm (milliseconds with dot separator)
+ * Used for timeline hover bubble in VideoPreview
+ */
+export function formatTimePrecise(seconds: number): string {
+  const mins = Math.floor(seconds / MINUTES_IN_SECONDS)
+  const secs = Math.floor(seconds % MINUTES_IN_SECONDS)
+  const ms = Math.floor((seconds % 1) * MS_PER_SECOND)
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`
+}
+
+/**
  * Format frame number with thousand separators
  */
 export function formatFrameNumber(frame: number): string {

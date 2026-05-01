@@ -4,7 +4,7 @@ layout: home
 hero:
   name: SubLens
   text: 视频字幕提取工具
-  tagline: 从视频中提取硬编码字幕，输出 SRT / VTT / ASS / JSON 等多种格式
+  tagline: 从视频中提取硬编码字幕，输出 SRT / VTT / ASS / JSON 等 12 种格式
   image:
     src: /logo.svg
     alt: SubLens
@@ -23,7 +23,7 @@ features:
 
   - icon: 🔍
     title: 智能导航
-    details: 支持 j/k 键快速跳转、置信度过滤、搜索定位、千条字幕虚拟滚动
+    details: j/k 键快速跳转、置信度过滤、搜索定位、千条字幕虚拟滚动
 
   - icon: 🤖
     title: 多引擎 OCR
@@ -40,4 +40,12 @@ features:
   - icon: 📦
     title: 12 种导出格式
     details: SRT / VTT / ASS / SSA / JSON / CSV / TXT / LRC / SBV / MD / STL / TTML
+
+  - icon: 🗺️
+    title: ROI 区域预设
+    details: 底部 / 顶部 / 左侧 / 右侧 / 中间 / 自定义，一键切换
+
+  - icon: 🎬
+    title: 多格式支持
+    details: MP4 · MKV · AVI · MOV · WebM · M4V · WMV · FLV · 3GP
 ---

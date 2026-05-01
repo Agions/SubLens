@@ -115,7 +115,7 @@ watch(() => props.open, (isOpen) => {
     0 24px 64px rgba(0, 0, 0, 0.6);
   max-height: 90vh;
   display: flex;
-  flex-direction: column;
+  @include flex-column;
   overflow: hidden;
 
   &.modal-sm  { width: min(360px, 90vw); }

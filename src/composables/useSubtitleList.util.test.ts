@@ -1,51 +1,6 @@
 import { describe, it, expect } from 'vitest'
-
-// ─── Helpers (duplicated from source for isolation) ──────────────────────────
-function formatTimeShort(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
-function formatTimeSrt(seconds: number): string {
-  const hrs = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = Math.floor(seconds % 60)
-  const ms = Math.floor((seconds % 1) * 1000)
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${pad(hrs)}:${pad(mins)}:${pad(secs)},${ms.toString().padStart(3, '0')}`
-}
-
-function parseTime(timeStr: string): number {
-  const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})[,\.](\d{3})$/)
-  if (!match) return -1
-  const [, hrs, mins, secs, ms] = match
-  return parseInt(hrs) * 3600 + parseInt(mins) * 60 + parseInt(secs) + parseInt(ms) / 1000
-}
-
-function getConfidenceLevel(confidence: number): 'high' | 'mid' | 'low' {
-  if (confidence >= 0.85) return 'high'
-  if (confidence >= 0.60) return 'mid'
-  return 'low'
-}
-
-function getConfidenceHeatmap(confidence: number): string {
-  if (confidence >= 0.85) {
-    return `linear-gradient(180deg, #22c55e ${Math.round(confidence * 100 - 85) * (100/15)}%, #16a34a 100%)`
-  } else if (confidence >= 0.60) {
-    const t = (confidence - 0.60) / 0.25
-    const r = Math.round(234 - t * 12)
-    const g = Math.round(179 + t * 17)
-    const b = Math.round(8 + t * 78)
-    return `linear-gradient(180deg, rgb(${r},${g},${b}) 0%, rgb(${Math.round(r*0.7)},${Math.round(g*0.7)},${Math.round(b*0.7)}) 100%)`
-  } else {
-    const t = confidence / 0.60
-    const r = Math.round(239 - t * 5)
-    const g = Math.round(68 + t * 111)
-    const b = Math.round(68 + t * 60)
-    return `linear-gradient(180deg, rgb(${r},${g},${b}) 0%, rgb(${Math.round(r*0.7)},${Math.round(g*0.7)},${Math.round(b*0.7)}) 100%)`
-  }
-}
+import { formatTimeShort, formatTimeSrt, parseTime } from '@/utils/time'
+import { getConfidenceLevel, getConfidenceHeatmap } from '@/utils/confidence'
 
 describe('useSubtitleList pure utilities', () => {
 
