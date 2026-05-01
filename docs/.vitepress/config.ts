@@ -9,7 +9,7 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/SubLens/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#0A84FF' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'SubLens' }],
@@ -17,7 +17,7 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/SubLens/logo.svg',
     siteTitle: 'SubLens',
 
     nav: [
