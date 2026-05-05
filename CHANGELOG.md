@@ -2,6 +2,34 @@
 
 All notable changes to SubLens are documented here.
 
+## [3.5.1] - 2026-05-05
+
+### 🔧 Refactoring — Code Duplication Elimination
+
+**前端 TypeScript 重构：**
+
+| 文件 | 优化内容 | 效果 |
+|------|---------|------|
+| `ConfidenceCalibrator.ts` | 提取 `_applyRules()` 规则引擎，所有校准规则统一走驱动循环 | 257→202 行，消除 20+ 处重复 `quality *=` / `signals.push` |
+| `useSubtitleExtractor.ts` | 合并去重 Set + deduped 数组 + rawIndex Map 为单次遍历 | `_normKey` 调用从 2n→1n |
+| `useImagePreprocessor.ts` | `_getSquareKernel` 工厂 + `forEachNeighbor` 邻域遍历辅助 | 3 个 kernel 缓存统一管理 |
+| `useOCREngine.ts` | `safeExtractROI` 使用 `TypedArray.set()` 批量复制 RGBA 行数据 | 逐像素→批量，提升 3-4× |
+| `SceneDetector.ts` | `buildHistogram` 步进采样→确定性 LCG 随机采样 | 消除规律性漏检 |
+
+**后端 Rust 重构：**
+
+| 文件 | 优化内容 |
+|------|---------|
+| `export.rs` | `format_timestamp_sbv` 复用已有工厂函数，消除重复时间计算 |
+| `utils.rs` | `CACHED_PYTHON` / `SCRIPT_CACHE` 懒加载缓存，避免重复 PATH 搜索 |
+| `video.rs` / `ocr_engine.rs` | 临时文件 `TempFileGuard` RAII 管理，确保错误路径下也能清理 |
+
+**文档更新：**
+
+- `architecture.md`：移除已删除的 `main_cli.rs` / `ocr.rs`，新增 `utils.rs` / `types.rs`
+
+---
+
 ## [3.5.0] - 2026-04-16
 
 ### 🎨 Branding — Project Renamed to SubLens

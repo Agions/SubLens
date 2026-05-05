@@ -88,16 +88,16 @@ SubLens uses **Pinia** for frontend state with a clear separation:
 ```
 src-tauri/src/
 ├── main.rs              # Tauri app entry
-├── main_cli.rs          # CLI entry point (sublens-cli)
 ├── lib.rs               # Library root
 └── commands/
     ├── video.rs          # FFmpeg 帧提取、元数据
-    ├── ocr.rs            # EasyOCR / Tesseract.js
-    ├── ocr_engine.rs     # PaddleOCR Python bridge
+    ├── ocr_engine.rs     # Tesseract.js + PaddleOCR Python bridge
     ├── scene.rs          # 场景检测
     ├── export.rs         # 格式写入
     ├── file.rs           # 文件对话框
-    └── system.rs         # 系统依赖诊断
+    ├── system.rs         # 系统依赖诊断
+    ├── utils.rs          # 共享工具（时间解析、临时文件、Python 缓存）
+    └── types.rs          # 共享类型定义
 ```
 
 所有 `std::process::Command` 和 `std::fs` 已替换为 `tokio::` 异步版本，主线程不再阻塞。
