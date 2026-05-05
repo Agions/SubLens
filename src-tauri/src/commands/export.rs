@@ -124,7 +124,7 @@ fn export_timed_entries<F>(
 where
     F: Fn(f64) -> String,
 {
-    let cap = header.map_or(0, |h| h.len()) + subtitles.iter().map(|s| 50 + s.text.len()).sum();
+    let cap = header.map_or(0, |h| h.len()) + subtitles.iter().map(|s| 50 + s.text.len()).sum::<usize>();
     let mut output = String::with_capacity(cap);
     if let Some(h) = header {
         output.push_str(h);
