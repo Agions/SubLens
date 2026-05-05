@@ -12,7 +12,7 @@
  * 8. GPU-accelerated operations where available
  */
 
-import { clamp } from '@/utils/math'
+import { clamp, pixelLuma } from '@/utils/math'
 import { CANVAS_CONTEXT_2D, MIME_IMAGE_PNG, ERR_CANVAS_CTX_2D } from '@/utils/constants'
 
 // Re-export for backwards compatibility (used by test files)
@@ -74,7 +74,7 @@ export function toGrayscale(imageData: ImageData): ImageData {
   
   for (let i = 0; i < data.length; i += 4) {
     // Use luminosity method for better OCR
-    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+    const gray = pixelLuma(data, i)
     grayscale.data[i] = gray
     grayscale.data[i + 1] = gray
     grayscale.data[i + 2] = gray

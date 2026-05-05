@@ -26,6 +26,7 @@ import {
   getCalibrator,
   langToScript,
 } from '@/core'
+import { pixelLuma } from '@/utils/math'
 
 
 /**
@@ -66,8 +67,8 @@ export function _isRoiRegionLikelyEmpty(
   for (let y = y0; y < yEnd; y += 2) {
     for (let x = x0; x < xEnd; x += 2) {
       const idx = (y * width + x) * 4
-      // 灰度值 (ITU-R BT.601 luminosity method, result 0-255)
-      const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]
+      // 灰度值 (ITU-R BT.601)
+      const gray = pixelLuma(data, idx)
       sum += gray
       sumSq += gray * gray
       count++

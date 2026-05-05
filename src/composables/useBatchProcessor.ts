@@ -287,18 +287,16 @@ export function useBatchProcessor() {
     }
   }
 
-  // Get statistics (single-pass memoized computed)
+  // Get statistics (single-pass using counter object instead of 6 if-else branches)
   const stats = computed(() => {
-    let total = 0, pending = 0, processing = 0, completed = 0, failed = 0, cancelled = 0
+    const counts = { total: 0, pending: 0, processing: 0, completed: 0, failed: 0, cancelled: 0 }
     for (const job of jobs.value) {
-      total++
-      if (job.status === 'pending') pending++
-      else if (job.status === 'processing') processing++
-      else if (job.status === 'completed') completed++
-      else if (job.status === 'failed') failed++
-      else if (job.status === 'cancelled') cancelled++
+      counts.total++
+      if (job.status in counts) {
+        counts[job.status as keyof typeof counts]++
+      }
     }
-    return { total, pending, processing, completed, failed, cancelled }
+    return counts
   })
 
   return {
