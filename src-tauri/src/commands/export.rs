@@ -240,11 +240,9 @@ fn export_as_json(subtitles: &[SubtitleItem]) -> Result<String, String> {
 }
 
 fn format_timestamp_sbv(seconds: f64) -> String {
-    let hours = (seconds / 3600.0).floor() as u32;
-    let minutes = ((seconds % 3600.0) / 60.0).floor() as u32;
-    let secs = (seconds % 60.0).floor() as u32;
-    let millis = ((seconds % 1.0) * 1000.0).floor() as u32;
-    format!("{:02}:{:02}:{:02}.{:03}", hours, minutes, secs, millis)
+    // Reuse factory — format is identical to format_timestamp(seconds, ".", 3):
+    // HH:MM:SS.mmm (separator=".", precision=3 for milliseconds)
+    format_timestamp(seconds, ".", 3)
 }
 
 fn export_as_lrc(subtitles: &[SubtitleItem]) -> String {
