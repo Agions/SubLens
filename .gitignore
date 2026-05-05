@@ -47,3 +47,5 @@ PADDLEOCR_SETUP.md
 
 # Development knowledge (local only, do not commit)
 .learnings/
+*.pyc
+__pycache__/

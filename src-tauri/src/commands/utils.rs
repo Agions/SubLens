@@ -5,6 +5,28 @@ use std::time::Duration;
 use uuid::Uuid;
 use tokio::process::Command;
 use tokio::time::timeout;
+use once_cell::sync::LazyLock;
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+/// Cached Python binary path - resolved once at first use and reused.
+/// Avoids repeated PATH searches on every OCR/scene detection call.
+static CACHED_PYTHON: LazyLock<Result<PathBuf, String>> = LazyLock::new(|| {
+    let candidates = ["python3", "python", "python3.11", "python3.10", "python3.9"];
+    for cmd in &candidates {
+        // Use blocking Command for one-shot discovery at startup
+        if let Ok(output) = std::process::Command::new(cmd)
+            .arg("--version")
+            .output()
+        {
+            if output.status.success() {
+                tracing::info!("Cached Python binary: {}", cmd);
+                return Ok(PathBuf::from(*cmd));
+            }
+        }
+    }
+    Err("Python3 not found in PATH. Please install Python 3.8+".to_string())
+});
 
 /// Parse frame rate from ffprobe's "30000/1001" fraction string.
 /// Returns fps as f64, or 30.0 as fallback.
@@ -186,31 +208,33 @@ pub fn temp_path(suffix: &str) -> PathBuf {
 }
 
 /// Find Python3/Python executable in PATH (async).
+/// Now uses a cached static — the Python binary never changes at runtime.
 pub async fn find_python_binary() -> Result<PathBuf, String> {
-    let candidates = ["python3", "python", "python3.11", "python3.10", "python3.9"];
-
-    for cmd in candidates {
-        if let Ok(output) = tokio::process::Command::new(cmd)
-            .arg("--version")
-            .output()
-            .await
-        {
-            if output.status.success() {
-                return Ok(PathBuf::from(cmd));
-            }
-        }
-    }
-
-    Err("Python3 not found in PATH. Please install Python 3.8+".to_string())
+    CACHED_PYTHON.clone()
 }
 
-/// Find a scripts/ directory script by name.
+/// Cached script paths - each script is resolved once and reused.
+/// Script locations don't change at runtime.
+static SCRIPT_CACHE: LazyLock<Mutex<HashMap<String, PathBuf>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// Find a scripts/ directory script by name (cached).
 ///
 /// Checks in order:
 ///   1. `<exe_dir>/scripts/<name>`  (bundled with installed app)
 ///   2. `<CARGO_MANIFEST_DIR>/../src-tauri/scripts/<name>` (development)
 ///   3. `src-tauri/scripts/<name>`   (relative to cwd)
+///
+/// Results are cached after first lookup.
 pub fn find_script(script_name: &str) -> Result<PathBuf, String> {
+    // Fast path: return cached result
+    if let Ok(cache) = SCRIPT_CACHE.lock() {
+        if let Some(path) = cache.get(script_name) {
+            tracing::debug!("Script cache hit: {} -> {}", script_name, path.display());
+            return Ok(path.clone());
+        }
+    }
+
     let candidates: [Option<PathBuf>; 3] = [
         // Bundled with the app (relative to executable)
         std::env::current_exe()
@@ -229,7 +253,11 @@ pub fn find_script(script_name: &str) -> Result<PathBuf, String> {
 
     for candidate in candidates.into_iter().flatten() {
         if candidate.exists() {
-            tracing::info!("Found {} at: {}", script_name, candidate.display());
+            tracing::info!("Found {} at: {} (caching)", script_name, candidate.display());
+            // Cache the result for future lookups
+            if let Ok(mut cache) = SCRIPT_CACHE.lock() {
+                cache.insert(script_name.to_string(), candidate.clone());
+            }
             return Ok(candidate);
         }
     }

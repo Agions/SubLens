@@ -110,21 +110,17 @@ fn format_timestamp_vtt(seconds: f64) -> String {
 }
 
 fn export_as_srt(subtitles: &[SubtitleItem]) -> String {
-    // Avoid O(n) collect+join: pre-allocate and push in single pass.
-    let capacity = subtitles.iter().map(|s| {
-        10 + s.text.len()
-    }).sum();
+    // Pre-allocate with estimated per-subtitle overhead to avoid reallocations.
+    // Each entry: index (10) + timestamp (30) + text + 4 newlines + blank line.
+    let capacity = subtitles.iter().map(|s| 50 + s.text.len()).sum();
     let mut output = String::with_capacity(capacity);
     for sub in subtitles {
         let start = format_timestamp_srt(sub.start_time);
         let end = format_timestamp_srt(sub.end_time);
         use std::fmt::Write;
-        // SRT block format: index\nstart --> end\ntext\n\n (blank line between entries)
-        writeln!(output, "{}\n{} --> {}\n{}", sub.index, start, end, sub.text).unwrap();
-        output.push('\n'); // blank line separator
+        // SRT format: index\nstart --> end\ntext\n\n (blank line between entries)
+        writeln!(output, "{}\n{} --> {}\n{}\n", sub.index, start, end, sub.text).unwrap();
     }
-    // Strip trailing blank line from the last entry
-    output.pop();
     output
 }
 
@@ -273,16 +269,24 @@ fn export_as_lrc(subtitles: &[SubtitleItem]) -> String {
 }
 
 fn export_as_csv(subtitles: &[SubtitleItem]) -> String {
+    // RFC 4180 compliant CSV: fields with commas/quotes must be quoted,
+    // and embedded quotes must be doubled.
     let mut output = String::from("Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence\n");
     for sub in subtitles {
-        // CSV escape per RFC 4180: wrap in quotes, double embedded quotes, also
-        // escape commas (they would otherwise split fields even inside quotes).
-        let escaped = format!(
-            "\"{}\"",
-            sub.text
-                .replace("\"", "\"\"")
-                .replace(",", "&#44;") // escape commas to prevent field splitting
-        );
+        // Escape text field: double embedded quotes, then wrap in quotes if needed
+        let text_escaped = sub.text
+            .replace("\"", "\"\"");
+        // Wrap in quotes if contains comma, quote, or newline
+        let needs_quoting = text_escaped.contains(',')
+            || text_escaped.contains('"')
+            || text_escaped.contains('\n')
+            || text_escaped.contains('\r');
+        let text_field = if needs_quoting {
+            format!("\"{}\"", text_escaped)
+        } else {
+            text_escaped
+        };
+
         output.push_str(&format!(
             "{},{:.3},{:.3},{},{},{},{:.3}\n",
             sub.index,
@@ -290,7 +294,7 @@ fn export_as_csv(subtitles: &[SubtitleItem]) -> String {
             sub.end_time,
             sub.start_frame,
             sub.end_frame,
-            escaped,
+            text_field,
             sub.confidence
         ));
     }

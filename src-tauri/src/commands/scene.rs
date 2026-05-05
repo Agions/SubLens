@@ -186,35 +186,54 @@ pub async fn calculate_frame_similarity(
         return Err("Frame data is empty".to_string());
     }
 
-    // Calculate histogram-based similarity
-    let sample_count = (frame1_data.len() / 4).min(1000);
-    if sample_count == 0 {
+    // Use RGB histogram bins for faster, more robust comparison.
+    // 32 bins per channel = 32768 total bins, but we use 16 per channel (4096 total)
+    // for better speed while maintaining good accuracy.
+    const HIST_BINS: usize = 16;
+    const HIST_SIZE: usize = HIST_BINS * HIST_BINS * HIST_BINS;
+
+    let pixel_count = frame1_data.len() / 4;
+    if pixel_count == 0 {
         return Ok(1.0);
     }
 
-    let step = ((frame1_data.len() / 4) / sample_count).max(1);
-    let mut total_diff = 0f32;
+    let mut hist1 = vec![0u32; HIST_SIZE];
+    let mut hist2 = vec![0u32; HIST_SIZE];
 
-    for i in 0..sample_count {
-        let idx = i * step * 4;
-        if idx + 3 >= frame1_data.len() {
-            break;
-        }
-
-        let r1 = frame1_data[idx] as f32;
-        let g1 = frame1_data[idx + 1] as f32;
-        let b1 = frame1_data[idx + 2] as f32;
-
-        let r2 = frame2_data[idx] as f32;
-        let g2 = frame2_data[idx + 1] as f32;
-        let b2 = frame2_data[idx + 2] as f32;
-
-        let diff = ((r1 - r2).powi(2) + (g1 - g2).powi(2) + (b1 - b2).powi(2)).sqrt();
-        total_diff += diff;
+    // Build histograms - iterate over every pixel (RGBA)
+    for chunk in frame1_data.chunks_exact(4) {
+        let r = (chunk[0] / (256 / HIST_BINS) as u8) as usize;
+        let g = (chunk[1] / (256 / HIST_BINS) as u8) as usize;
+        let b = (chunk[2] / (256 / HIST_BINS) as u8) as usize;
+        hist1[r * HIST_BINS * HIST_BINS + g * HIST_BINS + b] += 1;
     }
 
-    let avg_diff = total_diff / sample_count as f32;
-    let similarity = 1.0 - (avg_diff / 441.67).min(1.0); // Max RGB distance
+    for chunk in frame2_data.chunks_exact(4) {
+        let r = (chunk[0] / (256 / HIST_BINS) as u8) as usize;
+        let g = (chunk[1] / (256 / HIST_BINS) as u8) as usize;
+        let b = (chunk[2] / (256 / HIST_BINS) as u8) as usize;
+        hist2[r * HIST_BINS * HIST_BINS + g * HIST_BINS + b] += 1;
+    }
+
+    // Normalize histograms to probability distributions
+    let norm1: Vec<f32> = hist1.iter().map(|&c| c as f32 / pixel_count as f32).collect();
+    let norm2: Vec<f32> = hist2.iter().map(|&c| c as f32 / pixel_count as f32).collect();
+
+    // Compute Bhattacharyya coefficient (good for histogram comparison)
+    let mut bc_sum = 0.0f32;
+    for i in 0..HIST_SIZE {
+        if norm1[i] > 0.0 && norm2[i] > 0.0 {
+            bc_sum += (norm1[i] * norm2[i]).sqrt();
+        }
+    }
+
+    // Bhattacharyya distance: -ln(BC) clamped to [0, 1]
+    let similarity = if bc_sum > 0.0 {
+        let dist = (-bc_sum.ln()).clamp(0.0, 1.0);
+        1.0 - dist
+    } else {
+        0.0 // Completely different
+    };
 
     Ok(similarity)
 }

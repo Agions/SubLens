@@ -221,8 +221,9 @@ def main():
         roi = config.get("roi", None)
         
         # Handle ROI cropping — always clean up temp file even on error
+        base64_temp_path = None  # Track base64-derived temp separately
+        roi_temp_path = None     # Track ROI-cropped temp separately
         if image_path and roi:
-            tmp_path = None
             try:
                 from PIL import Image
                 img = Image.open(image_path)
@@ -235,43 +236,40 @@ def main():
                 cropped = img.crop((x, y, min(x+rw, w), min(y+rh, h)))
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
                     cropped.save(tmp.name)
-                    tmp_path = tmp.name
-                image_path = tmp_path
+                    roi_temp_path = tmp.name
+                image_path = roi_temp_path
             except Exception as e:
                 # Clean up temp file on error before exiting
-                if tmp_path:
-                    try: os.unlink(tmp_path)
+                if roi_temp_path:
+                    try: os.unlink(roi_temp_path)
                     except: pass
                 print(json.dumps({"success": False, "error": f"ROI cropping failed: {e}"}))
                 sys.exit(1)
 
         # Handle base64 image data — always clean up temp file even on error
         if not image_path and image_data_b64:
-            tmp_path = None
             try:
                 img_bytes = base64.b64decode(image_data_b64)
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
                     tmp.write(img_bytes)
-                    tmp_path = tmp.name
-                image_path = tmp_path
+                    base64_temp_path = tmp.name
+                image_path = base64_temp_path
             except Exception as e:
-                if tmp_path:
-                    try: os.unlink(tmp_path)
+                if base64_temp_path:
+                    try: os.unlink(base64_temp_path)
                     except: pass
                 print(json.dumps({"success": False, "error": f"Base64 decode failed: {e}"}))
                 sys.exit(1)
-        # Track temp file so we clean it up regardless of success/failure.
-        # Only the base64 path is our temp file; ROI reuses the caller's image_path.
-        base64_temp_path = image_path if (not image_path and image_data_b64) else None
 
         result = run_paddleocr(image_path, language, use_gpu, return_words)
 
-        # Clean up base64 temp file (ROI temp is cleaned in its own except block)
-        if base64_temp_path and os.path.exists(base64_temp_path):
-            try:
-                os.unlink(base64_temp_path)
-            except Exception:
-                pass  # Best-effort
+        # Clean up temp files — both ROI-cropped and base64-derived temps
+        for tmp_path in [roi_temp_path, base64_temp_path]:
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass  # Best-effort
 
         print(json.dumps(result, ensure_ascii=False))
         return
