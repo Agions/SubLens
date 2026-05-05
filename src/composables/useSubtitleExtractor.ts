@@ -258,22 +258,20 @@ export function useSubtitleExtractor() {
       // 转换回 SubtitleItem（需要 id, index 等完整字段）
       // Build index once — O(n), then each map lookup is O(1) instead of O(n)
       // Deduplicate rawSubs to avoid key collisions in the index
+      // _normKey: stable normalized key for time-based dedup (avoids repeated Math.round)
+      const _normKey = (r: { startTime: number; text: string }) =>
+        `${(Math.round(r.startTime * 1000) / 1000).toFixed(3)}#${r.text}`
       const seen = new Set<string>()
       const deduped = rawSubs.filter(r => {
-        const nStart = Math.round(r.startTime * 1000) / 1000
-        const key = `${nStart}#${r.text}`
+        const key = _normKey(r)
         if (seen.has(key)) return false
         seen.add(key)
         return true
       })
-      const rawIndex = new Map(deduped.map(r => {
-        const nStart = Math.round(r.startTime * 1000) / 1000
-        return [`${nStart}#${r.text}`, r]
-      }))
+      const rawIndex = new Map(deduped.map(r => [_normKey(r), r]))
       subtitleStore.setSubtitles(
         cleaned.map((s, i) => {
-          const nStart = Math.round(s.startTime * 1000) / 1000
-          const match = rawIndex.get(`${nStart}#${s.text}`)
+          const match = rawIndex.get(_normKey(s))
           // Use crypto.randomUUID() to avoid ID collisions in batch processing
           // Fallback format: sub-{startFrame}-{startTimeMs}-{cleanIndex}
           const id = match
