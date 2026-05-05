@@ -1,6 +1,3 @@
-/// Maximum image size to prevent OOM (16MB)
-const MAX_IMAGE_SIZE_BYTES: usize = 16 * 1024 * 1024;
-
 //! OCR Engine unified interface.
 //!
 //! This module provides a **unified interface** for multiple OCR backends:
@@ -31,6 +28,9 @@ const MAX_IMAGE_SIZE_BYTES: usize = 16 * 1024 * 1024;
 //! ```bash
 //! pip install paddlepaddle paddleocr
 //! ```
+
+/// Maximum image size to prevent OOM (16MB)
+const MAX_IMAGE_SIZE_BYTES: usize = 16 * 1024 * 1024;
 
 use base64::Engine;
 use image::{ImageBuffer, Rgba};
