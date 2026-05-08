@@ -21,7 +21,7 @@
 //! comparison for frames that don't involve scene cuts.
 
 use serde::{Deserialize, Serialize};
-use std::path::Path as _;
+use std::path::Path;
 
 /// Maximum frame size to prevent OOM attacks (16MB = 1920x1080 RGBA)
 const MAX_FRAME_SIZE_BYTES: usize = 16 * 1024 * 1024;
