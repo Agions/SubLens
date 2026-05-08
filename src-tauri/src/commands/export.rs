@@ -365,7 +365,7 @@ pub async fn export_multiple_formats(
         let output_path = dir.join(&filename);
         
         let export_format = ExportFormat::from_str(&ext);
-        match export_subtitles(subtitles.clone(), export_format, output_path.to_string()).await {
+        match export_subtitles(subtitles.clone(), export_format, output_path.to_string_lossy().to_string()).await {
             Ok(path) => outputs.push(path),
             Err(e) => {
                 tracing::warn!("Failed to export {}: {}", ext, e);

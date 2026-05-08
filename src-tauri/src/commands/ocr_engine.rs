@@ -36,9 +36,7 @@ use base64::Engine;
 use image::{ImageBuffer, Rgba};
 use std::collections::HashMap;
 use std::time::Instant;
-use tokio::io::AsyncWriteExt;
-
-use super::types::{BoundingBox, OCRConfig, OCRProcessResult, OCRResultItem};
+use super::types::{BoundingBox, OCRProcessResult, OCRResultItem};
 use super::utils::{find_python_binary, find_script, uuid_v4};
 
 /// Language code mapper: application code -> Tesseract code.
