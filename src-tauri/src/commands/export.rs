@@ -132,9 +132,10 @@ where
     for sub in subtitles {
         let start = format_ts(sub.start_time);
         let end = format_ts(sub.end_time);
+        // write! to a locally-owned pre-allocated String never fails at runtime
+        // (std::fmt::Write::write_fmt only returns Err on OutOfMemory, which panics)
         use std::fmt::Write;
-        // String writeln to pre-allocated buffer never fails (Ok write to valid String)
-        let _ = writeln!(output, "{}\n{} --> {}\n{}\n", sub.index, start, end, sub.text);
+        write!(output, "{}\n{} --> {}\n{}\n", sub.index, start, end, sub.text).unwrap();
     }
     output
 }
@@ -164,9 +165,7 @@ fn export_as_sbv(subtitles: &[SubtitleItem]) -> String {
     for sub in subtitles {
         let start = format_timestamp_sbv(sub.start_time);
         let end = format_timestamp_sbv(sub.end_time);
-        use std::fmt::Write;
-        // String writeln to pre-allocated buffer never fails
-        let _ = writeln!(output, "{},{}\n{}\n\n", start, end, sub.text);
+        write!(output, "{},{}\n{}\n\n", start, end, sub.text).unwrap();
     }
     output
 }
