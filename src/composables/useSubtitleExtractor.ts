@@ -19,7 +19,7 @@ import { ERR_NO_VIDEO } from '@/utils/constants'
 import { useVideoPlayer } from './useVideoPlayer'
 import { useOCREngine } from './useOCREngine'
 import type { OCRConfig } from '@/types'
-import type { SubtitleLite } from '@/types/subtitle'
+import type { SubtitleLite, SubtitleItem } from '@/types/subtitle'
 import {
   SubtitlePipeline,
   SceneDetector,
@@ -27,6 +27,47 @@ import {
   langToScript,
 } from '@/core'
 import { pixelLuma } from '@/utils/math'
+
+/**
+ * ROI 类型（从 project store 共享）
+ */
+type ROI = { x: number; y: number; width: number; height: number }
+
+/**
+ * 提取选项类型
+ */
+interface ExtractOptions {
+  languages: string[]
+  confidenceThreshold: number
+  frameInterval: number
+}
+
+/**
+ * 将 SubtitleLite 转换为 SubtitleItem 的工厂函数
+ * 消除两处重复的对象字面量创建代码
+ */
+function _toSubtitleItem(
+  s: SubtitleLite,
+  i: number,
+  lang: string,
+  roi: ROI,
+  idPrefix: string,
+): SubtitleItem {
+  return {
+    id: `${idPrefix}${s.startFrame}-${Math.round(s.startTime * 1000)}-${i}`,
+    index: i + 1,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    startFrame: s.startFrame,
+    endFrame: s.endFrame,
+    text: s.text,
+    confidence: s.confidence,
+    language: lang,
+    roi,
+    thumbnailUrls: [],
+    edited: false,
+  }
+}
 
 
 /**
@@ -271,46 +312,16 @@ export function useSubtitleExtractor() {
         rawIndex.set(key, r)
       }
       subtitleStore.setSubtitles(
-        cleaned.map((s, i) => {
-          const match = rawIndex.get(_normKey(s))
-          // Use crypto.randomUUID() to avoid ID collisions in batch processing
-          // Fallback format: sub-{startFrame}-{startTimeMs}-{cleanIndex}
-          const id = match
-            ? `sub-${s.startFrame}-${Math.round(s.startTime * 1000)}-${i}`
-            : `sub-${i}`
-          return {
-            id,
-            index: i + 1,
-            startTime: s.startTime,
-            endTime: s.endTime,
-            startFrame: s.startFrame,
-            endFrame: s.endFrame,
-            text: s.text,
-            confidence: s.confidence,
-            language: opts.languages[0],
-            roi,
-            thumbnailUrls: [],
-            edited: false,
-          }
-        })
+        cleaned.map((s, i) =>
+          _toSubtitleItem(s, i, opts.languages[0], roi, 'sub-')
+        )
       )
     } else {
       // 无需后处理，直接设置
       subtitleStore.setSubtitles(
-        rawSubs.map((s, i) => ({
-          id: `sub-${s.startFrame}-${Date.now()}-${i}`,
-          index: i + 1,
-          startTime: s.startTime,
-          endTime: s.endTime,
-          startFrame: s.startFrame,
-          endFrame: s.endFrame,
-          text: s.text,
-          confidence: s.confidence,
-          language: opts.languages[0],
-          roi,
-          thumbnailUrls: [],
-          edited: false,
-        }))
+        rawSubs.map((s, i) =>
+          _toSubtitleItem(s, i, opts.languages[0], roi, `sub-raw-`)
+        )
       )
     }
 

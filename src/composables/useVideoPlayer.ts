@@ -180,28 +180,26 @@ export function useVideoPlayer() {
     return _captureCtx.value
   }
 
-  // Frame capture
-  function captureFrame(): ImageData | null {
+  // Frame capture — 统一入口，减少 captureFrame / captureFrameAsDataURL 的 null-check 重复
+  function _captureToCanvas(): { ctx: CanvasRenderingContext2D; width: number; height: number } | null {
     if (!videoRef.value || !isReady.value) return null
-
     const width = videoRef.value.videoWidth
     const height = videoRef.value.videoHeight
     const ctx = _ensureCaptureCanvas(width, height)
     if (!ctx) return null
-
     ctx.drawImage(videoRef.value, 0, 0)
-    return ctx.getImageData(0, 0, width, height)
+    return { ctx, width, height }
+  }
+
+  function captureFrame(): ImageData | null {
+    const result = _captureToCanvas()
+    if (!result) return null
+    return result.ctx.getImageData(0, 0, result.width, result.height)
   }
 
   function captureFrameAsDataURL(): string | null {
-    if (!videoRef.value || !isReady.value) return null
-
-    const width = videoRef.value.videoWidth
-    const height = videoRef.value.videoHeight
-    const ctx = _ensureCaptureCanvas(width, height)
-    if (!ctx) return null
-
-    ctx.drawImage(videoRef.value, 0, 0)
+    const result = _captureToCanvas()
+    if (!result) return null
     return _captureCanvas.value!.toDataURL(MIME_IMAGE_PNG)
   }
 
