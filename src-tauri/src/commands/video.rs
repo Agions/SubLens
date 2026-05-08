@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::Path as _;
 
 use super::types::ROI;
 use super::utils::{

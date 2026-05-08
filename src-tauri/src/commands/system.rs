@@ -15,7 +15,7 @@
 //! Falls back to default values if version cannot be parsed.
 
 use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
+use std::sync::OnceLock as _;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemDependency {

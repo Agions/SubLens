@@ -25,7 +25,7 @@
 //! - **ASS/SSA**: `HH:MM:SS.cc` (centiseconds)
 
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::Path as _;
 
 use super::types::ROI;
 use chrono::Local;

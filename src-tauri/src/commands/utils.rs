@@ -195,18 +195,6 @@ pub fn uuid_v4() -> String {
     Uuid::new_v4().to_string()
 }
 
-/// Get the path to a temp directory for this application.
-pub fn temp_dir() -> PathBuf {
-    std::env::temp_dir().join("sublens")
-}
-
-/// Build a temp file path under the application temp directory.
-pub fn temp_path(suffix: &str) -> PathBuf {
-    let dir = temp_dir();
-    let _ = std::fs::create_dir_all(&dir);
-    dir.join(format!("sublens_{}_{}", uuid_v4(), suffix))
-}
-
 /// Find Python3/Python executable in PATH (async).
 /// Now uses a cached static — the Python binary never changes at runtime.
 pub async fn find_python_binary() -> Result<PathBuf, String> {
