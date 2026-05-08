@@ -9,9 +9,7 @@ import { useNotification } from '@/composables/useNotification'
 
 const { error: notifyError } = useNotification()
 
-defineProps<{
-  open?: boolean
-}>()
+defineProps()
 
 const emit = defineEmits<{
   (e: 'close'): void
