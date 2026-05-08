@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useROITab } from '@/composables/useROITab'
+import { useROI } from '@/composables/useROI'
 
-const { roiPresets, selectedROI, selectPreset } = useROITab()
+const { roiPresets, selectedROI, selectPreset } = useROI()
 </script>
 
 <template>

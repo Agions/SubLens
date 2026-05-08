@@ -2,7 +2,7 @@
 import { ref, inject } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useFileOperations } from '@/composables/useFileOperations'
+import { useFile } from '@/composables/useFile'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useVideoMetadata } from '@/composables/useVideoMetadata'
 import { useTheme } from '@/composables/useTheme'
@@ -15,7 +15,7 @@ const { error: notifyError } = useNotification()
 const { currentTheme, toggleTheme } = useTheme()
 
 // Composable instances - created once at setup level for proper state sharing
-const fileOps = useFileOperations()
+const fileOps = useFile()
 const videoPlayer = useVideoPlayer()
 const { getVideoMetadata } = useVideoMetadata()
 

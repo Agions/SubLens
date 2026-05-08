@@ -8,7 +8,7 @@ export interface FileInfo {
   is_dir: boolean
 }
 
-export function useFileOperations() {
+export function useFile() {
   // Open file dialog
   async function openFileDialog(title: string = 'Select File'): Promise<string | null> {
     try {

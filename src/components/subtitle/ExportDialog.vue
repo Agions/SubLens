@@ -4,7 +4,7 @@ import { type ExportFormat } from '@/core'
 import Modal from '@/components/common/Modal.vue'
 import Button from '@/components/common/Button.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useFileOperations } from '@/composables/useFileOperations'
+import { useFile } from '@/composables/useFile'
 import { useNotification } from '@/composables/useNotification'
 
 const { error: notifyError } = useNotification()
@@ -34,7 +34,7 @@ function openDialog() {
 defineExpose({ open: openDialog, close })
 
 const subtitleStore = useSubtitleStore()
-const fileOps = useFileOperations()
+const fileOps = useFile()
 
 const selectedFormats = computed(() => {
   return Object.entries(subtitleStore.exportFormats)

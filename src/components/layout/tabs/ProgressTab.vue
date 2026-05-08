@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { useProgressTab } from '@/composables/useProgressTab'
+import { useProgress } from '@/composables/useProgress'
 import { useSubtitleStore } from '@/stores/subtitle'
 
 interface ExtractionSession {
@@ -8,7 +8,7 @@ interface ExtractionSession {
 }
 
 const subtitleExtractor = inject<ExtractionSession | null>('subtitleExtractor')
-const { extractSpeed } = useProgressTab()
+const { extractSpeed } = useProgress()
 const subtitleStore = useSubtitleStore()
 
 const isExtracting = subtitleExtractor?.isExtracting ?? { value: false }

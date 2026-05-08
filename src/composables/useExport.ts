@@ -1,12 +1,12 @@
 /**
- * useExportTab - Export tab state and logic
+ * useExport - Export tab state and logic
  * Extracted from SidePanel.vue Export tab
  */
 import { ref, computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 import type { ExportFormats } from '@/types/subtitle'
 
-export function useExportTab() {
+export function useExport() {
   const subtitleStore = useSubtitleStore()
   const openExportDialog = ref<(() => void) | null>(null)
 

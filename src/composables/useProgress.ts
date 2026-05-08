@@ -1,12 +1,12 @@
 /**
- * useProgressTab - Progress tab state and logic
+ * useProgress - Progress tab state and logic
  * Extracted from SidePanel.vue Progress tab
  */
 import { computed } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 
-export function useProgressTab() {
+export function useProgress() {
   const projectStore = useProjectStore()
   const subtitleStore = useSubtitleStore()
 

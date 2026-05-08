@@ -1,6 +1,6 @@
 /**
  * Confidence level utilities
- * Consolidated from video.ts and useSubtitleList.util.test.ts
+ * Consolidated from video.ts and useSubtitleList.test.ts
  */
 
 import {

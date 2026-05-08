@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useSettingsTab } from '@/composables/useSettingsTab'
+import { useSettings } from '@/composables/useSettings'
 import { useProjectStore } from '@/stores/project'
 
-const { localSettings, systemDeps, handleThemeChange } = useSettingsTab()
+const { localSettings, systemDeps, handleThemeChange } = useSettings()
 const projectStore = useProjectStore()
 </script>
 

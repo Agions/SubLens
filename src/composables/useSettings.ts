@@ -1,5 +1,5 @@
 /**
- * useSettingsTab - Settings tab state and logic
+ * useSettings - Settings tab state and logic
  * Extracted from SidePanel.vue Settings tab
  */
 import { ref, watch, onMounted, computed } from 'vue'
@@ -7,7 +7,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useTheme } from '@/composables/useTheme'
 import { useSystemCheck } from '@/composables/useSystemCheck'
 
-export function useSettingsTab() {
+export function useSettings() {
   const settingsStore = useSettingsStore()
   const { setTheme } = useTheme()
   const { checkDependencies, lastResult } = useSystemCheck()

@@ -1,5 +1,5 @@
 /**
- * useOCRTab - OCR tab state and logic
+ * useOCR - OCR tab state and logic
  * Extracted from SidePanel.vue OCR tab
  */
 import { ref, computed } from 'vue'
@@ -18,7 +18,7 @@ export interface OCREngineInfo {
   description: string
 }
 
-export function useOCRTab() {
+export function useOCR() {
   const projectStore = useProjectStore()
 
   // OCR Engine definitions

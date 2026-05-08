@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useOCRTab } from '@/composables/useOCRTab'
+import { useOCR } from '@/composables/useOCR'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { useProjectStore } from '@/stores/project'
 
@@ -24,7 +24,7 @@ const {
   setMergeThreshold,
   setSceneThreshold,
   setFrameInterval,
-} = useOCRTab()
+} = useOCR()
 
 const subtitleStore = useSubtitleStore()
 
