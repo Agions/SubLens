@@ -1,5 +1,5 @@
 /**
- * useProgress - Progress tab state and logic
+ * useProgress - Progress state
  * Extracted from SidePanel.vue Progress tab
  */
 import { computed } from 'vue'

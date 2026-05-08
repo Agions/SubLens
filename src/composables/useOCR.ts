@@ -1,5 +1,5 @@
 /**
- * useOCR - OCR tab state and logic
+ * useOCR - OCR tab state
  * Extracted from SidePanel.vue OCR tab
  */
 import { ref, computed } from 'vue'

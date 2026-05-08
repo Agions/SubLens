@@ -1,5 +1,5 @@
 /**
- * useROI - ROI tab state and logic
+ * useROI - ROI state
  * Extracted from SidePanel.vue ROI tab
  */
 import { computed } from 'vue'

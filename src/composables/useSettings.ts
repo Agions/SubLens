@@ -1,5 +1,5 @@
 /**
- * useSettings - Settings tab state and logic
+ * useSettings - Settings state
  * Extracted from SidePanel.vue Settings tab
  */
 import { ref, watch, onMounted, computed } from 'vue'
