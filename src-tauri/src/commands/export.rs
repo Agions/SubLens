@@ -133,7 +133,8 @@ where
         let start = format_ts(sub.start_time);
         let end = format_ts(sub.end_time);
         use std::fmt::Write;
-        writeln!(output, "{}\n{} --> {}\n{}\n", sub.index, start, end, sub.text).unwrap();
+        // String writeln to pre-allocated buffer never fails (Ok write to valid String)
+        let _ = writeln!(output, "{}\n{} --> {}\n{}\n", sub.index, start, end, sub.text);
     }
     output
 }
@@ -163,7 +164,9 @@ fn export_as_sbv(subtitles: &[SubtitleItem]) -> String {
     for sub in subtitles {
         let start = format_timestamp_sbv(sub.start_time);
         let end = format_timestamp_sbv(sub.end_time);
-        writeln!(output, "{},{}\n{}\n", start, end, sub.text).unwrap();
+        use std::fmt::Write;
+        // String writeln to pre-allocated buffer never fails
+        let _ = writeln!(output, "{},{}\n{}\n\n", start, end, sub.text);
     }
     output
 }
