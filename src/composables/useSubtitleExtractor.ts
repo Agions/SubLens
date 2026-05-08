@@ -283,21 +283,6 @@ export function useSubtitleExtractor() {
     // ── 后处理管道 ─────────────────────────────────────────
     if (opts.mergeSubtitles && rawSubs.length > 0) {
       const cleaned = pipeline.process(rawSubs)
-
-      // Build index in one pass — O(n), deduplicate + Map construction combined
-      // Avoids calling _normKey twice (filter loop + Map loop)
-      const _normKey = (r: { startTime: number; text: string }) =>
-        `${(Math.round(r.startTime * 1000) / 1000).toFixed(3)}#${r.text}`
-      const seen = new Set<string>()
-      const deduped: SubtitleLite[] = []
-      const rawIndex = new Map<string, SubtitleLite>()
-      for (const r of rawSubs) {
-        const key = _normKey(r)
-        if (seen.has(key)) continue
-        seen.add(key)
-        deduped.push(r)
-        rawIndex.set(key, r)
-      }
       subtitleStore.setSubtitles(
         cleaned.map((s, i) =>
           _toSubtitleItem(s, i, opts.languages[0], roi, 'sub-')
