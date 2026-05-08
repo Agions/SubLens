@@ -248,19 +248,7 @@ pub async fn ocr_image_tesseract(
 
     let start = Instant::now();
 
-    // First, try using native Rust tesseract crate if available
-    if let Ok(result) = try_native_tesseract(&image_path, &language) {
-        let processing_time_ms = start.elapsed().as_millis() as u64;
-        return Ok(OCRProcessResult {
-            items: result.0,
-            full_text: result.1,
-            language_detected: language.clone(),
-            processing_time_ms,
-        });
-    }
-
-    // Fallback to CLI tesseract
-    tracing::info!("Native tesseract crate not available, using CLI");
+    // CLI tesseract
 
     // Determine tesseract binary path
     let tesseract = tesseract_path.unwrap_or_else(|| "tesseract".to_string());
@@ -369,25 +357,6 @@ pub async fn ocr_image_tesseract(
         language_detected,
         processing_time_ms,
     })
-}
-
-/// Try native Rust tesseract bindings (requires tesseract-sys crate)
-/// Returns Ok with (items, full_text) or Err if not available
-#[allow(dead_code)]
-fn try_native_tesseract(image_path: &str, language: &str) -> Result<(Vec<OCRResultItem>, String), String> {
-    // Native tesseract requires the "tesseract" feature flag in Cargo.toml
-    // and tesseract-sys + tesseract crates to be available.
-    //
-    // To enable native tesseract:
-    // 1. Add to Cargo.toml: tesseract = { version = "0.4", optional = true }
-    // 2. Enable in src-tauri: tesseract = ["tesseract"]
-    //
-    // For now, this always falls back to CLI tesseract.
-    tracing::debug!(
-        "Native tesseract not available for {} with lang {}. Using CLI fallback.",
-        image_path, language
-    );
-    Err("Native tesseract feature not enabled. Set `tesseract = [\"tesseract\"]` in Cargo.toml".to_string())
 }
 
 /// Process an image with PaddleOCR via Python bridge script.

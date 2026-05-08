@@ -232,7 +232,7 @@ Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 fn export_as_json(subtitles: &[SubtitleItem]) -> Result<String, String> {
     let output = serde_json::json!({
         "version": "3.0",
-        "generatedAt": chrono_lite_now(),
+        "generatedAt": Local::now().to_rfc3339(),
         "tool": "SubLens",
         "subtitleCount": subtitles.len(),
         "subtitles": subtitles.iter().map(|sub| {
@@ -305,10 +305,6 @@ fn export_as_csv(subtitles: &[SubtitleItem]) -> String {
         ));
     }
     output
-}
-
-fn chrono_lite_now() -> String {
-    Local::now().to_rfc3339()
 }
 
 #[tauri::command]

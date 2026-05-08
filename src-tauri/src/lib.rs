@@ -51,7 +51,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod commands;
 
-// Explicitly re-export only specific items to avoid duplicate detect_scenes
+// Explicit re-exports of all public Tauri commands
 pub use commands::file::{get_file_info, open_file_dialog, read_text_file, save_file_dialog, write_text_file};
 pub use commands::ocr_engine::{
     check_paddle_ocr_available, get_available_ocr_engines, get_ocr_engine_info,

@@ -614,11 +614,4 @@ function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
   return canvas
 }
 
-/**
- * Helper: Convert canvas to ImageData
- */
-export function canvasToImageData(canvas: HTMLCanvasElement): ImageData {
-  const ctx = canvas.getContext(CANVAS_CONTEXT_2D)
-  if (!ctx) throw new Error(ERR_CANVAS_CTX_2D)
-  return ctx.getImageData(0, 0, canvas.width, canvas.height)
-}
+
