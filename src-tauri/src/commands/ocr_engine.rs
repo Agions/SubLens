@@ -587,7 +587,7 @@ pub async fn process_paddle_ocr(
 #[tauri::command]
 pub async fn check_paddle_ocr_available() -> serde_json::Value {
     let python = match find_python_binary().await {
-        Ok(p) => p.to_string_lossy().to_string(),
+        Ok(p) => p.to_string(),
         Err(e) => {
             return serde_json::json!({
                 "available": false,
@@ -598,7 +598,7 @@ pub async fn check_paddle_ocr_available() -> serde_json::Value {
     };
 
     let script_path = match find_script("paddle_ocr.py") {
-        Ok(p) => p.to_string_lossy().to_string(),
+        Ok(p) => p.to_string(),
         Err(e) => {
             return serde_json::json!({
                 "available": false,
@@ -674,7 +674,7 @@ pub async fn ocr_base64_image(
 
     // Process with Tesseract CLI
     let result = ocr_image_tesseract(
-        temp_path.to_string_lossy().to_string(),
+        temp_path.to_string(),
         language,
         None,
     ).await;

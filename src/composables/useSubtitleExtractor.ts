@@ -160,6 +160,25 @@ export function useSubtitleExtractor() {
     extractedCount.value = 0
     totalFrames.value = projectStore.videoMeta.totalFrames
 
+    // 提取循环外预计算（避免每帧重复计算）
+    const fps = projectStore.videoMeta.fps
+    const lang = opts.languages[0]
+    const confThreshold = opts.confidenceThreshold
+
+    // 统一的校准+验证 — 提升到循环外，避免每帧重新创建函数对象
+    const _calibrateAndValidate = (
+      text: string,
+      confidence: number,
+    ): { text: string; confidence: number } | null => {
+      const trimmed = text.trim()
+      if (!trimmed) return null
+      const { confidence: calibrated } = calibrator.calibrateEnhanced(
+        trimmed, confidence, langToScript(lang),
+      )
+      if (calibrated < confThreshold) return null
+      return { text: trimmed, confidence: calibrated }
+    }
+
     // 构建 OCR 配置
     const ocrConfig: OCRConfig = {
       engine: opts.ocrEngine,
@@ -221,21 +240,7 @@ export function useSubtitleExtractor() {
 
       // ── OCR 识别 ─────────────────────────────────────
       try {
-        // 统一的校准+验证辅助函数 — 消除多通道/单通道 OCR 分支重复代码
         let result: { text: string; confidence: number } | null = null
-        const _calibrateAndValidate = (
-          text: string,
-          confidence: number,
-        ): { text: string; confidence: number } | null => {
-          const trimmed = text.trim()
-          if (!trimmed) return null
-          const lang = opts.languages[0]
-          const { confidence: calibrated } = calibrator.calibrateEnhanced(
-            trimmed, confidence, langToScript(lang),
-          )
-          if (calibrated < opts.confidenceThreshold) return null
-          return { text: trimmed, confidence: calibrated }
-        }
 
         if (opts.multiPass && opts.postProcess) {
           // 多通道 OCR
@@ -256,7 +261,6 @@ export function useSubtitleExtractor() {
         }
 
         if (result) {
-          const fps = projectStore.videoMeta.fps
           const timestamp = frameIndex / fps
           const frameDuration = Math.max(frameInterval / fps, 2)
 
