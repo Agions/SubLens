@@ -1,12 +1,11 @@
 use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
-use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use super::types::{BoundingBox, ROI};
+use super::types::ROI;
 use super::utils::{
     parse_duration_from_ffmpeg_output, parse_fps_from_fraction, parse_stream_from_ffmpeg_output,
-    parse_time_to_seconds, uuid_v4, TempFileGuard, run_command_with_timeout,
+    uuid_v4, TempFileGuard, run_command_with_timeout,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -245,7 +244,7 @@ pub async fn extract_frames(
     } else {
         options.frame_interval
     };
-    let total_possible = ((metadata.total_frames as f64 / frame_interval as f64).ceil() as usize);
+    let total_possible = (metadata.total_frames as f64 / frame_interval as f64).ceil() as usize;
     // No hard cap — use options.max_frames if provided, else 200,000 as absolute safety max
     let max_frames = options.max_frames.unwrap_or(200_000);
     let total_extractable = total_possible.min(max_frames);

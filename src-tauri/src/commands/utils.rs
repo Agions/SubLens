@@ -162,7 +162,7 @@ impl TempFileGuard {
     /// Consumes the guard and returns the path.
     /// The temp file will NOT be automatically deleted — caller is responsible for cleanup.
     /// This is the safe alternative to std::mem::forget.
-    pub fn into_path(mut self) -> PathBuf {
+    pub fn into_path(self) -> PathBuf {
         use std::mem::ManuallyDrop;
         // Prevent Drop from running by wrapping in ManuallyDrop
         let guard = ManuallyDrop::new(self);
