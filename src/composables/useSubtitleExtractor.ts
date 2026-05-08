@@ -27,20 +27,7 @@ import {
   langToScript,
 } from '@/core'
 import { pixelLuma } from '@/utils/math'
-
-/**
- * ROI 类型（从 project store 共享）
- */
-type ROI = { x: number; y: number; width: number; height: number }
-
-/**
- * 提取选项类型
- */
-interface ExtractOptions {
-  languages: string[]
-  confidenceThreshold: number
-  frameInterval: number
-}
+import type { ROI } from '@/types/video'
 
 /**
  * 将 SubtitleLite 转换为 SubtitleItem 的工厂函数
