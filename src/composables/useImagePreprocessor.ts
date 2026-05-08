@@ -15,9 +15,6 @@
 import { clamp, pixelLuma } from '@/utils/math'
 import { CANVAS_CONTEXT_2D, MIME_IMAGE_PNG, ERR_CANVAS_CTX_2D } from '@/utils/constants'
 
-// Re-export for backwards compatibility (used by test files)
-export { clamp }
-
 export interface PreprocessorConfig {
   /** Scale factor for upscaling small images (default: 2.0) */
   scaleFactor: number

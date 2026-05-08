@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import {
-  toGrayscale,
-  enhanceContrast,
-  clamp,
-  boxBlur,
-} from './useImagePreprocessor'
+import { toGrayscale, enhanceContrast, boxBlur } from './useImagePreprocessor'
+import { clamp } from '@/utils/math'
 
 // ─── ImageData factory (uses native constructor via test-setup polyfill) ────
 function makeFrame(width: number, height: number, r: number, g: number, b: number): ImageData {
