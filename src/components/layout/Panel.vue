@@ -1036,9 +1036,7 @@ watch(localSettings, (newSettings) => {
   color: $text-muted;
 }
 
-// ── Export ───────────────────────────────────────────────────
-
-// ── Export ───────────────────────────────────────────────────
+// ── Export List ────────────────────────────────────────────────
 .export-list {
   display: flex;
   @include flex-column;
