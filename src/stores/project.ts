@@ -22,6 +22,10 @@ export const useProjectStore = defineStore('project', () => {
   const isPlaying = ref(false)
   const volume = ref(1)
   const isMuted = ref(false)
+
+  // Active blob URL — tracked separately so it can be revoked on video switch/clear
+  // without affecting the displayed videoPath
+  let _activeBlobUrl: string | null = null
   
   // ROI State
   const selectedROI = ref<ROI>({
@@ -66,12 +70,21 @@ export const useProjectStore = defineStore('project', () => {
   
   // Actions
   function setVideo(path: string, meta: VideoMetadata) {
+    // Revoke the previous blob URL before creating a new one
+    if (_activeBlobUrl && path !== _activeBlobUrl) {
+      URL.revokeObjectURL(_activeBlobUrl)
+    }
+    _activeBlobUrl = path
     videoPath.value = path
     videoMeta.value = meta
     currentFrame.value = 0
   }
-  
+
   function clearVideo() {
+    if (_activeBlobUrl) {
+      URL.revokeObjectURL(_activeBlobUrl)
+      _activeBlobUrl = null
+    }
     videoPath.value = null
     videoMeta.value = null
     currentFrame.value = 0

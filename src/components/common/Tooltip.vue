@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 
 interface Props {
   content: string
@@ -28,6 +28,10 @@ function hide() {
   }
   isVisible.value = false
 }
+
+onUnmounted(() => {
+  if (timeoutId) clearTimeout(timeoutId)
+})
 
 const tooltipClass = computed(() => [
   'tooltip',

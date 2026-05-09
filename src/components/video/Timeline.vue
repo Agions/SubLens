@@ -112,6 +112,7 @@ function handleTimelineLeave() {
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleMouseMove)
   document.removeEventListener('mouseup', handleMouseUp)
+  if (thumbnailTimeout) clearTimeout(thumbnailTimeout)
 })
 
 // ── Keyboard Navigation ──────────────────────────────────────
