@@ -264,10 +264,11 @@ function stage3_mergeSimilar(subs: SubtitleLite[], opts: PipelineOptions, cache:
     const sim = textSimilarity(current.text, curr.text, cache)
 
     if (sim >= opts.similarSimilarityThreshold && gap <= opts.similarMaxGap) {
-      // 合并
+      // 合并：取时间跨度最大者 + 置信度最高者；文本优先选当前项（信息更完整）
       current.endTime = Math.max(current.endTime, curr.endTime)
       current.endFrame = Math.max(current.endFrame, curr.endFrame)
       current.confidence = Math.max(current.confidence, curr.confidence)
+      current.text = curr.text
     } else {
       result.push(current)
       current = { ...curr }

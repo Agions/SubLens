@@ -135,9 +135,13 @@ async fn detect_scenes_scenedetect(
     let threshold_arg = format!("{:.3}", threshold.clamp(0.05, 0.95));
     let min_scene_arg = min_scene_len.to_string();
 
+    let script_path = script.to_str().ok_or_else(|| {
+        format!("scene_detect.py path is not valid UTF-8: {:?}", script)
+    })?;
+
     let output = tokio::process::Command::new(&python)
         .args([
-            script.to_str().unwrap_or_default(),
+            script_path,
             path,
             &threshold_arg,
             &min_scene_arg,

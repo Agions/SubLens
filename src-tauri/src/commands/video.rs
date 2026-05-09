@@ -328,7 +328,9 @@ pub async fn extract_cropped_frame_at_time(
             "-vf", &crop_filter,
             "-vframes", "1",
             "-q:v", "2",
-            output_path.to_str().unwrap_or_default(),
+            output_path.to_str().ok_or_else(|| {
+                format!("Temp file path is not valid UTF-8: {:?}", output_path)
+            })?,
         ],
         std::time::Duration::from_secs(30),
     )
