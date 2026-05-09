@@ -39,6 +39,25 @@ use std::time::Instant;
 use super::types::{BoundingBox, OCRProcessResult, OCRResultItem};
 use super::utils::{find_python_binary, find_script, uuid_v4};
 
+/// Validate raw image buffer for OCR processing.
+/// Returns `Ok(())` if valid, or an `Err` with the validation message.
+fn validate_image_data(data: &[u8], width: u32, height: u32) -> Result<(), String> {
+    if data.len() > MAX_IMAGE_SIZE_BYTES {
+        return Err(format!(
+            "Image data too large: {} bytes (max: {}). Refusing to process.",
+            data.len(),
+            MAX_IMAGE_SIZE_BYTES
+        ));
+    }
+    if data.is_empty() {
+        return Err("Image data is empty".to_string());
+    }
+    if width == 0 || height == 0 {
+        return Err("Invalid image dimensions".to_string());
+    }
+    Ok(())
+}
+
 /// Language code mapper: application code -> Tesseract code.
 fn map_lang_to_tesseract(lang: &str) -> &'static str {
     match lang {
@@ -105,23 +124,7 @@ pub async fn process_image_ocr(
     config: OCREngineConfig,
 ) -> Result<OCRProcessResult, String> {
     tracing::info!("Processing image with {} OCR engine", config.engine);
-
-    // Security: validate input size to prevent OOM
-    if image_data.len() > MAX_IMAGE_SIZE_BYTES {
-        return Err(format!(
-            "Image data too large: {} bytes (max: {}). Refusing to process.",
-            image_data.len(),
-            MAX_IMAGE_SIZE_BYTES
-        ));
-    }
-
-    if image_data.is_empty() {
-        return Err("Image data is empty".to_string());
-    }
-
-    if width == 0 || height == 0 {
-        return Err("Invalid image dimensions".to_string());
-    }
+    validate_image_data(&image_data, width, height)?;
 
     // Dispatch to PaddleOCR if configured
     if config.engine == "paddle" {
@@ -151,20 +154,7 @@ pub async fn process_roi_ocr(
 ) -> Result<OCRProcessResult, String> {
     tracing::info!("Processing ROI ({}, {}) {}x{} with {} engine",
         roi_x, roi_y, roi_width, roi_height, config.engine);
-
-    // Security: validate input size to prevent OOM
-    if image_data.len() > MAX_IMAGE_SIZE_BYTES {
-        return Err(format!(
-            "Image data too large: {} bytes (max: {}). Refusing to process.",
-            image_data.len(),
-            MAX_IMAGE_SIZE_BYTES
-        ));
-    }
-
-    if image_data.is_empty() {
-        return Err("Image data is empty".to_string());
-    }
-
+    validate_image_data(&image_data, width, height)?;
     if roi_width == 0 || roi_height == 0 {
         return Err("ROI has invalid dimensions".to_string());
     }
@@ -199,39 +189,56 @@ pub async fn get_available_ocr_engines() -> HashMap<String, bool> {
     engines
 }
 
+#[derive(serde::Serialize)]
+struct EngineInfo {
+    name: &'static str,
+    #[serde(rename = "type")]
+    engine_type: &'static str,
+    languages: Vec<&'static str>,
+    gpu_support: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    cpu_support: Option<bool>,
+    accuracy: &'static str,
+    speed: &'static str,
+    description: &'static str,
+}
+
 #[tauri::command]
 pub fn get_ocr_engine_info(engine: String) -> Result<serde_json::Value, String> {
-    match engine.as_str() {
-        "tesseract" => Ok(serde_json::json!({
-            "name": "Tesseract.js",
-            "type": "wasm",
-            "languages": ["eng", "chi_sim", "chi_tra", "jpn", "kor", "fra", "deu", "spa", "por", "ita"],
-            "gpu_support": false,
-            "accuracy": "medium",
-            "speed": "fast",
-            "description": "Pure JavaScript OCR using WebAssembly. Works in browser without native installation."
-        })),
-        "paddle" => Ok(serde_json::json!({
-            "name": "PaddleOCR",
-            "type": "native",
-            "languages": ["ch", "en", "ja", "ko", "fr", "de", "es", "ru", "ar"],
-            "gpu_support": true,
-            "cpu_support": true,
-            "accuracy": "high",
-            "speed": "medium",
-            "description": "BAIDU's PP-OCRv3 engine. High accuracy, especially for Chinese. CPU mode fully supported (use_gpu=false). Requires Python + paddlepaddle + paddleocr packages."
-        })),
-        "easyocr" => Ok(serde_json::json!({
-            "name": "EasyOCR",
-            "type": "native",
-            "languages": ["ch", "en", "ja", "ko", "fr", "de", "es", "it", "pt", "ru"],
-            "gpu_support": true,
-            "accuracy": "high",
-            "speed": "slow",
-            "description": "Python-based OCR with broad language support. Requires Python integration."
-        })),
-        _ => Err(format!("Unknown OCR engine: {}. Available: tesseract, paddle, easyocr", engine))
-    }
+    let info = match engine.as_str() {
+        "tesseract" => EngineInfo {
+            name: "Tesseract.js",
+            engine_type: "wasm",
+            languages: vec!["eng", "chi_sim", "chi_tra", "jpn", "kor", "fra", "deu", "spa", "por", "ita"],
+            gpu_support: false,
+            cpu_support: None,
+            accuracy: "medium",
+            speed: "fast",
+            description: "Pure JavaScript OCR using WebAssembly. Works in browser without native installation.",
+        },
+        "paddle" => EngineInfo {
+            name: "PaddleOCR",
+            engine_type: "native",
+            languages: vec!["ch", "en", "ja", "ko", "fr", "de", "es", "ru", "ar"],
+            gpu_support: true,
+            cpu_support: Some(true),
+            accuracy: "high",
+            speed: "medium",
+            description: "BAIDU's PP-OCRv3 engine. High accuracy, especially for Chinese. CPU mode fully supported (use_gpu=false). Requires Python + paddlepaddle + paddleocr packages.",
+        },
+        "easyocr" => EngineInfo {
+            name: "EasyOCR",
+            engine_type: "native",
+            languages: vec!["ch", "en", "ja", "ko", "fr", "de", "es", "it", "pt", "ru"],
+            gpu_support: true,
+            cpu_support: None,
+            accuracy: "high",
+            speed: "slow",
+            description: "Python-based OCR with broad language support. Requires Python integration.",
+        },
+        _ => return Err(format!("Unknown OCR engine: {}. Available: tesseract, paddle, easyocr", engine)),
+    };
+    Ok(serde_json::to_value(info).map_err(|e| e.to_string())?)
 }
 
 /// OCR an image using Tesseract CLI (if available on the system)
@@ -378,21 +385,7 @@ pub async fn process_paddle_ocr(
         config.engine
     );
 
-    // Security: validate input size to prevent OOM
-    if image_data.len() > MAX_IMAGE_SIZE_BYTES {
-        return Err(format!(
-            "Image data too large: {} bytes (max: {}). Refusing to process.",
-            image_data.len(),
-            MAX_IMAGE_SIZE_BYTES
-        ));
-    }
-
-    if image_data.is_empty() {
-        return Err("Image data is empty".to_string());
-    }
-    if width == 0 || height == 0 {
-        return Err("Invalid image dimensions".to_string());
-    }
+    validate_image_data(&image_data, width, height)?;
 
     let start = Instant::now();
 
