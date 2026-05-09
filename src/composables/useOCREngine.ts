@@ -16,7 +16,7 @@
 import { ref, shallowRef } from 'vue'
 import type { OCRConfig, OCREngine } from '@/types/video'
 import { CANVAS_CONTEXT_2D, ERR_OCR_NOT_READY, MIME_IMAGE_PNG } from '@/utils/constants'
-import { useImagePreprocessor } from './Preprocessor'
+import { useImagePreprocessor } from './usePreprocessor'
 import { getCalibrator, langToScript } from '@/core'
 
 // ─── Canvas context guard ────────────────────────────────────────────

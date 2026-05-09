@@ -12,7 +12,7 @@
  */
 import { watch } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/SubList'
+import { useSubtitleList } from '@/composables/useSubList'
 
 // 子组件
 import Card from './Card.vue'

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useTheme } from '@/composables/useTheme'
-import { useKeyboardShortcuts } from '@/composables/Hotkeys'
-import { useSubtitleExtractor } from '@/composables/Extractor'
+import { useKeyboardShortcuts } from '@/composables/useHotkeys'
+import { useSubtitleExtractor } from '@/composables/useExtractor'
 import Toolbar from '@/components/layout/Toolbar.vue'
 import Panel from '@/components/layout/Panel.vue'
 import Video from '@/components/layout/Video.vue'

@@ -9,7 +9,7 @@ import ProgressTab from './tabs/Progress.vue'
 import ROITab from './tabs/ROI.vue'
 import OCRTab from './tabs/OCR.vue'
 import ExportTab from './tabs/Export.vue'
-import SettingsTab from './tabs/SettingsTab.vue'
+import Settings from './tabs/Settings.vue'
 
 const settingsStore = useSettingsStore()
 const { checkDependencies } = useSystemCheck()
@@ -131,8 +131,8 @@ watch(localSettings, (newSettings) => {
     <!-- ── Export Tab ────────────────────────────────────── -->
     <ExportTab v-if="activeTab === 'export'" />
 
-    <!-- ── Settings Tab (Component) ───────────────────────── -->
-    <SettingsTab v-if="activeTab === 'settings'" />
+    <!-- ── Settings Tab ────────────────────────────────────── -->
+    <Settings v-if="activeTab === 'settings'" />
   </aside>
 </template>
 

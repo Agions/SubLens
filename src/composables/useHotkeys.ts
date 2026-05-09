@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useVideoPlayer } from './Player'
+import { useVideoPlayer } from './usePlayer'
 
 export interface KeyboardShortcut {
   key: string

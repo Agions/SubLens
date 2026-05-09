@@ -6,7 +6,7 @@
 import { computed } from 'vue'
 import type { SubtitleItem } from '@/types/subtitle'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/SubList'
+import { useSubtitleList } from '@/composables/useSubList'
 import { getConfidenceLevel } from '@/utils/confidence'
 
 const props = defineProps<{
