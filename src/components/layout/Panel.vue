@@ -4,11 +4,11 @@ import { useSettingsStore } from '@/stores/settings'
 import { useSystemCheck } from '@/composables/useSystemCheck'
 
 // Tab components
-import FilesTab from './tabs/FilesTab.vue'
-import ProgressTab from './tabs/ProgressTab.vue'
-import ROITab from './tabs/ROITab.vue'
-import OCRTab from './tabs/OCRTab.vue'
-import ExportTab from './tabs/ExportTab.vue'
+import FilesTab from './tabs/Files.vue'
+import ProgressTab from './tabs/Progress.vue'
+import ROITab from './tabs/ROI.vue'
+import OCRTab from './tabs/OCR.vue'
+import ExportTab from './tabs/Export.vue'
 import SettingsTab from './tabs/SettingsTab.vue'
 
 const settingsStore = useSettingsStore()
