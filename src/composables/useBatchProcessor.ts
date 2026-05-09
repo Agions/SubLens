@@ -89,7 +89,7 @@ export function useBatchProcessor() {
       status: 'pending',
       progress: 0
     }))
-    
+
     jobs.value.push(...newJobs)
     return newJobs
   }
@@ -159,44 +159,45 @@ export function useBatchProcessor() {
 
   async function processJob(job: BatchJob, options: BatchOptions) {
     const jobStart = Date.now()
+
+    // 1. Get video metadata via Tauri backend
+    job.progress = 5
+    job.stageLabel = '读取视频元数据'
+    const videoMeta = await invoke<{
+      path: string
+      width: number
+      height: number
+      duration: number
+      fps: number
+      total_frames: number
+      codec: string
+    }>('get_video_metadata', { path: job.inputPath })
+
+    if (!videoMeta || videoMeta.duration <= 0) {
+      throw new Error('Failed to read video metadata')
+    }
+
+    // 2. Initialize OCR engine
+    job.progress = 10
+    job.stageLabel = '初始化 OCR 引擎'
+    const langMap: Record<string, string[]> = {
+      ch: ['eng', 'chi_sim'],
+      en: ['eng'],
+      ja: ['eng', 'jpn'],
+      ko: ['eng', 'kor']
+    }
+    const langs = langMap[options.languages[0]] || ['eng']
+
+    const ocr = useOCREngine()
+    await ocr.init(options.ocrEngine, langs)
+
     try {
-      // 1. Get video metadata via Tauri backend
-      job.progress = 5
-      job.stageLabel = '读取视频元数据'
-      const videoMeta = await invoke<{
-        path: string
-        width: number
-        height: number
-        duration: number
-        fps: number
-        total_frames: number
-        codec: string
-      }>('get_video_metadata', { path: job.inputPath })
-      
-      if (!videoMeta || videoMeta.duration <= 0) {
-        throw new Error('Failed to read video metadata')
-      }
-      
-      // 2. Initialize OCR engine
-      job.progress = 10
-      job.stageLabel = '初始化 OCR 引擎'
-      const langMap: Record<string, string[]> = {
-        ch: ['eng', 'chi_sim'],
-        en: ['eng'],
-        ja: ['eng', 'jpn'],
-        ko: ['eng', 'kor']
-      }
-      const langs = langMap[options.languages[0]] || ['eng']
-      
-      const ocr = useOCREngine()
-      await ocr.init(options.ocrEngine, langs)
-      
       // 3. Extract frames and process OCR
       job.progress = 30
       job.stageLabel = '检测场景变化'
       // Note: This is a simplified version - full implementation would
       // use the video element to capture frames and run OCR on each
-      
+
       // For batch processing, we use the Tauri backend to extract frames
       // and process them via OCR
       const sceneChanges = await invoke<number[]>('detect_scenes', {
@@ -207,10 +208,10 @@ export function useBatchProcessor() {
           frame_interval: 1
         }
       })
-      
+
       job.progress = 60
       job.stageLabel = '提取帧并进行 OCR'
-      
+
       // Process each detected scene
       const totalScenes = sceneChanges.length || 1
       for (let i = 0; i < totalScenes; i++) {
@@ -226,16 +227,16 @@ export function useBatchProcessor() {
           path: job.inputPath,
           timestampSecs: timestamp
         })
-        
+
         job.progress = 60 + Math.round((i / totalScenes) * 30)
       }
-      
+
       // 4. Export subtitles in requested formats
       job.progress = 95
       job.stageLabel = '导出字幕'
-      
+
       const baseName = job.inputPath.split('/').pop()?.replace(/\.[^.]+$/, '') || 'subtitle'
-      
+
       for (const format of options.formats) {
         await invoke('export_subtitles', {
           subtitles: [], // Would pass actual extracted subtitles here
@@ -243,20 +244,19 @@ export function useBatchProcessor() {
           outputPath: `${options.outputDir}/${baseName}.${format}`
         })
       }
-      
+
       // Update average processing time
       updateAvgProcessingTime(Date.now() - jobStart)
-      
-    } catch (e) {
-      console.error(`[Batch] Failed to process ${job.inputPath}:`, e)
-      throw e
+    } finally {
+      // Clean up OCR engine to prevent Tesseract Worker memory leak
+      await ocr.terminate()
     }
   }
 
   // Cancel batch processing
   function cancelBatch() {
     isProcessing.value = false
-    
+
     if (currentJob.value) {
       currentJob.value.status = 'cancelled'
     }
@@ -264,7 +264,7 @@ export function useBatchProcessor() {
 
   // Clear completed jobs
   function clearCompleted() {
-    jobs.value = jobs.value.filter(j => 
+    jobs.value = jobs.value.filter(j =>
       j.status !== 'completed' && j.status !== 'failed' && j.status !== 'cancelled'
     )
   }

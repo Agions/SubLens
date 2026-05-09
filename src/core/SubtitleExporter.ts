@@ -79,16 +79,22 @@ const tsSSA = tsFormat(':', ':', ':', 30, pad2)     // H:MM:SS:ff (30fps frames)
 function formatSRT(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
   return subs.map((sub, i) =>
-    `${i + 1}\n${tsSRT(sub.startTime)} --> ${tsSRT(sub.endTime)}\n${sub.text}`
+    `${i + 1}
+${tsSRT(sub.startTime)} --> ${tsSRT(sub.endTime)}
+${sub.text}`
   ).join('\n\n')
 }
 
 function formatVTT(subs: SubtitleItem[]): string {
   if (!subs?.length) return 'WEBVTT\n\n'
   const content = subs.map((sub, i) =>
-    `${i + 1}\n${tsVTT(sub.startTime)} --> ${tsVTT(sub.endTime)}\n${sub.text}`
+    `${i + 1}
+${tsVTT(sub.startTime)} --> ${tsVTT(sub.endTime)}
+${sub.text}`
   ).join('\n\n')
-  return `WEBVTT\n\n${content}`
+  return `WEBVTT
+
+${content}`
 }
 
 function formatASS(subs: SubtitleItem[]): string {
@@ -115,7 +121,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
     return `Dialogue: 0,${tsASS(sub.startTime)},${tsASS(sub.endTime)},Default,,0,0,0,,${text}`
   }).join('\n')
 
-  return `${header}\n${events}`
+  return `${header}
+${events}`
 }
 
 function formatSSA(subs: SubtitleItem[]): string {
@@ -142,7 +149,8 @@ Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return `Dialogue: Marked=0,${tsSSA(sub.startTime)},${tsSSA(sub.endTime)},Default,NTP,0000,0000,0000,,${text}`
   }).join('\n')
 
-  return `${header}\n${events}`
+  return `${header}
+${events}`
 }
 
 function formatJSON(subs: SubtitleItem[]): string {
@@ -194,7 +202,8 @@ function formatLRC(subs: SubtitleItem[]): string {
 function formatSBV(subs: SubtitleItem[]): string {
   if (!subs?.length) return ''
   return subs.map(sub =>
-    `${tsSBV(sub.startTime)},${tsSBV(sub.endTime)}\n${sub.text}`
+    `${tsSBV(sub.startTime)},${tsSBV(sub.endTime)}
+${sub.text}`
   ).join('\n\n')
 }
 
