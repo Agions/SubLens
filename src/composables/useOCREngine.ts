@@ -330,7 +330,7 @@ export function useOCREngine() {
       ])
 
       // 空间网格合并（去重）
-      const merged = mergeOCRResults([r1, r2, r3])
+      const merged = _mergeOCRResults([r1, r2, r3])
       progress.value = 100
       return merged
     } catch (e) {
@@ -339,11 +339,6 @@ export function useOCREngine() {
     } finally {
       isProcessing.value = false
     }
-  }
-
-  // ─── OCR 结果合并（空间网格）─────────────────────────────────
-  function mergeOCRResults(resultsList: OCRResult[][]): OCRResult[] {
-    return _mergeOCRResults(resultsList)
   }
 
   // ─── 终止 ─────────────────────────────────────────────────────
