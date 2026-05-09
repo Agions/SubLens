@@ -293,63 +293,12 @@ pub async fn extract_cropped_frame_at_time(
     timestamp_secs: f64,
     roi: ROI,
 ) -> Result<String, String> {
-    let path_obj = Path::new(&path);
-    if !path_obj.exists() {
-        return Err(format!("File not found: {}", path));
-    }
-
     // Get video metadata for ROI pixel calculation
     let metadata = get_video_metadata_ffprobe(&path)
         .await
         .map_err(|e| format!("Failed to get video metadata: {}", e))?;
-
-    // Build crop filter
     let crop_filter = build_roi_crop_filter(&roi, metadata.width, metadata.height);
-
-    // Use ffmpeg to extract cropped frame (async)
-    let uuid = uuid_v4();
-    let timestamp_ms = (timestamp_secs * 1000.0) as u64;
-    let output_path = std::env::temp_dir().join(format!(
-        "sublens_crop_{}_{}.png",
-        timestamp_ms,
-        uuid
-    ));
-    let _guard = TempFileGuard::new(output_path.clone()); // Auto-cleanup on function exit
-
-    // FFmpeg extraction with 30s timeout to prevent hanging
-    // -y: overwrite output without asking (needed for automated pipelines)
-    // -nostdin: disable interactive mode (avoids deadlock in CI/non-TTY environments)
-    let output = run_command_with_timeout(
-        "ffmpeg",
-        &[
-            "-y", "-nostdin",
-            "-ss", &format!("{}", timestamp_secs),
-            "-i", &path,
-            "-vf", &crop_filter,
-            "-vframes", "1",
-            "-q:v", "2",
-            output_path.to_str().ok_or_else(|| {
-                format!("Temp file path is not valid UTF-8: {:?}", output_path)
-            })?,
-        ],
-        std::time::Duration::from_secs(30),
-    )
-    .await
-    .map_err(|e| format!("Failed to run ffmpeg: {}", e))?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("ffmpeg failed: {}", stderr));
-    }
-
-    // Read and encode to base64
-    let img_data = tokio::fs::read(&output_path)
-        .await
-        .map_err(|e| format!("Failed to read extracted frame: {}", e))?;
-
-    let base64_str = STANDARD.encode(&img_data);
-
-    Ok(format!("data:image/png;base64,{}", base64_str))
+    extract_frame_at_time_impl(&path, timestamp_secs, Some(&crop_filter)).await
 }
 
 /// Build ffmpeg crop filter string from ROI parameters
