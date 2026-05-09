@@ -26,7 +26,8 @@ use std::path::Path;
 /// Maximum frame size to prevent OOM attacks (16MB = 1920x1080 RGBA)
 const MAX_FRAME_SIZE_BYTES: usize = 16 * 1024 * 1024;
 
-use super::utils::{find_python_binary, find_script, parse_fps_from_fraction};
+use super::utils::{find_python_binary, find_script};
+use super::video::get_video_metadata;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SceneDetectionConfig {
@@ -54,9 +55,9 @@ pub async fn detect_scenes(
         return Err(format!("File not found: {}", video_path));
     }
 
-    // Get video FPS for frame number calculation
-    let fps = match get_video_fps(&video_path).await {
-        Ok(f) => f,
+    // Get video FPS for frame number calculation (reuses get_video_metadata which calls ffprobe)
+    let fps = match get_video_metadata(video_path.clone()).await {
+        Ok(metadata) => metadata.fps,
         Err(e) => {
             tracing::warn!("Failed to get video FPS: {}, using default 30.0", e);
             30.0
@@ -84,42 +85,6 @@ pub async fn detect_scenes(
 
     tracing::info!("Detected {} scene changes", scene_changes.len());
     Ok(scene_changes)
-}
-
-/// Get video FPS using ffprobe (async)
-async fn get_video_fps(path: &str) -> Result<f64, String> {
-    let output = tokio::process::Command::new("ffprobe")
-        .args([
-            "-v", "quiet",
-            "-print_format", "json",
-            "-show_streams",
-            path,
-        ])
-        .output()
-        .await
-        .map_err(|e| format!("Failed to run ffprobe: {}", e))?;
-
-    if !output.status.success() {
-        return Err("ffprobe exited with error".to_string());
-    }
-
-    let json_str = String::from_utf8_lossy(&output.stdout);
-    let json: serde_json::Value = serde_json::from_str(&json_str)
-        .map_err(|e| format!("Failed to parse ffprobe output: {}", e))?;
-
-    // Find video stream
-    let video_stream = json["streams"]
-        .as_array()
-        .and_then(|streams| {
-            streams.iter().find(|s| s["codec_type"] == "video")
-        })
-        .ok_or("No video stream found")?;
-
-    // Parse frame rate (e.g., "30000/1001" -> ~29.97)
-    let fps_str = video_stream["r_frame_rate"].as_str().unwrap_or("30/1");
-    let fps = parse_fps_from_fraction(fps_str);
-
-    Ok(fps)
 }
 
 /// Detect scene changes using scenedetect Python library (async)
