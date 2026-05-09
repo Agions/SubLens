@@ -546,27 +546,22 @@ pub async fn process_paddle_ocr(
 /// Check if PaddleOCR is installed and available
 #[tauri::command]
 pub async fn check_paddle_ocr_available() -> serde_json::Value {
+    fn unavailable(error: &str, message: &str) -> serde_json::Value {
+        serde_json::json!({
+            "available": false,
+            "error": error,
+            "message": message
+        })
+    }
+
     let python = match find_python_binary().await {
         Ok(p) => p.to_string_lossy().to_string(),
-        Err(e) => {
-            return serde_json::json!({
-                "available": false,
-                "error": e,
-                "message": "Python not found"
-            });
-        }
+        Err(e) => return unavailable(&e, "Python not found"),
     };
 
     let script_path = match find_script("paddle_ocr.py") {
         Ok(p) => p.to_string_lossy().to_string(),
-        Err(e) => {
-            return serde_json::json!({
-                "available": false,
-                "error": e,
-                "message": "PaddleOCR script not found",
-                "python": python
-            });
-        }
+        Err(e) => return unavailable(&e, "PaddleOCR script not found"),
     };
 
     // Run the --check command
@@ -581,26 +576,14 @@ pub async fn check_paddle_ocr_available() -> serde_json::Value {
             let stdout = String::from_utf8_lossy(&out.stdout);
             match serde_json::from_str(&stdout) {
                 Ok(result) => result,
-                Err(_) => serde_json::json!({
-                    "available": false,
-                    "error": "Failed to parse check output",
-                    "raw": stdout.to_string()
-                }),
+                Err(_) => unavailable("Failed to parse check output", "Parse error"),
             }
         }
         Ok(out) => {
             let stderr = String::from_utf8_lossy(&out.stderr);
-            serde_json::json!({
-                "available": false,
-                "error": stderr.trim(),
-                "message": "PaddleOCR check failed"
-            })
+            unavailable(stderr.trim(), "PaddleOCR check failed")
         }
-        Err(e) => serde_json::json!({
-            "available": false,
-            "error": format!("{}", e),
-            "message": "Failed to run PaddleOCR check"
-        }),
+        Err(e) => unavailable(&format!("{}", e), "Failed to run PaddleOCR check"),
     }
 }
 
