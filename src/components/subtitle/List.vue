@@ -56,7 +56,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
           v-if="lowConfCount > 0"
           class="alert-badge"
           :class="{ active: subtitleStore.confidenceFilter === 'low' }"
-          @click="subtitleStore.setConfFilter('low')"
+          @click="subtitleStore.setConfidenceFilter('low')"
           title="查看低置信度字幕"
         >
           <svg viewBox="0 0 12 12" fill="none" class="alert-icon">

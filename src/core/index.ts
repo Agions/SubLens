@@ -13,7 +13,7 @@ export { Pipeline, DEFAULT_PIPELINE_OPTIONS } from './Pipeline'
 export type { PipelineOptions } from './Pipeline'
 
 export { SceneDetect, DEFAULT_SCENE_DETECTOR_OPTIONS } from './SceneDetect'
-export type { SceneDetectorOptions } from './SceneDetect'
+export type { SceneDetectOptions } from './SceneDetect'
 
 export { Exporter, getExporter } from './Exporter'
 export type { ExportFormat, ExportResult } from './Exporter'

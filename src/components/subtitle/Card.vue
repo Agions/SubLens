@@ -6,7 +6,7 @@
 import { computed } from 'vue'
 import type { SubtitleItem } from '@/types/subtitle'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useList } from '@/composables/useList'
+import { useSubtitleList } from '@/composables/SubList'
 import { getConfidenceLevel } from '@/utils/confidence'
 
 const props = defineProps<{
@@ -25,7 +25,7 @@ const {
   saveEdit,
   formatTimeShort,
   getConfidenceHeatmap,
-} = useList()
+} = useSubtitleList()
 
 const isSelected = computed(() => subtitleStore.selectedId === props.subtitle.id)
 const isHovered = computed(() => hoveredId.value === props.subtitle.id)

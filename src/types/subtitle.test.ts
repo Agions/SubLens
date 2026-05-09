@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  SubtitleExporter,
-} from '@/core/SubtitleExporter'
+import { Exporter } from '@/core/Exporter'
 import type { SubtitleItem } from '@/types/subtitle'
 import type { ROI } from '@/types/video'
 
@@ -38,7 +36,7 @@ function createSub(overrides: Partial<SubtitleItem> = {}): SubtitleItem {
   }
 }
 
-const exporter = new SubtitleExporter()
+const exporter = new Exporter()
 
 describe('SubtitleExporter', () => {
   describe('SRT', () => {

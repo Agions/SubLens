@@ -3,20 +3,20 @@
  * ConfFilter - 置信度筛选标签组件
  */
 import { useSubtitleStore } from '@/stores/subtitle'
-import { CONFIDENCE_FILTER_LEVELS, type ConfFilterValue } from '@/utils/confidence'
+import { CONFIDENCE_FILTER_LEVELS, type ConfidenceFilterValue } from '@/utils/confidence'
 
 const subtitleStore = useSubtitleStore()
 
 const levels = CONFIDENCE_FILTER_LEVELS
 
-function getCount(level: ConfFilterValue): number {
+function getCount(level: ConfidenceFilterValue): number {
   if (level === 'all') return subtitleStore.subtitles.length
   if (level === 'high') return subtitleStore.confidenceStats.high
   if (level === 'mid') return subtitleStore.confidenceStats.mid
   return subtitleStore.confidenceStats.low
 }
 
-function getLabel(level: ConfFilterValue): string {
+function getLabel(level: ConfidenceFilterValue): string {
   if (level === 'all') return '全部'
   if (level === 'high') return '高'
   if (level === 'mid') return '中'
@@ -32,7 +32,7 @@ function getLabel(level: ConfFilterValue): string {
         v-for="level in levels"
         :key="level"
         :class="['filter-tab', `tab-${level}`, { active: subtitleStore.confidenceFilter === level }]"
-        @click="subtitleStore.setConfFilter(level)"
+        @click="subtitleStore.setConfidenceFilter(level)"
       >
         <span class="tab-dot"/>
         <span class="tab-label">{{ getLabel(level) }}</span>

@@ -25,7 +25,7 @@ const subtitleStore = useSubtitleStore()
         </button>
         <button
           class="btn btn-ghost"
-          @click="subtitleStore.setConfFilter('all')"
+          @click="subtitleStore.setConfidenceFilter('all')"
         >
           清除
         </button>
