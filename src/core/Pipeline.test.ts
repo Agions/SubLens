@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { SubtitlePipeline, textSimilarity } from './SubtitlePipeline'
+import { Pipeline, textSimilarity } from './Pipeline'
 import type { SubtitleLite } from '@/types/subtitle'
 
 function sub(
@@ -13,11 +13,11 @@ function sub(
   return { startTime, endTime, startFrame, endFrame, text, confidence }
 }
 
-describe('SubtitlePipeline', () => {
-  let pipeline: SubtitlePipeline
+describe('Pipeline', () => {
+  let pipeline: Pipeline
 
   beforeEach(() => {
-    pipeline = new SubtitlePipeline()
+    pipeline = new Pipeline()
     pipeline.clearCache()
   })
 
@@ -257,7 +257,7 @@ describe('SubtitlePipeline', () => {
   // ─── Configuration ─────────────────────────────────────────────
   describe('Configuration', () => {
     it('uses default options', () => {
-      const opts = new SubtitlePipeline().getOptions()
+      const opts = new Pipeline().getOptions()
       expect(opts.jitterMinDuration).toBe(0.3)
       expect(opts.jitterMaxConfidence).toBe(0.75)
       expect(opts.splitMaxGap).toBe(1.5)
@@ -265,13 +265,13 @@ describe('SubtitlePipeline', () => {
     })
 
     it('configure overrides specific options', () => {
-      const p = new SubtitlePipeline({ jitterMinDuration: 1.0 })
+      const p = new Pipeline({ jitterMinDuration: 1.0 })
       expect(p.getOptions().jitterMinDuration).toBe(1.0)
       expect(p.getOptions().splitMaxGap).toBe(1.5) // default preserved
     })
 
     it('configure returns this for chaining', () => {
-      const p = new SubtitlePipeline()
+      const p = new Pipeline()
       const returned = p.configure({ jitterMinDuration: 0.5 })
       expect(returned).toBe(p)
     })

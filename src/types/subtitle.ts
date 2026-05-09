@@ -2,7 +2,7 @@
  * Subtitle Types — SubLens
  * ==========================
  * 核心数据类型定义。
- * 格式化逻辑已迁移至 src/core/SubtitleExporter.ts。
+ * 格式化逻辑已迁移至 src/core/Exporter.ts。
  */
 
 import type { ROI } from './video'
@@ -54,7 +54,7 @@ export interface SubtitleExportOptions {
 
 /**
  * Supported export formats.
- * @see src/core/SubtitleExporter
+ * @see src/core/Exporter
  */
 export type ExportFormat = 'srt' | 'vtt' | 'ass' | 'ssa' | 'json' | 'txt' | 'lrc' | 'sbv' | 'csv'
 

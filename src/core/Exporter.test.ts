@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { SubtitleExporter } from './SubtitleExporter'
+import { Exporter } from './Exporter'
 import type { SubtitleItem } from '@/types/subtitle'
 import type { ROI } from '@/types/video'
 
@@ -29,11 +29,11 @@ function sub(
   }
 }
 
-describe('SubtitleExporter', () => {
-  let exporter: SubtitleExporter
+describe('Exporter', () => {
+  let exporter: Exporter
 
   beforeEach(() => {
-    exporter = new SubtitleExporter()
+    exporter = new Exporter()
   })
 
   // ─── formatSRT ─────────────────────────────────────────────────

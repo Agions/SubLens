@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Modal from '@/components/common/Modal.vue'
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useKeyboardShortcuts } from '@/composables/Hotkeys'
 
 const { shortcuts, getShortcutText } = useKeyboardShortcuts()
 

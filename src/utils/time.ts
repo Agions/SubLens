@@ -1,6 +1,6 @@
 /**
  * Time formatting utilities
- * Consolidated from Timeline.vue, useSubtitleList.ts, and SubtitleExporter.ts
+ * Consolidated from Timeline.vue, useSubtitleList.ts, and Exporter.ts
  */
 
 // ── Constants ─────────────────────────────────────────────────

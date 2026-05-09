@@ -1,12 +1,12 @@
 <script setup lang="ts">
 /**
- * SubtitleCard - 单条字幕卡片组件
+ * Card - 单条字幕卡片组件
  * 职责：展示字幕信息、处理编辑、提供hover效果和操作按钮
  */
 import { computed } from 'vue'
 import type { SubtitleItem } from '@/types/subtitle'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/useSubtitleList'
+import { useList } from '@/composables/useList'
 import { getConfidenceLevel } from '@/utils/confidence'
 
 const props = defineProps<{
@@ -25,7 +25,7 @@ const {
   saveEdit,
   formatTimeShort,
   getConfidenceHeatmap,
-} = useSubtitleList()
+} = useList()
 
 const isSelected = computed(() => subtitleStore.selectedId === props.subtitle.id)
 const isHovered = computed(() => hoveredId.value === props.subtitle.id)

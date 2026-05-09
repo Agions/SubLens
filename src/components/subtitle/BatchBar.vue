@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * BatchActionBar - 批量操作栏组件
+ * BatchBar - 批量操作栏组件
  */
 import { useSubtitleStore } from '@/stores/subtitle'
 const subtitleStore = useSubtitleStore()
@@ -25,7 +25,7 @@ const subtitleStore = useSubtitleStore()
         </button>
         <button
           class="btn btn-ghost"
-          @click="subtitleStore.setConfidenceFilter('all')"
+          @click="subtitleStore.setConfFilter('all')"
         >
           清除
         </button>

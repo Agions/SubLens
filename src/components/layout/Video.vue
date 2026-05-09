@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watch, computed, provide } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useVideoPlayer } from '@/composables/useVideoPlayer'
+import { useVideoPlayer } from '@/composables/Player'
 import { formatTimeShort, formatTimePrecise } from '@/utils/time'
 import ROISelector from '@/components/video/ROISelector.vue'
 

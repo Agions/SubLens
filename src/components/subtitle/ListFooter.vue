@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * SubtitleListFooter - 字幕列表底部组件（格式选择+删除）
+ * ListFooter - 字幕列表底部组件（格式选择+删除）
  */
 import { computed } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'

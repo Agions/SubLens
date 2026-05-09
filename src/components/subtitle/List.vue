@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * SubtitleList - 字幕列表容器组件
+ * List - 字幕列表容器组件
  * 
  * 职责：
  * - 字幕搜索和筛选
@@ -12,15 +12,15 @@
  */
 import { watch } from 'vue'
 import { useSubtitleStore } from '@/stores/subtitle'
-import { useSubtitleList } from '@/composables/useSubtitleList'
+import { useSubtitleList } from '@/composables/SubList'
 
 // 子组件
-import SubtitleCard from './SubtitleCard.vue'
+import Card from './Card.vue'
 import SkeletonCard from './SkeletonCard.vue'
 import EmptyState from './EmptyState.vue'
-import ConfidenceFilter from './ConfidenceFilter.vue'
-import BatchActionBar from './BatchActionBar.vue'
-import SubtitleListFooter from './SubtitleListFooter.vue'
+import ConfFilter from './ConfFilter.vue'
+import BatchBar from './BatchBar.vue'
+import ListFooter from './ListFooter.vue'
 
 const subtitleStore = useSubtitleStore()
 const {
@@ -56,7 +56,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
           v-if="lowConfCount > 0"
           class="alert-badge"
           :class="{ active: subtitleStore.confidenceFilter === 'low' }"
-          @click="subtitleStore.setConfidenceFilter('low')"
+          @click="subtitleStore.setConfFilter('low')"
           title="查看低置信度字幕"
         >
           <svg viewBox="0 0 12 12" fill="none" class="alert-icon">
@@ -113,7 +113,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
     </div>
 
     <!-- ── Confidence Filter ──────────────────────── -->
-    <ConfidenceFilter v-if="totalCount > 0" />
+    <ConfFilter v-if="totalCount > 0" />
 
     <!-- ── Subtitle List ──────────────────────────── -->
     <div class="subtitle-list" role="list">
@@ -124,7 +124,7 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
 
       <!-- Cards -->
       <template v-else>
-        <SubtitleCard
+        <Card
           v-for="sub in visibleSubtitles"
           :key="sub.id"
           :subtitle="sub"
@@ -153,10 +153,10 @@ watch(() => subtitleStore.confidenceFilter, resetDisplayCount)
     <!-- ── Footer ─────────────────────────────────── -->
     <footer class="panel-footer">
       <!-- Batch action -->
-      <BatchActionBar />
+      <BatchBar />
 
       <!-- Format toggles + delete -->
-      <SubtitleListFooter />
+      <ListFooter />
     </footer>
   </aside>
 </template>

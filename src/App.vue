@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useTheme } from '@/composables/useTheme'
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
-import { useSubtitleExtractor } from '@/composables/useSubtitleExtractor'
-import ToolBar from '@/components/layout/ToolBar.vue'
-import SidePanel from '@/components/layout/SidePanel.vue'
-import VideoPreview from '@/components/layout/VideoPreview.vue'
-import SubtitleList from '@/components/subtitle/SubtitleList.vue'
+import { useKeyboardShortcuts } from '@/composables/Hotkeys'
+import { useSubtitleExtractor } from '@/composables/Extractor'
+import Toolbar from '@/components/layout/Toolbar.vue'
+import Panel from '@/components/layout/Panel.vue'
+import Video from '@/components/layout/Video.vue'
+import List from '@/components/subtitle/List.vue'
 import Timeline from '@/components/video/Timeline.vue'
 import StatusBar from '@/components/layout/StatusBar.vue'
-import KeyboardShortcutsHelp from '@/components/common/KeyboardShortcutsHelp.vue'
-import ExportDialog from '@/components/subtitle/ExportDialog.vue'
-import BatchProcessView from '@/components/layout/BatchProcessView.vue'
-import SubtitleToast from '@/components/common/SubtitleToast.vue'
-import NotificationToast from '@/components/common/NotificationToast.vue'
+import Shortcuts from '@/components/common/Shortcuts.vue'
+import Export from '@/components/subtitle/Export.vue'
+import Batch from '@/components/layout/Batch.vue'
+import SubToast from '@/components/common/SubToast.vue'
+import Toast from '@/components/common/Toast.vue'
 import { useSubtitleStore } from '@/stores/subtitle'
 
 // Initialize theme
@@ -45,15 +45,15 @@ const subtitleExtractor = useSubtitleExtractor()
 provide('subtitleExtractor', subtitleExtractor)
 
 // Export dialog opener
-function openExportDialog() {
+function openExport() {
   exportDialogRef.value?.open()
 }
-provide('openExportDialog', openExportDialog)
+provide('openExport', openExport)
 
 const showTimeline = ref(true)
-const shortcutsHelpRef = ref<InstanceType<typeof KeyboardShortcutsHelp> | null>(null)
-const exportDialogRef = ref<InstanceType<typeof ExportDialog> | null>(null)
-const batchProcessRef = ref<InstanceType<typeof BatchProcessView> | null>(null)
+const shortcutsHelpRef = ref<InstanceType<typeof Shortcuts> | null>(null)
+const exportDialogRef = ref<InstanceType<typeof Export> | null>(null)
+const batchProcessRef = ref<InstanceType<typeof Batch> | null>(null)
 
 function openBatchProcess() {
   batchProcessRef.value?.open()
@@ -84,30 +84,30 @@ onUnmounted(() => {
 
 <template>
   <div class="app-container">
-    <ToolBar />
+    <Toolbar />
     
     <div class="app-main">
-      <SidePanel />
+      <Panel />
       <div class="main-content">
-        <VideoPreview class="video-area" />
+        <Video class="video-area" />
         <Timeline v-if="showTimeline" class="timeline-area" />
       </div>
-      <SubtitleList />
+      <List />
     </div>
     
     <StatusBar />
     
-    <KeyboardShortcutsHelp ref="shortcutsHelpRef" />
-    <ExportDialog ref="exportDialogRef" />
-    <BatchProcessView ref="batchProcessRef" />
-    <SubtitleToast
+    <Shortcuts ref="shortcutsHelpRef" />
+    <Export ref="exportDialogRef" />
+    <Batch ref="batchProcessRef" />
+    <SubToast
       :visible="toastVisible"
       :text="toastText"
       :index="toastIndex"
       :total="toastTotal"
       @hide="toastVisible = false"
     />
-    <NotificationToast />
+    <Toast />
   </div>
 </template>
 

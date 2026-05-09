@@ -1,5 +1,5 @@
 /**
- * ConfidenceCalibrator — 置信度校准引擎
+ * Calibrator — 置信度校准引擎
  * ========================================
  * 统一所有置信度校准逻辑：
  * - 基础校准（calibrate）
@@ -72,7 +72,7 @@ function _applyRules(rules: Rule[], signals: CalibrationSignal[], quality: numbe
   return quality
 }
 
-export class ConfidenceCalibrator {
+export class Calibrator {
   /**
    * 基础校准（单次 OCR 识别结果）
    */
@@ -194,9 +194,9 @@ export function langToScript(lang: string): Script {
 }
 
 // ─── 全局单例 ─────────────────────────────────────────────────────
-let _calibrator: ConfidenceCalibrator | null = null
+let _calibrator: Calibrator | null = null
 
-export function getCalibrator(): ConfidenceCalibrator {
-  if (!_calibrator) _calibrator = new ConfidenceCalibrator()
+export function getCalibrator(): Calibrator {
+  if (!_calibrator) _calibrator = new Calibrator()
   return _calibrator
 }

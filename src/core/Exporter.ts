@@ -1,5 +1,5 @@
 /**
- * SubtitleExporter — 字幕导出引擎
+ * Exporter — 字幕导出引擎
  * ==================================
  * 负责将 SubtitleItem[] 序列化为各种格式。
  * Store 专注状态管理，Exporter 专注格式逻辑。
@@ -227,7 +227,7 @@ export interface ExportResult {
   filename: string
 }
 
-export class SubtitleExporter {
+export class Exporter {
   private readonly FORMATTERS: Record<ExportFormat, (subs: SubtitleItem[]) => string> = {
     srt: formatSRT,
     vtt: formatVTT,
@@ -278,9 +278,9 @@ export class SubtitleExporter {
 }
 
 // ─── 全局单例（避免重复实例化开销）─────────────────────────────────
-let _instance: SubtitleExporter | null = null
+let _instance: Exporter | null = null
 
-export function getExporter(): SubtitleExporter {
-  if (!_instance) _instance = new SubtitleExporter()
+export function getExporter(): Exporter {
+  if (!_instance) _instance = new Exporter()
   return _instance
 }

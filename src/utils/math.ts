@@ -1,5 +1,5 @@
 /**
- * Math utilities — consolidated from useImagePreprocessor.ts and ConfidenceCalibrator.ts
+ * Math utilities — consolidated from useImagePreprocessor.ts and Calibrator.ts
  */
 
 /**

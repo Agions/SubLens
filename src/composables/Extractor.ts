@@ -3,26 +3,26 @@
  * ===========================================
  * 职责：
  * - 管理提取状态（isExtracting, isPaused 等）
- * - 协调 VideoPlayer、OCREngine、SubtitlePipeline
+ * - 协调 VideoPlayer、OCREngine、Pipeline
  * - 与 SubtitleStore 交互（更新进度、添加字幕）
  *
  * 不再负责：
- * - 场景检测（→ SceneDetector）
- * - 后处理管道（→ SubtitlePipeline）
- * - 置信度校准（→ ConfidenceCalibrator）
+ * - 场景检测（→ SceneDetect）
+ * - 后处理管道（→ Pipeline）
+ * - 置信度校准（→ Calibrator）
  */
 
 import { ref } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useSubtitleStore } from '@/stores/subtitle'
 import { ERR_NO_VIDEO } from '@/utils/constants'
-import { useVideoPlayer } from './useVideoPlayer'
+import { useVideoPlayer } from './Player'
 import { useOCREngine } from './useOCREngine'
 import type { OCRConfig } from '@/types'
 import type { SubtitleLite, SubtitleItem } from '@/types/subtitle'
 import {
-  SubtitlePipeline,
-  SceneDetector,
+  Pipeline,
+  SceneDetect,
   getCalibrator,
   langToScript,
 } from '@/core'
@@ -127,8 +127,8 @@ export function useSubtitleExtractor() {
   const extractedCount = ref(0)
 
   // ─── 管道实例（延迟创建）──────────────────────────────────
-  let pipeline: SubtitlePipeline | null = null
-  let sceneDetector: SceneDetector | null = null
+  let pipeline: Pipeline | null = null
+  let sceneDetector: SceneDetect | null = null
 
   // ─── 提取主循环 ───────────────────────────────────────────
   async function startExtraction() {
@@ -141,7 +141,7 @@ export function useSubtitleExtractor() {
     const frameInterval = opts.frameInterval
 
     // 初始化管道
-    pipeline = new SubtitlePipeline({
+    pipeline = new Pipeline({
       jitterMinDuration: 0.3,
       jitterMaxConfidence: opts.confidenceThreshold,
       splitMaxGap: 1.5,
@@ -151,7 +151,7 @@ export function useSubtitleExtractor() {
     })
 
     // 初始化场景检测器
-    sceneDetector = new SceneDetector({
+    sceneDetector = new SceneDetect({
       threshold: opts.sceneThreshold,
     })
 

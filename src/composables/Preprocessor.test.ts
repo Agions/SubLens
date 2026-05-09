@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toGrayscale, enhanceContrast, boxBlur } from './useImagePreprocessor'
+import { toGrayscale, enhanceContrast, boxBlur } from './Preprocessor'
 import { clamp } from '@/utils/math'
 
 // ─── ImageData factory (uses native constructor via test-setup polyfill) ────

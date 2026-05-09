@@ -1,5 +1,5 @@
 /**
- * SceneDetector — 场景变化检测
+ * SceneDetect — 场景变化检测
  * =================================
  * 基于量化直方图 + chi-square 比较的场景变化检测。
  *
@@ -14,7 +14,7 @@
  * - 对光照渐变鲁棒（量化平滑噪声）
  */
 
-export interface SceneDetectorOptions {
+export interface SceneDetectOptions {
   /** chi-square 阈值，默认 0.3 */
   threshold: number
   /** 每帧采样的像素数，默认 500 */
@@ -23,7 +23,7 @@ export interface SceneDetectorOptions {
   binCount: number
 }
 
-export const DEFAULT_SCENE_DETECTOR_OPTIONS: SceneDetectorOptions = {
+export const DEFAULT_SCENE_DETECTOR_OPTIONS: SceneDetectOptions = {
   threshold: 0.3,
   sampleCount: 500,
   binCount: 16,
@@ -67,10 +67,10 @@ function chiSquareDistance(
   return chiSquare / (sampleCount * threshold)
 }
 
-export class SceneDetector {
-  private opts: Required<SceneDetectorOptions>
+export class SceneDetect {
+  private opts: Required<SceneDetectOptions>
 
-  constructor(opts: Partial<SceneDetectorOptions> = {}) {
+  constructor(opts: Partial<SceneDetectOptions> = {}) {
     this.opts = { ...DEFAULT_SCENE_DETECTOR_OPTIONS, ...opts }
   }
 
@@ -140,7 +140,7 @@ export class SceneDetector {
   }
 
   /** 获取当前配置 */
-  getOptions(): SceneDetectorOptions {
+  getOptions(): SceneDetectOptions {
     return { ...this.opts }
   }
 }

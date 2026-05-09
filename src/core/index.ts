@@ -2,21 +2,21 @@
  * core/ — SubLens 核心业务逻辑模块
  *
  * 子模块：
- * - SubtitlePipeline   后处理管道（4阶段清洗）
- * - SceneDetector      场景变化检测
- * - SubtitleExporter   多格式导出引擎
- * - ConfidenceCalibrator  置信度校准
+ * - Pipeline         后处理管道（4阶段清洗）
+ * - SceneDetect     场景变化检测
+ * - Exporter        多格式导出引擎
+ * - Calibrator       置信度校准
  */
 
 // Re-export all public APIs
-export { SubtitlePipeline, DEFAULT_PIPELINE_OPTIONS } from './SubtitlePipeline'
-export type { PipelineOptions } from './SubtitlePipeline'
+export { Pipeline, DEFAULT_PIPELINE_OPTIONS } from './Pipeline'
+export type { PipelineOptions } from './Pipeline'
 
-export { SceneDetector, DEFAULT_SCENE_DETECTOR_OPTIONS } from './SceneDetector'
-export type { SceneDetectorOptions } from './SceneDetector'
+export { SceneDetect, DEFAULT_SCENE_DETECTOR_OPTIONS } from './SceneDetect'
+export type { SceneDetectorOptions } from './SceneDetect'
 
-export { SubtitleExporter, getExporter } from './SubtitleExporter'
-export type { ExportFormat, ExportResult } from './SubtitleExporter'
+export { Exporter, getExporter } from './Exporter'
+export type { ExportFormat, ExportResult } from './Exporter'
 
-export { ConfidenceCalibrator, getCalibrator, langToScript } from './ConfidenceCalibrator'
-export type { CalibrationResult, CalibrationSignal, Script } from './ConfidenceCalibrator'
+export { Calibrator, getCalibrator, langToScript } from './Calibrator'
+export type { CalibrationResult, CalibrationSignal, Script } from './Calibrator'

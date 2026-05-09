@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { _isRoiRegionLikelyEmpty as isRoiRegionLikelyEmpty } from './useSubtitleExtractor'
+import { _isRoiRegionLikelyEmpty as isRoiRegionLikelyEmpty } from './Extractor'
 
 // ─── Frame factories (no DOM, pure typed arrays) ─────────────────────────────
 function makeFrame(width: number, height: number, pixel: number): { data: Uint8ClampedArray; width: number; height: number } {

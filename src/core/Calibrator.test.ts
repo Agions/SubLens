@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ConfidenceCalibrator } from './ConfidenceCalibrator'
+import { Calibrator } from './Calibrator'
 
-describe('ConfidenceCalibrator', () => {
-  let calibrator: ConfidenceCalibrator
+describe('Calibrator', () => {
+  let calibrator: Calibrator
 
   beforeEach(() => {
-    calibrator = new ConfidenceCalibrator()
+    calibrator = new Calibrator()
   })
 
   // ─── calibrateEnhanced() ───────────────────────────────────────

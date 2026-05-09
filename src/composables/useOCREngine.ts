@@ -7,16 +7,16 @@
  * - 多通道 OCR（processMultiPass）
  *
  * 不再负责（已迁移到 core/）：
- * - 置信度校准 → ConfidenceCalibrator
- * - 文本后处理 → ConfidenceCalibrator.postProcessText
- * - 后处理管道 → SubtitlePipeline
- * - 相似度计算 → SubtitlePipeline.textSimilarity
+ * - 置信度校准 → Calibrator
+ * - 文本后处理 → Calibrator.postProcessText
+ * - 后处理管道 → Pipeline
+ * - 相似度计算 → Pipeline.textSimilarity
  */
 
 import { ref, shallowRef } from 'vue'
 import type { OCRConfig, OCREngine } from '@/types/video'
 import { CANVAS_CONTEXT_2D, ERR_OCR_NOT_READY, MIME_IMAGE_PNG } from '@/utils/constants'
-import { useImagePreprocessor } from './useImagePreprocessor'
+import { useImagePreprocessor } from './Preprocessor'
 import { getCalibrator, langToScript } from '@/core'
 
 // ─── Canvas context guard ────────────────────────────────────────────

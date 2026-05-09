@@ -1,5 +1,5 @@
 /**
- * SubtitlePipeline — SubLens Core
+ * Pipeline — SubLens Core
  * ================================
  * 独立的后处理管道：将原始 OCR 结果经过多级处理得到干净字幕。
  *
@@ -49,7 +49,7 @@ const SIMILARITY_CACHE_MAX_SIZE = 3000
 const SIMILARITY_CACHE_TRIM_TO  = 2500
 
 // ─── Levenshtein 距离（带缓存 per-pipeline 实例）───────────────────────
-// 每个 SubtitlePipeline 实例拥有独立缓存，避免不同配置（threshold）互相干扰。
+// 每个 Pipeline 实例拥有独立缓存，避免不同配置（threshold）互相干扰。
 // 3000 条缓存、LRU淘汰策略（同 original）。
 
 class SimilarityCache {
@@ -297,7 +297,7 @@ function stage4_computeEndTime(subs: SubtitleLite[]): SubtitleLite[] {
 }
 
 // ─── 主管道 ─────────────────────────────────────────────────────
-export class SubtitlePipeline {
+export class Pipeline {
   private opts: PipelineOptions
   private _cache = new SimilarityCache()
 
