@@ -307,6 +307,7 @@ export function useSubtitleExtractor() {
     // 清理
     pipeline.clearCache()
     sceneDetector.reset()
+    await ocrEngine.terminate()
   }
 
   function pauseExtraction() {
