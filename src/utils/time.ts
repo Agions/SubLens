@@ -8,6 +8,19 @@ const HOURS_IN_SECONDS = 3600
 const MINUTES_IN_SECONDS = 60
 const MS_PER_SECOND = 1000
 
+// ── Shared decomposition ───────────────────────────────────────
+function _decompose(seconds: number): { hrs: number; mins: number; secs: number } {
+  return {
+    hrs: Math.floor(seconds / HOURS_IN_SECONDS),
+    mins: Math.floor((seconds % HOURS_IN_SECONDS) / MINUTES_IN_SECONDS),
+    secs: Math.floor(seconds % MINUTES_IN_SECONDS),
+  }
+}
+
+function _pad2(n: number): string {
+  return n.toString().padStart(2, '0')
+}
+
 // ── Formatters ─────────────────────────────────────────────────
 
 /**
@@ -15,14 +28,9 @@ const MS_PER_SECOND = 1000
  * Used for UI display
  */
 export function formatTimeShort(seconds: number): string {
-  const hrs = Math.floor(seconds / HOURS_IN_SECONDS)
-  const mins = Math.floor((seconds % HOURS_IN_SECONDS) / MINUTES_IN_SECONDS)
-  const secs = Math.floor(seconds % MINUTES_IN_SECONDS)
-  
-  if (hrs > 0) {
-    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-  return `${mins}:${secs.toString().padStart(2, '0')}`
+  const { hrs, mins, secs } = _decompose(seconds)
+  if (hrs > 0) return `${hrs}:${_pad2(mins)}:${_pad2(secs)}`
+  return `${mins}:${_pad2(secs)}`
 }
 
 /**
@@ -30,13 +38,9 @@ export function formatTimeShort(seconds: number): string {
  * Used for .srt subtitle files
  */
 export function formatTimeSrt(seconds: number): string {
-  const hrs = Math.floor(seconds / HOURS_IN_SECONDS)
-  const mins = Math.floor((seconds % HOURS_IN_SECONDS) / MINUTES_IN_SECONDS)
-  const secs = Math.floor(seconds % MINUTES_IN_SECONDS)
+  const { hrs, mins, secs } = _decompose(seconds)
   const ms = Math.floor((seconds % 1) * MS_PER_SECOND)
-  
-  const pad = (n: number): string => n.toString().padStart(2, '0')
-  return `${pad(hrs)}:${pad(mins)}:${pad(secs)},${ms.toString().padStart(3, '0')}`
+  return `${_pad2(hrs)}:${_pad2(mins)}:${_pad2(secs)},${ms.toString().padStart(3, '0')}`
 }
 
 /**
@@ -44,12 +48,9 @@ export function formatTimeSrt(seconds: number): string {
  * Used for .ass/.ssa subtitle files
  */
 export function formatTimeAss(seconds: number): string {
-  const hrs = Math.floor(seconds / HOURS_IN_SECONDS)
-  const mins = Math.floor((seconds % HOURS_IN_SECONDS) / MINUTES_IN_SECONDS)
-  const secs = Math.floor(seconds % MINUTES_IN_SECONDS)
-  const cs = Math.floor((seconds % 1) * 100) // centiseconds
-  
-  return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`
+  const { hrs, mins, secs } = _decompose(seconds)
+  const cs = Math.floor((seconds % 1) * 100)
+  return `${hrs}:${_pad2(mins)}:${_pad2(secs)}.${_pad2(cs)}`
 }
 
 /**

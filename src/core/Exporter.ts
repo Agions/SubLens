@@ -207,15 +207,16 @@ ${sub.text}`
   ).join('\n\n')
 }
 
+const CSV_HEADER = 'Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence\n'
+
 function formatCSV(subs: SubtitleItem[]): string {
-  if (!subs?.length) return 'Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence\n'
-  const header = 'Index,StartTime,EndTime,StartFrame,EndFrame,Text,Confidence\n'
+  if (!subs?.length) return CSV_HEADER
   const rows = subs.map(sub => {
     const escaped = `"${sub.text.replace(/"/g, '""')}"`
     // Use float [0-1] to match JSON format, consistent across all export formats
     return `${sub.index},${sub.startTime.toFixed(3)},${sub.endTime.toFixed(3)},${sub.startFrame},${sub.endFrame},${escaped},${sub.confidence.toFixed(3)}`
   }).join('\n')
-  return header + rows
+  return CSV_HEADER + rows
 }
 
 // ─── Exporter 主类 ─────────────────────────────────────────────────
