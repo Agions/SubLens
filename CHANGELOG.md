@@ -2,6 +2,46 @@
 
 All notable changes to SubLens are documented here.
 
+## [3.6.0] - 2026-05-11
+
+### 🔧 Refactoring — Dead Code Elimination
+
+大规模死代码清理，通过静态分析删除从未被调用的代码，总计减少约 **1,500 行**。
+
+**Rust 侧：**
+
+| 文件 | 变化 | 说明 |
+|------|------|------|
+| `ocr_engine.rs` | 635→4 行 | 删除全部 9 个 OCR 命令（前端无调用） |
+| `video.rs` | 434→301 行 | 删除 `extract_frames`/`extract_cropped_frame`/`extract_cropped_frame_at_time` |
+| `scene.rs` | 208→115 行 | 删除 `get_video_info`、`calculate_frame_similarity` |
+| `export.rs` | 381→341 行 | 删除 `export_multiple_formats` |
+| `types.rs` | 154→95 行 | 删除 BoundingBox/OCRResultItem/OCRProcessResult/OCRConfig |
+| `Cargo.toml` | -3 依赖 | 删除 `anyhow`、`thiserror`、`image`（均无使用） |
+| `paddle_ocr.py` | 已删除（290 行） | Python OCR 脚本无 Rust 调用 |
+
+活跃命令确认（11 个）：`get_video_metadata`、`extract_frame_at_time`（video）；`get_file_info`、`open_file_dialog`、`read_text_file`、`save_file_dialog`、`write_text_file`（file）；`detect_scenes`（scene）；`check_system_dependencies`、`get_tesseract_languages`（system）；`export_subtitles`（export）
+
+**前端侧：**
+
+| 操作 | 文件 | 变化 |
+|------|------|------|
+| 删除 barrel | `composables/index.ts` | -24 行（零消费者使用 `from '@/composables'`） |
+| 删除 barrel | `stores/index.ts` | -3 行（零消费者使用 `from '@/stores'`） |
+| 删除 barrel | `utils/index.ts` | -12 行（零消费者使用 `from '@/utils'`） |
+| 删除 barrel | `components/index.ts` | -21 行（零消费者使用 `from '@/components'`） |
+| 删除 barrel | `types/index.ts` | -2 行（零消费者使用 `from '@/types'`） |
+| 删除死 composable | `useExport.ts` | -54 行（无外部导入） |
+| 重写主题 | `themes/index.ts` | `darkTheme`/`lightTheme` 内联，138→84 行 |
+| 删除死类型 | `subtitle.ts` | 删除 `SubtitleExportOptions` |
+| 删除死类型 | `video.ts` | 删除 `ROIPreset` interface |
+| 清理常量 | `constants.ts` | 删除 `EXPORT_FORMAT_KEYS`/`ExportFormatKey`/`ERR_CANVAS_CTX` |
+| 清理 confidence | `confidence.ts` | 删除 `getConfidenceClass`/`formatConfidence`（41 行） |
+
+**文档更新：**
+- README.md：更新目录结构（修正 core 模块文件名、移除 `ocr.rs`、更新 composables 数量）
+- `docs/file-naming-conventions.md`：完全重写，与实际代码结构对齐
+
 ## [3.5.1] - 2026-05-05
 
 ### 🔧 Refactoring — Code Duplication Elimination

@@ -121,32 +121,34 @@ SubLens/
 │   │   │   └── tabs/           # Files/Progress/ROI/OCR/Export/Settings 标签页
 │   │   ├── video/              # ROISelector、Timeline（缩略图预览）
 │   │   └── subtitle/           # SubtitleList、ExportDialog
-│   ├── composables/            # 17 个组合式函数（逻辑/UI 分离）
+│   ├── composables/            # 15 个组合式函数（逻辑/UI 分离）
 │   │   ├── useSubtitleList.ts  # 字幕过滤、搜索、分页
 │   │   ├── useVideoPlayer.ts   # 播放控制、帧捕获
 │   │   ├── useOCREngine.ts    # OCR 引擎抽象 + 后处理
-│   │   ├── useSubtitleExtractor.ts
+│   │   ├── useExtractor.ts    # 提取流程协调
 │   │   └── useBatchProcessor.ts
 │   ├── stores/                 # Pinia 状态管理
 │   │   ├── subtitle.ts         # 字幕列表、导出格式、过滤器
 │   │   ├── project.ts          # 视频状态、元数据、ROI
 │   │   └── settings.ts         # 主题、语言、OCR 偏好
 │   └── core/                   # 核心业务逻辑（纯函数，无 Vue 依赖）
-│       ├── SubtitlePipeline.ts # 4 阶段 OCR 后处理管道
-│       ├── SubtitleExporter.ts # 12 格式导出器
-│       ├── SceneDetector.ts    # 直方图 + 卡方场景检测
-│       └── ConfidenceCalibrator.ts
+│       ├── Pipeline.ts          # 4 阶段 OCR 后处理管道
+│       ├── Exporter.ts          # 12 格式导出器
+│       ├── SceneDetect.ts       # 直方图 + 卡方场景检测
+│       ├── Calibrator.ts        # 置信度校准
+│       └── index.ts
 │
 ├── src-tauri/                  # Rust 后端
 │   └── src/
 │       ├── commands/           # Tauri IPC 命令
 │       │   ├── video.rs        # FFmpeg 帧提取、元数据
-│       │   ├── ocr.rs          # EasyOCR / Tesseract.js
-│       │   ├── ocr_engine.rs   # PaddleOCR Python 桥接
+│       │   ├── ocr_engine.rs  # 占位（OCR 逻辑已移至前端 WASM）
 │       │   ├── scene.rs        # 场景检测
 │       │   ├── export.rs       # 格式写入
 │       │   ├── file.rs         # 文件对话框
-│       │   └── system.rs       # 系统依赖诊断
+│       │   ├── system.rs       # 系统依赖诊断
+│       │   ├── types.rs        # 共享类型
+│       │   └── utils.rs        # 命令工具函数
 │       └── main.rs             # Tauri 应用入口
 │
 ├── docs/                       # 在线文档（VitePress）
@@ -164,7 +166,7 @@ SubLens/
 
 ## 核心架构设计
 
-### OCR 后处理管道（SubtitlePipeline）
+### OCR 后处理管道（Pipeline）
 
 四阶段纯函数管道，输入原始 OCR 结果，输出清洗后的字幕：
 
@@ -178,14 +180,14 @@ Stage 4: computeEndTime  → 根据下一条字幕计算精确 endTime
 
 每阶段独立可测试，`textSimilarity` 结果按 (文本长度前缀 + 首尾各4字) 缓存，O(n log n) 复杂度。
 
-### 置信度校准（ConfidenceCalibrator）
+### 置信度校准（Calibrator）
 
 基于语言脚本（CJK / Latin）的多信号加权校准：
 
 - **惩罚信号**：混语、短文本（<3字）、重复字符、孤立 CJK 字符、引号不平衡、大写误识、尾随逗号
 - **奖励信号**：字符多样性、句子完整结尾、合理字幕长度
 
-### 场景检测（SceneDetector）
+### 场景检测（SceneDetect）
 
 基于量化 RGB 直方图 + 卡方距离，每帧 O(n) 时间复杂度和 48 计数器内存占用，对光照渐变鲁棒。
 

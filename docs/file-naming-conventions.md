@@ -2,14 +2,19 @@
 
 ## 1. 概述
 
-本规范定义 SubLens 项目的文件命名约定，确保跨前端（Vue3/TypeScript）和后端（Rust/Tauri）的命名一致性、可读性和可维护性。
+本规范定义 SubLens 项目的文件命名约定，确保跨前端（Vue 3 / TypeScript）和后端（Rust / Tauri）的命名一致性、可读性和可维护性。
 
 ## 2. 目录结构
 
 ```
 SubLens/
-├── src/                              # Vue3 前端
+├── src/                              # Vue 3 前端
 │   ├── components/                   # Vue 组件
+│   │   ├── common/                   # 通用组件
+│   │   │   ├── Button.vue
+│   │   │   ├── Modal.vue
+│   │   │   ├── Tooltip.vue
+│   │   │   └── Shortcuts.vue
 │   │   ├── layout/                   # 布局组件
 │   │   │   ├── Video.vue            # 视频预览
 │   │   │   ├── Toolbar.vue          # 工具栏
@@ -17,64 +22,68 @@ SubLens/
 │   │   │   ├── Batch.vue            # 批量处理视图
 │   │   │   ├── Settings.vue         # 设置视图
 │   │   │   ├── StatusBar.vue        # 状态栏
-│   │   │   └── tabs/                # Tab 子组件（无 Tab 后缀）
-│   │   │       ├── Files.vue        # ← 无后缀
-│   │   │       ├── OCR.vue
-│   │   │       ├── Progress.vue
-│   │   │       ├── ROI.vue
-│   │   │       └── Export.vue
-│   │   ├── common/                  # 通用组件
-│   │   ├── video/                   # 视频相关
-│   │   └── subtitle/                # 字幕相关
-│   ├── composables/                 # 组合式函数（use 前缀）
-│   │   ├── useSettings.ts           # ← use 前缀
-│   │   ├── useBatchProcessor.ts
-│   │   ├── useOCREngine.ts
-│   │   ├── useExport.ts
-│   │   ├── useFile.ts
-│   │   ├── useNotification.ts
-│   │   ├── useOCR.ts
-│   │   ├── useProgress.ts
-│   │   ├── useROI.ts
-│   │   ├── useSystemCheck.ts
-│   │   ├── useTheme.ts
-│   │   ├── useVideoMetadata.ts
-│   │   └── index.ts
-│   ├── core/                        # 核心业务逻辑（无 use 前缀，简洁）
+│   │   │   └── AboutDialog.vue
+│   │   ├── video/                    # 视频相关
+│   │   │   ├── ROISelector.vue
+│   │   │   └── Timeline.vue
+│   │   └── subtitle/                 # 字幕相关
+│   │       ├── List.vue
+│   │       ├── Card.vue
+│   │       ├── SubExport.vue
+│   │       ├── ListFooter.vue
+│   │       ├── BatchBar.vue
+│   │       └── ConfFilter.vue
+│   ├── composables/                  # 组合式函数（use 前缀）
+│   │   ├── useExtractor.ts           # 提取流程协调
+│   │   ├── useOCREngine.ts          # OCR 引擎抽象
+│   │   ├── useOCR.ts                # OCR 引擎选择
+│   │   ├── useSubList.ts            # 字幕列表
+│   │   ├── usePlayer.ts             # 播放控制
+│   │   ├── useROI.ts                # ROI 管理
+│   │   ├── useProgress.ts           # 进度跟踪
+│   │   ├── useBatchProcessor.ts     # 批量处理
+│   │   ├── useSettings.ts           # 设置管理
+│   │   ├── useTheme.ts              # 主题切换
+│   │   ├── useHotkeys.ts            # 快捷键
+│   │   ├── usePreprocessor.ts       # 图像预处理
+│   │   ├── useFile.ts               # 文件操作
+│   │   ├── useNotification.ts       # 通知
+│   │   └── useVideoMetadata.ts      # 视频元数据
+│   ├── core/                         # 核心业务逻辑（无 use 前缀）
 │   │   ├── Pipeline.ts              # 字幕处理流水线
 │   │   ├── SceneDetect.ts           # 场景检测
 │   │   ├── Exporter.ts              # 导出器
 │   │   ├── Calibrator.ts            # 置信度校准
 │   │   └── index.ts
-│   ├── stores/                      # Pinia stores
-│   │   ├── project.ts
-│   │   ├── subtitle.ts
-│   │   ├── settings.ts
-│   │   └── index.ts
-│   ├── utils/                       # 工具函数
-│   │   ├── time.ts
-│   │   ├── math.ts
-│   │   ├── confidence.ts
-│   │   ├── constants.ts
-│   │   └── index.ts
-│   └── types/                       # 类型定义
-│       ├── subtitle.ts
-│       ├── video.ts
-│       └── index.ts
-├── src-tauri/src/                   # Rust 后端
-│   ├── commands/                    # Tauri 命令
-│   │   ├── video.rs                 # 视频处理命令
-│   │   ├── ocr_engine.rs            # OCR 引擎命令
-│   │   ├── scene.rs                 # 场景检测命令
-│   │   ├── export.rs                # 导出命令
-│   │   ├── file.rs                  # 文件操作命令
-│   │   ├── system.rs                # 系统检查命令
-│   │   ├── types.rs                 # 共享类型
-│   │   ├── utils.rs                 # 命令工具函数
-│   │   └── mod.rs
+│   ├── stores/                        # Pinia stores
+│   │   ├── project.ts               # 视频状态、ROI
+│   │   ├── subtitle.ts              # 字幕列表、导出格式
+│   │   └── settings.ts              # 主题、语言、OCR 偏好
+│   ├── utils/                         # 工具函数
+│   │   ├── time.ts                  # 时间格式化
+│   │   ├── math.ts                  # 数学工具
+│   │   ├── confidence.ts             # 置信度工具
+│   │   └── constants.ts              # 常量
+│   ├── themes/                        # 主题
+│   │   └── index.ts                 # 主题配置
+│   └── types/                         # 类型定义
+│       ├── subtitle.ts              # 字幕类型
+│       └── video.ts                 # 视频相关类型
+├── src-tauri/src/                    # Rust 后端
+│   ├── commands/                     # Tauri IPC 命令
+│   │   ├── video.rs                # FFmpeg 帧提取、元数据
+│   │   ├── ocr_engine.rs           # 占位（OCR 已移至前端）
+│   │   ├── scene.rs                 # 场景检测
+│   │   ├── export.rs               # 格式写入
+│   │   ├── file.rs                 # 文件对话框
+│   │   ├── system.rs               # 系统依赖诊断
+│   │   ├── types.rs                # 共享类型
+│   │   └── utils.rs                # 命令工具函数
+│   ├── scripts/
+│   │   └── scene_detect.py         # 场景检测脚本
 │   ├── main.rs
 │   └── lib.rs
-└── tests/                           # 测试文件（随被测文件）
+└── tests/                            # 测试文件（随被测文件）
 ```
 
 ## 3. 命名规则
@@ -84,33 +93,23 @@ SubLens/
 | 类型 | 规则 | 示例 |
 |------|------|------|
 | 页面级组件 | `PascalCase.vue`，无特殊后缀 | `Batch.vue`, `Settings.vue`, `Panel.vue` |
-| Tab 子组件 | `PascalCase.vue`，**无 Tab 后缀** | `Files.vue`, `OCR.vue`, `Export.vue` |
-| 通用组件 | `PascalCase.vue` | `Modal.vue`, `Button.vue`, `Toast.vue` |
+| Tab 子组件 | `PascalCase.vue`，无 Tab 后缀 | `Files.vue`, `OCR.vue`, `Export.vue` |
+| 通用组件 | `PascalCase.vue` | `Modal.vue`, `Button.vue`, `Tooltip.vue` |
 | 业务组件 | `PascalCase.vue` | `Card.vue`, `ConfFilter.vue`, `BatchBar.vue` |
-
-**⚠️ 已废弃命名（需重命名）：**
-- ❌ `SettingsTab.vue` → ✅ `Settings.vue`
 
 ### 3.2 Composables（组合式函数）
 
 | 类型 | 规则 | 示例 |
 |------|------|------|
-| Composables | `usePascalCase.ts`，**必须 use 前缀** | `useSettings.ts`, `useOCREngine.ts` |
-
-**⚠️ 已废弃命名（需重命名）：**
-- ❌ `Extractor.ts` → ✅ `useExtractor.ts`
-- ❌ `Hotkeys.ts` → ✅ `useHotkeys.ts`
-- ❌ `Player.ts` → ✅ `usePlayer.ts`
-- ❌ `Preprocessor.ts` → ✅ `usePreprocessor.ts`
-- ❌ `SubList.ts` → ✅ `useSubList.ts`
+| Composables | `usePascalCase.ts`，必须 use 前缀 | `useSettings.ts`, `useOCREngine.ts` |
 
 ### 3.3 Core（核心业务模块）
 
 | 类型 | 规则 | 示例 |
 |------|------|------|
-| 核心模块 | `PascalCase.ts`，**无 use 前缀**，简洁 | `Pipeline.ts`, `SceneDetect.ts`, `Exporter.ts`, `Calibrator.ts` |
+| 核心模块 | `PascalCase.ts`，无 use 前缀，简洁 | `Pipeline.ts`, `SceneDetect.ts`, `Exporter.ts`, `Calibrator.ts` |
 
-**说明：** Core 模块是核心业务逻辑类，不是 React Hooks，统一用简洁命名以区分。
+**说明：** Core 模块是核心业务逻辑类，不是 React Hooks，也不是 Vue Composables，统一用简洁命名以区分。
 
 ### 3.4 Stores（Pinia 状态管理）
 
@@ -134,18 +133,21 @@ SubLens/
 
 | 类型 | 规则 | 示例 |
 |------|------|------|
-| 命令模块 | `snake_case.rs`，noun | `video.rs`, `ocr_engine.rs`, `scene.rs` |
+| 命令模块 | `snake_case.rs`，noun | `video.rs`, `scene.rs`, `file.rs` |
 | 共享类型 | `types.rs` | `types.rs` |
 | 工具函数 | `utils.rs` | `utils.rs` |
+| 占位模块 | `ocr_engine.rs` | 占位（OCR 已移至前端） |
 
 ## 4. 测试文件命名
 
-测试文件**跟随被测文件**，使用 `.test.ts` / `.test.rs` 后缀：
+测试文件跟随被测文件，使用 `.test.ts` / `.test.rs` 后缀：
 
 ```
-Extractor.ts → Extractor.test.ts
-Pipeline.ts → Pipeline.test.ts
-useOCREngine.ts → useOCREngine.test.ts
+Pipeline.ts         → Pipeline.test.ts
+SceneDetect.ts      → SceneDetect.test.ts
+Exporter.ts        → Exporter.test.ts
+useSubList.ts      → SubList.test.ts
+useOCREngine.ts    → useOCREngine.test.ts
 ```
 
 ## 5. 命名决策理由
@@ -168,18 +170,7 @@ useOCREngine.ts → useOCREngine.test.ts
 2. **路径已区分**：`tabs/Files.vue` vs `Settings.vue`，语境清晰
 3. **与 Vue 生态一致**：主流项目（Vue Router, Pinia）也不在文件名加类型后缀
 
-## 6. 待修复清单
-
-| 文件 | 问题 | 修复操作 |
-|------|------|----------|
-| `SettingsTab.vue` | 残留 Tab 后缀 | 重命名为 `Settings.vue` |
-| `Extractor.ts` | composable 缺少 use 前缀 | 重命名为 `useExtractor.ts` |
-| `Hotkeys.ts` | composable 缺少 use 前缀 | 重命名为 `useHotkeys.ts` |
-| `Player.ts` | composable 缺少 use 前缀 | 重命名为 `usePlayer.ts` |
-| `Preprocessor.ts` | composable 缺少 use 前缀 | 重命名为 `usePreprocessor.ts` |
-| `SubList.ts` | composable 缺少 use 前缀 | 重命名为 `useSubList.ts` |
-
-## 7. 规范执行
+## 6. 规范执行
 
 - **新文件**：严格遵循上述规范
 - **存量文件**：逐步重构，优先处理明显不一致的命名
