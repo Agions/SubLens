@@ -6,7 +6,7 @@
 //! This crate provides the Tauri backend that handles:
 //!
 //! - **Video Processing**: Frame extraction, metadata reading
-//! - **OCR Processing**: Tesseract and PaddleOCR integration
+//! - **OCR Processing**: Handled in frontend via WASM (EasyOCR / Tesseract.js)
 //! - **Scene Detection**: Shot change detection for efficient processing
 //! - **Subtitle Export**: Multiple formats (SRT, VTT, ASS, JSON)
 //! - **File Operations**: Native dialogs, file I/O
@@ -17,7 +17,7 @@
 //! ┌─────────────────────────────────────────────────────────────┐
 //! │                      Frontend (Vue.js)                       │
 //! │   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
-//! │   │  OCR    │  │  ROI    │  │  Export │  │ Settings│     │
+//! │   │  OCR (WASM)│  │  ROI    │  │  Export │  │ Settings│     │
 //! │   │  Tab    │  │  Tab    │  │  Tab    │  │   Tab   │     │
 //! │   └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘     │
 //! └────────┼────────────┼────────────┼────────────┼───────────┘
@@ -27,7 +27,7 @@
 //! ┌─────────────────────────┴───────────────────────────────────┐
 //! │                     Backend (Rust/Tauri)                    │
 //! │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-//! │   │  Video   │  │   OCR    │  │  Scene   │  │  Export  │ │
+//! │   │  Video   │  │  Scene  │  │  Export │  │  File  │ │
 //! │   │ Commands │  │ Commands │  │ Commands │  │ Commands │ │
 //! │   └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘ │
 //! │        │             │             │             │       │
