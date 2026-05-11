@@ -150,19 +150,6 @@ SubLens/
 │       │   ├── types.rs        # 共享类型
 │       │   └── utils.rs        # 命令工具函数
 │       └── main.rs             # Tauri 应用入口
-│
-├── docs/                       # 在线文档（VitePress）
-│   ├── index.md                # 文档首页
-│   ├── guide/
-│   │   ├── getting-started.md  # 安装与首次提取
-│   │   ├── architecture.md     # 项目架构与设计
-│   │   ├── export-formats.md    # 导出格式详解
-│   │   ├── keyboard-shortcuts.md
-│   │   ├── faq.md              # 常见问题
-│   │   └── troubleshooting.md  # 故障排除
-│   └── .vitepress/             # VitePress 配置
-
----
 
 ## 核心架构设计
 
