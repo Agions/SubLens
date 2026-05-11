@@ -2,7 +2,6 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::types::ROI;
 use super::utils::{
     parse_duration_from_ffmpeg_output, parse_fps_from_fraction, parse_stream_from_ffmpeg_output,
     uuid_v4, TempFileGuard, run_command_with_timeout,
@@ -17,23 +16,6 @@ pub struct VideoMetadata {
     pub fps: f64,
     pub total_frames: u64,
     pub codec: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Frame {
-    pub index: u64,
-    pub timestamp: f64,
-    pub width: u32,
-    pub height: u32,
-    pub data: Vec<u8>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExtractOptions {
-    pub scene_threshold: f32,
-    pub frame_interval: u32,
-    /// Optional max frames cap. None = unlimited (capped at 200,000 for safety).
-    pub max_frames: Option<usize>,
 }
 
 #[tauri::command]
