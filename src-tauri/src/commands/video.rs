@@ -195,30 +195,6 @@ async fn get_video_metadata_ffprobe(path: &str) -> Result<VideoMetadata, String>
     })
 }
 
-/// Extract a single frame at a specific timestamp (no ROI cropping)
-fn build_roi_crop_filter(roi: &ROI, video_width: u32, video_height: u32) -> String {
-    // Determine if ROI is in pixel or percent coordinates
-    // Default to percent (0-100 range) for backward compatibility
-    let (x, y, w, h) = if roi.unit == "pixel" {
-        // Clamp pixel coordinates to valid video bounds
-        (
-            roi.x.min(video_width.saturating_sub(1)),
-            roi.y.min(video_height.saturating_sub(1)),
-            roi.width.min(video_width.saturating_sub(roi.x)),
-            roi.height.min(video_height.saturating_sub(roi.y)),
-        )
-    } else {
-        // Default: percent coordinates (0-100)
-        let x = (roi.x as f32 / 100.0 * video_width as f32) as u32;
-        let y = (roi.y as f32 / 100.0 * video_height as f32) as u32;
-        let w = (roi.width as f32 / 100.0 * video_width as f32) as u32;
-        let h = (roi.height as f32 / 100.0 * video_height as f32) as u32;
-        (x, y, w, h)
-    };
-
-    format!("crop={}:{}:{}:{}", w, h, x, y)
-}
-
 #[tauri::command]
 pub async fn extract_frame_at_time(
     path: String,
