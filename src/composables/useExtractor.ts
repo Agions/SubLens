@@ -18,7 +18,7 @@ import { useSubtitleStore } from '@/stores/subtitle'
 import { ERR_NO_VIDEO } from '@/utils/constants'
 import { useVideoPlayer } from './usePlayer'
 import { useOCREngine } from './useOCREngine'
-import type { OCRConfig } from '@/types'
+import type { OCRConfig } from '@/types/video'
 import type { SubtitleLite, SubtitleItem } from '@/types/subtitle'
 import {
   Pipeline,
