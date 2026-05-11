@@ -53,15 +53,10 @@ mod commands;
 
 // Explicit re-exports of all public Tauri commands
 pub use commands::file::{get_file_info, open_file_dialog, read_text_file, save_file_dialog, write_text_file};
-pub use commands::ocr_engine::{
-    check_paddle_ocr_available, get_available_ocr_engines, get_ocr_engine_info,
-    init_ocr_engine, ocr_base64_image, ocr_image_tesseract, process_image_ocr,
-    process_paddle_ocr, process_roi_ocr,
-};
-pub use commands::scene::{calculate_frame_similarity, detect_scenes, get_video_info};
+pub use commands::scene::{detect_scenes, calculate_frame_similarity};
 pub use commands::system::{check_system_dependencies, get_tesseract_languages};
-pub use commands::export::{export_multiple_formats, export_subtitles};
-pub use commands::video::{extract_cropped_frame_at_time, extract_frame_at_time, extract_frames, get_video_metadata};
+pub use commands::export::export_subtitles;
+pub use commands::video::{extract_frame_at_time, extract_frames, get_video_metadata};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -80,9 +75,7 @@ pub fn run() {
             commands::video::get_video_metadata,
             commands::video::extract_frames,
             commands::video::extract_frame_at_time,
-            commands::video::extract_cropped_frame_at_time,
             commands::export::export_subtitles,
-            commands::export::export_multiple_formats,
             commands::file::save_file_dialog,
             commands::file::open_file_dialog,
             commands::file::write_text_file,
@@ -90,16 +83,6 @@ pub fn run() {
             commands::file::get_file_info,
             commands::scene::detect_scenes,
             commands::scene::calculate_frame_similarity,
-            commands::scene::get_video_info,
-            commands::ocr_engine::init_ocr_engine,
-            commands::ocr_engine::process_image_ocr,
-            commands::ocr_engine::process_roi_ocr,
-            commands::ocr_engine::get_available_ocr_engines,
-            commands::ocr_engine::get_ocr_engine_info,
-            commands::ocr_engine::ocr_image_tesseract,
-            commands::ocr_engine::ocr_base64_image,
-            commands::ocr_engine::process_paddle_ocr,
-            commands::ocr_engine::check_paddle_ocr_available,
             commands::system::check_system_dependencies,
             commands::system::get_tesseract_languages,
         ])
