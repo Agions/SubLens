@@ -36,8 +36,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # Only install VitePress — scoped to docs/ directory
+      - name: Install VitePress
+        run: |
+          cd docs
+          pnpm add -D vitepress vue
+          pnpm install
 
       - name: Build Docs
         run: pnpm exec vitepress build docs
