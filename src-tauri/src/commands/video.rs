@@ -306,7 +306,13 @@ fn build_roi_crop_filter(roi: &ROI, video_width: u32, video_height: u32) -> Stri
     // Determine if ROI is in pixel or percent coordinates
     // Default to percent (0-100 range) for backward compatibility
     let (x, y, w, h) = if roi.unit == "pixel" {
-        (roi.x, roi.y, roi.width, roi.height)
+        // Clamp pixel coordinates to valid video bounds
+        (
+            roi.x.min(video_width.saturating_sub(1)),
+            roi.y.min(video_height.saturating_sub(1)),
+            roi.width.min(video_width.saturating_sub(roi.x)),
+            roi.height.min(video_height.saturating_sub(roi.y)),
+        )
     } else {
         // Default: percent coordinates (0-100)
         let x = (roi.x as f32 / 100.0 * video_width as f32) as u32;

@@ -494,7 +494,9 @@ pub async fn process_paddle_ocr(
         .iter()
         .filter_map(|w| {
             let text = w.get("text")?.as_str()?.to_string();
-            let confidence = w.get("confidence")?.as_f64()? as f32;
+            let confidence = w.get("confidence")?.as_f64()
+                .filter(|&c| c.is_finite())
+                .unwrap_or(0.0) as f32;
             let bbox_array = w.get("bbox")?.as_array()?;
             if bbox_array.len() < 4 {
                 return None;
