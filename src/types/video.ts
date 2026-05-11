@@ -41,13 +41,6 @@ export interface Frame {
   thumbnailUrl?: string
 }
 
-export interface ROIPreset {
-  id: string
-  name: string
-  icon: string
-  rect: ROI
-}
-
 // ROI preset display labels — deduplicated to avoid inline magic strings
 const _ROI_BOTTOM = '底部字幕'
 const _ROI_TOP    = '顶部字幕'
@@ -55,7 +48,7 @@ const _ROI_LEFT   = '左侧字幕'
 const _ROI_RIGHT  = '右侧字幕'
 const _ROI_CENTER = '中心字幕'
 
-export const ROI_PRESETS: ROIPreset[] = [
+export const ROI_PRESETS: { id: string; name: string; icon: string; rect: ROI }[] = [
   { id: 'bottom', name: _ROI_BOTTOM, icon: '⬇️', rect: { id: 'bottom', name: _ROI_BOTTOM, type: 'bottom', x: 0, y: 85, width: 100, height: 15, unit: 'percent', enabled: true } },
   { id: 'top',    name: _ROI_TOP,    icon: '⬆️', rect: { id: 'top',    name: _ROI_TOP,    type: 'top',    x: 0, y: 0,  width: 100, height: 15, unit: 'percent', enabled: true } },
   { id: 'left',   name: _ROI_LEFT,   icon: '⬅️', rect: { id: 'left',   name: _ROI_LEFT,   type: 'left',   x: 0, y: 30, width: 40,  height: 40, unit: 'percent', enabled: true } },

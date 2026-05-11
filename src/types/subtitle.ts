@@ -45,13 +45,6 @@ export interface SubtitleEdit {
   newValue: EditableValue
 }
 
-export interface SubtitleExportOptions {
-  format: ExportFormat
-  includeThumbnails: boolean
-  includeConfidence: boolean
-  outputPath: string
-}
-
 /**
  * Supported export formats.
  * @see src/core/Exporter

@@ -27,11 +27,9 @@ export const DEFAULT_ROI_Y = 85
 export const DEFAULT_ROI_HEIGHT = 15
 
 // ─── Export formats ───────────────────────────────────────────────────
-export const EXPORT_FORMAT_KEYS = ['srt', 'vtt', 'ass', 'ssa', 'json', 'txt', 'lrc', 'sbv', 'csv'] as const
-export type ExportFormatKey = typeof EXPORT_FORMAT_KEYS[number]
+// Export format keys defined inline where needed (ExportFormats in types/subtitle.ts)
 
 // ─── Error messages ──────────────────────────────────────────────────
 export const ERR_NO_VIDEO = 'No video loaded'
 export const ERR_OCR_NOT_READY = 'OCR engine not initialized'
-export const ERR_CANVAS_CTX = 'Failed to get canvas context'
 export const ERR_CANVAS_CTX_2D = 'Failed to get 2D canvas context'
