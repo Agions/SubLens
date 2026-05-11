@@ -14,17 +14,9 @@
 //! Uses adaptive threshold detection via scenedetect:
 //! - `threshold`: 0.05-0.95 (higher = less sensitive)
 //! - `min_scene_length`: minimum frames between cuts
-//!
-//! ## Frame Similarity
-//!
-//! The `calculate_frame_similarity()` function provides histogram-based
-//! comparison for frames that don't involve scene cuts.
 
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-
-/// Maximum frame size to prevent OOM attacks (16MB = 1920x1080 RGBA)
-const MAX_FRAME_SIZE_BYTES: usize = 16 * 1024 * 1024;
 
 use super::utils::{find_python_binary, find_script};
 use super::video::get_video_metadata;
@@ -55,7 +47,6 @@ pub async fn detect_scenes(
         return Err(format!("File not found: {}", video_path));
     }
 
-    // Get video FPS for frame number calculation (reuses get_video_metadata which calls ffprobe)
     let fps = match get_video_metadata(video_path.clone()).await {
         Ok(metadata) => metadata.fps,
         Err(e) => {
@@ -64,7 +55,6 @@ pub async fn detect_scenes(
         }
     };
 
-    // Use scenedetect (Python) for reliable scene detection
     let scene_timestamps = detect_scenes_scenedetect(
         &video_path,
         config.threshold,
@@ -72,14 +62,13 @@ pub async fn detect_scenes(
     )
     .await?;
 
-    // Convert timestamps to SceneChange list
     let scene_changes: Vec<SceneChange> = scene_timestamps
         .into_iter()
         .enumerate()
         .map(|(_i, timestamp)| SceneChange {
             frame_index: (timestamp * fps) as u64,
             timestamp,
-            similarity: 0.0, // scenedetect doesn't provide per-frame similarity
+            similarity: 0.0,
         })
         .collect();
 
@@ -87,8 +76,6 @@ pub async fn detect_scenes(
     Ok(scene_changes)
 }
 
-/// Detect scene changes using scenedetect Python library (async)
-/// Replaces deprecated ffmpeg showinfo-based approach.
 async fn detect_scenes_scenedetect(
     path: &str,
     threshold: f32,
@@ -125,84 +112,4 @@ async fn detect_scenes_scenedetect(
         .map_err(|e| format!("Failed to parse scene_detect.py JSON output: {}\nOutput: {}", e, stdout))?;
 
     Ok(timestamps)
-}
-
-#[tauri::command]
-pub async fn calculate_frame_similarity(
-    frame1_data: Vec<u8>,
-    frame2_data: Vec<u8>,
-    // NOTE: width and height parameters are reserved for future histogram-based
-    // similarity calculation that considers spatial distribution. Currently using
-    // global histogram approach that doesn't require dimensions.
-    _width: u32,
-    _height: u32,
-) -> Result<f32, String> {
-    // Security: validate input size to prevent OOM attacks
-    if frame1_data.len() > MAX_FRAME_SIZE_BYTES || frame2_data.len() > MAX_FRAME_SIZE_BYTES {
-        return Err(format!(
-            "Frame data too large: {} bytes (max: {}). Refusing to process.",
-            frame1_data.len().max(frame2_data.len()),
-            MAX_FRAME_SIZE_BYTES
-        ));
-    }
-
-    // Validate input
-    if frame1_data.len() != frame2_data.len() {
-        return Err("Frame data length mismatch".to_string());
-    }
-
-    if frame1_data.is_empty() {
-        return Err("Frame data is empty".to_string());
-    }
-
-    // Use RGB histogram bins for faster, more robust comparison.
-    // 32 bins per channel = 32768 total bins, but we use 16 per channel (4096 total)
-    // for better speed while maintaining good accuracy.
-    const HIST_BINS: usize = 16;
-    const HIST_SIZE: usize = HIST_BINS * HIST_BINS * HIST_BINS;
-
-    let pixel_count = frame1_data.len() / 4;
-    if pixel_count == 0 {
-        return Ok(1.0);
-    }
-
-    let mut hist1 = vec![0u32; HIST_SIZE];
-    let mut hist2 = vec![0u32; HIST_SIZE];
-
-    // Build histograms - iterate over every pixel (RGBA)
-    for chunk in frame1_data.chunks_exact(4) {
-        let r = (chunk[0] / (256 / HIST_BINS) as u8) as usize;
-        let g = (chunk[1] / (256 / HIST_BINS) as u8) as usize;
-        let b = (chunk[2] / (256 / HIST_BINS) as u8) as usize;
-        hist1[r * HIST_BINS * HIST_BINS + g * HIST_BINS + b] += 1;
-    }
-
-    for chunk in frame2_data.chunks_exact(4) {
-        let r = (chunk[0] / (256 / HIST_BINS) as u8) as usize;
-        let g = (chunk[1] / (256 / HIST_BINS) as u8) as usize;
-        let b = (chunk[2] / (256 / HIST_BINS) as u8) as usize;
-        hist2[r * HIST_BINS * HIST_BINS + g * HIST_BINS + b] += 1;
-    }
-
-    // Normalize histograms to probability distributions
-    let norm1: Vec<f32> = hist1.iter().map(|&c| c as f32 / pixel_count as f32).collect();
-    let norm2: Vec<f32> = hist2.iter().map(|&c| c as f32 / pixel_count as f32).collect();
-
-    // Compute Bhattacharyya coefficient (good for histogram comparison)
-    let mut bc_sum = 0.0f32;
-    for i in 0..HIST_SIZE {
-        if norm1[i] > 0.0 && norm2[i] > 0.0 {
-            bc_sum += (norm1[i] * norm2[i]).sqrt();
-        }
-    }
-
-    // Bhattacharyya distance: -ln(BC) clamped to [0, 1]
-    let similarity = if bc_sum > 0.0 {
-        let dist = (-bc_sum.ln()).clamp(0.0, 1.0);
-        1.0 - dist
-    } else {
-        0.0 // Completely different
-    };
-
-    Ok(similarity)
 }

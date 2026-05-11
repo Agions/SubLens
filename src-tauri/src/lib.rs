@@ -53,7 +53,7 @@ mod commands;
 
 // Explicit re-exports of all public Tauri commands
 pub use commands::file::{get_file_info, open_file_dialog, read_text_file, save_file_dialog, write_text_file};
-pub use commands::scene::{detect_scenes, calculate_frame_similarity};
+pub use commands::scene::detect_scenes;
 pub use commands::system::{check_system_dependencies, get_tesseract_languages};
 pub use commands::export::export_subtitles;
 pub use commands::video::{extract_frame_at_time, get_video_metadata};
@@ -81,7 +81,6 @@ pub fn run() {
             commands::file::read_text_file,
             commands::file::get_file_info,
             commands::scene::detect_scenes,
-            commands::scene::calculate_frame_similarity,
             commands::system::check_system_dependencies,
             commands::system::get_tesseract_languages,
         ])
