@@ -213,95 +213,7 @@ async fn get_video_metadata_ffprobe(path: &str) -> Result<VideoMetadata, String>
     })
 }
 
-#[tauri::command]
-pub async fn extract_frames(
-    path: String,
-    roi: ROI,
-    options: ExtractOptions,
-) -> Result<Vec<Frame>, String> {
-    tracing::info!("Extracting frames from: {} with ROI: {:?}", path, roi);
-
-    let path_obj = Path::new(&path);
-    if !path_obj.exists() {
-        return Err(format!("File not found: {}", path));
-    }
-
-    // Get video metadata to determine total frames
-    let metadata = match get_video_metadata_ffprobe(&path).await {
-        Ok(m) => m,
-        Err(e) => {
-            tracing::error!("Failed to get video metadata: {}", e);
-            return Err(format!(
-                "Failed to get video metadata: {}. Is ffprobe installed?",
-                e
-            ));
-        }
-    };
-
-    // Calculate frame interval
-    let frame_interval = if options.frame_interval == 0 {
-        1
-    } else {
-        options.frame_interval
-    };
-    let total_possible = (metadata.total_frames as f64 / frame_interval as f64).ceil() as usize;
-    // No hard cap — use options.max_frames if provided, else 200,000 as absolute safety max
-    let max_frames = options.max_frames.unwrap_or(200_000);
-    let total_extractable = total_possible.min(max_frames);
-
-    if total_possible > max_frames {
-        tracing::warn!(
-            "Frame count truncated: {} frames at interval {} would exceed limit ({}). \
-             Consider increasing frame_interval or processing in batches.",
-            total_possible, frame_interval, max_frames
-        );
-    }
-
-    tracing::info!(
-        "Extracting {} frames at interval {} (of {} total at this interval)",
-        total_extractable, frame_interval, total_possible
-    );
-
-    // Return frame metadata list.
-    // Actual frame extraction with ROI applied must go through
-    // extract_cropped_frame_at_time() which correctly wires the crop filter.
-    // extract_frames() only returns timing metadata — it does NOT extract image data.
-    if total_extractable == 0 {
-        return Ok(vec![]);
-    }
-    let frames: Vec<Frame> = (0..total_extractable)
-        .map(|i| {
-            let frame_index = (i * frame_interval as usize) as u64;
-            let timestamp = frame_index as f64 / metadata.fps;
-            Frame {
-                index: frame_index,
-                timestamp,
-                width: roi.width.min(metadata.width),
-                height: roi.height.min(metadata.height),
-                data: vec![],
-            }
-        })
-        .collect();
-
-    Ok(frames)
-}
-
-/// Extract a single frame with ROI cropping applied
-#[tauri::command]
-pub async fn extract_cropped_frame_at_time(
-    path: String,
-    timestamp_secs: f64,
-    roi: ROI,
-) -> Result<String, String> {
-    // Get video metadata for ROI pixel calculation
-    let metadata = get_video_metadata_ffprobe(&path)
-        .await
-        .map_err(|e| format!("Failed to get video metadata: {}", e))?;
-    let crop_filter = build_roi_crop_filter(&roi, metadata.width, metadata.height);
-    extract_frame_at_time_impl(&path, timestamp_secs, Some(&crop_filter)).await
-}
-
-/// Build ffmpeg crop filter string from ROI parameters
+/// Extract a single frame at a specific timestamp (no ROI cropping)
 fn build_roi_crop_filter(roi: &ROI, video_width: u32, video_height: u32) -> String {
     // Determine if ROI is in pixel or percent coordinates
     // Default to percent (0-100 range) for backward compatibility
@@ -331,33 +243,6 @@ pub async fn extract_frame_at_time(
     timestamp_secs: f64,
 ) -> Result<String, String> {
     extract_frame_at_time_impl(&path, timestamp_secs, None).await
-}
-
-/// Extract a cropped frame at specific ROI (pixel coordinates)
-#[tauri::command]
-pub async fn extract_cropped_frame(
-    path: String,
-    timestamp_secs: f64,
-    roi_x: f32,
-    roi_y: f32,
-    roi_width: f32,
-    roi_height: f32,
-) -> Result<String, String> {
-    // Build ROI struct with explicit pixel unit to match build_roi_crop_filter semantics
-    let roi = ROI {
-        x: roi_x as u32,
-        y: roi_y as u32,
-        width: roi_width as u32,
-        height: roi_height as u32,
-        unit: "pixel".to_string(),
-        ..Default::default()
-    };
-    // Get video metadata for video dimensions (needed by build_roi_crop_filter)
-    let metadata = get_video_metadata_ffprobe(&path)
-        .await
-        .map_err(|e| format!("Failed to get video metadata: {}", e))?;
-    let crop_filter = build_roi_crop_filter(&roi, metadata.width, metadata.height);
-    extract_frame_at_time_impl(&path, timestamp_secs, Some(&crop_filter)).await
 }
 
 async fn extract_frame_at_time_impl(

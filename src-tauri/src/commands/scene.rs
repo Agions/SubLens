@@ -206,29 +206,3 @@ pub async fn calculate_frame_similarity(
 
     Ok(similarity)
 }
-
-#[tauri::command]
-pub async fn get_video_info(path: String) -> Result<serde_json::Value, String> {
-    let path_obj = Path::new(&path);
-
-    if !path_obj.exists() {
-        return Err(format!("File not found: {:?}", path_obj));
-    }
-
-    let metadata = tokio::fs::metadata(&path)
-        .await
-        .map_err(|e| format!("Cannot read file: {}", e))?;
-
-    Ok(serde_json::json!({
-        "exists": true,
-        "is_file": metadata.is_file(),
-        "is_dir": metadata.is_dir(),
-        "size": metadata.len(),
-        "name": path_obj.file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown"),
-        "extension": path_obj.extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or(""),
-    }))
-}

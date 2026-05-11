@@ -56,7 +56,7 @@ pub use commands::file::{get_file_info, open_file_dialog, read_text_file, save_f
 pub use commands::scene::{detect_scenes, calculate_frame_similarity};
 pub use commands::system::{check_system_dependencies, get_tesseract_languages};
 pub use commands::export::export_subtitles;
-pub use commands::video::{extract_frame_at_time, extract_frames, get_video_metadata};
+pub use commands::video::{extract_frame_at_time, get_video_metadata};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -73,7 +73,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             commands::video::get_video_metadata,
-            commands::video::extract_frames,
             commands::video::extract_frame_at_time,
             commands::export::export_subtitles,
             commands::file::save_file_dialog,
