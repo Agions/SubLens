@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Aperture blades -->
+  <circle cx="32" cy="32" r="28" stroke="#6366f1" stroke-width="2" fill="none"/>
+  <path d="M32 4 L32 16" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+  <path d="M32 48 L32 60" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+  <path d="M4 32 L16 32" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+  <path d="M48 32 L60 32" stroke="#6366f1" stroke-width="3" stroke-linecap="round"/>
+  <path d="M12.2 12.2 L21 21" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+  <path d="M43 43 L51.8 51.8" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+  <path d="M51.8 12.2 L43 21" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+  <path d="M21 43 L12.2 51.8" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+  <!-- S letter for Subtitle -->
+  <text x="32" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6366f1">S</text>
+  <!-- Lens center -->
+  <circle cx="32" cy="32" r="8" fill="#6366f1" opacity="0.2"/>
+  <circle cx="32" cy="32" r="4" fill="#6366f1"/>
+</svg>
