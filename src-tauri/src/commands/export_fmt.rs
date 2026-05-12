@@ -7,8 +7,8 @@ use super::timestamp::{
 };
 use super::types::ROI;
 
-pub use super::export::ExportFormat;
-pub use super::export::SubtitleItem;
+pub use super::types::ExportFormat;
+pub use super::types::SubtitleItem;
 
 // Re-export so the public API surface is unchanged
 pub use super::timestamp::format_timestamp_ass as _ts_ass;

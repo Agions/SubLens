@@ -55,3 +55,44 @@ impl ROI {
         (x, y, w, h)
     }
 }
+
+/// A single subtitle entry with timing and text.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SubtitleItem {
+    pub start_time: f64,
+    pub end_time: f64,
+    pub text: String,
+    #[serde(default)]
+    pub confidence: f64,
+}
+
+/// Supported subtitle export formats.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ExportFormat {
+    SRT,
+    WebVTT,
+    ASS,
+    SSA,
+    JSON,
+    TXT,
+    LRC,
+    SBV,
+    CSV,
+}
+
+impl std::fmt::Display for ExportFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExportFormat::SRT => write!(f, "srt"),
+            ExportFormat::WebVTT => write!(f, "vtt"),
+            ExportFormat::ASS => write!(f, "ass"),
+            ExportFormat::SSA => write!(f, "ssa"),
+            ExportFormat::JSON => write!(f, "json"),
+            ExportFormat::TXT => write!(f, "txt"),
+            ExportFormat::LRC => write!(f, "lrc"),
+            ExportFormat::SBV => write!(f, "sbv"),
+            ExportFormat::CSV => write!(f, "csv"),
+        }
+    }
+}

@@ -7,7 +7,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-pub use super::export_fmt::{ExportFormat, SubtitleItem};
+pub use super::types::{ExportFormat, SubtitleItem};
 
 // Re-export format functions for use in lib.rs re-exports
 pub use super::export_fmt::{
