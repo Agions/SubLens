@@ -1,16 +1,16 @@
 //! Subtitle export module.
 //!
-//! Delegates to format-specific functions in [`export_formats`].
-//! The [`export_formats`] module is the owner of all format logic; this module
+//! Delegates to format-specific functions in [`export_fmt`].
+//! The [`export_fmt`] module owns all format logic; this module
 //! only handles Tauri command registration and async file I/O.
 
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-pub use super::export_formats::{ExportFormat, SubtitleItem};
+pub use super::export_fmt::{ExportFormat, SubtitleItem};
 
 // Re-export format functions for use in lib.rs re-exports
-pub use super::export_formats::{
+pub use super::export_fmt::{
     export_as_ass, export_as_csv, export_as_json, export_as_lrc, export_as_sbv, export_as_srt,
     export_as_ssa, export_as_txt, export_as_vtt,
 };

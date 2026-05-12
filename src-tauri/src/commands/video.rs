@@ -2,7 +2,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use super::ffmpeg_output::{
+use super::ffmpeg::{
     parse_duration_from_ffmpeg_output, parse_fps_from_fraction, parse_stream_info,
 };
 use super::utils::{

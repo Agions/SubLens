@@ -1,14 +1,4 @@
 //! Format-specific subtitle exporters.
-//!
-//! Each function takes a slice of [`SubtitleItem`] and returns the formatted
-//! string representation. All functions are pure and heap-allocation bounded.
-//!
-//! ## Format families
-//!
-//! - **Timed text** — SRT, VTT, SBV share [`export_timed_entries`]
-//! - **ASS/SSA family** — share [`export_ass_family`] with different headers
-//! - **Data** — JSON, CSV (RFC 4180)
-//! - **Plain** — TXT, LRC
 
 use serde::{Deserialize, Serialize};
 
