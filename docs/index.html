@@ -3,26 +3,282 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SubLens 文档</title>
+  <title>SubLens — 智能字幕提取工具</title>
+  <meta name="description" content="基于 Tauri + Vue 3 + Rust 的桌面字幕提取工具，支持 12 种格式导出" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Docsify core -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/themes/vue.css" />
+
   <style>
-    :root { --theme-color: #42b883; }
-    .sidebar-toggle { background: var(--theme-color); }
+    :root {
+      --theme-color: #10b981;
+      --theme-color-hover: #059669;
+      --theme-bg: #0f172a;
+      --theme-bg-nav: #1e293b;
+      --text-color: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --code-bg: #1e293b;
+      --heading-color: #f1f5f9;
+      --link-color: #10b981;
+      --sidebar-width: 260px;
+
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    /* ── Global ── */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--theme-bg); color: var(--text-color); font-family: var(--font-body); }
+    a { color: var(--link-color); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { font-family: var(--font-mono) !important; font-size: 0.875em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; }
+    pre code { background: transparent; padding: 0; }
+
+    /* ── App wrapper ── */
+    #docsify-launcher { display: none; }
+    div#app {
+      padding: 0;
+      background: var(--theme-bg);
+    }
+
+    /* ── Cover / Hero ── */
+    section.cover.show {
+      background: var(--theme-bg) !important;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16,185,129,0.15) 0%, transparent 60%),
+        linear-gradient(to bottom, transparent 0%, rgba(15,23,42,0.4) 100%);
+      min-height: 100vh;
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    section.cover::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 600px;
+      background: radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cover-main {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+    }
+
+    /* Logo mark */
+    .cover-logo {
+      width: 72px; height: 72px;
+      margin-bottom: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 18px;
+      box-shadow: 0 0 40px rgba(16,185,129,0.35), 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .cover-logo svg { width: 40px; height: 40px; fill: #fff; }
+
+    /* Typography */
+    .cover h1 {
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 8px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .cover h1 .name-part-2 { color: var(--theme-color); }
+    .cover .cover-subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--text-muted);
+      margin: 0 0 48px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    /* Badges row */
+    .cover-badges {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-color);
+      font-size: 0.8rem; color: var(--text-muted);
+    }
+    .badge .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--theme-color);
+      box-shadow: 0 0 6px var(--theme-color);
+    }
+
+    /* Stats grid */
+    .cover-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+      background: var(--border-color);
+      border-radius: 14px; overflow: hidden;
+      margin-bottom: 48px;
+      border: 1px solid var(--border-color);
+      width: 100%; max-width: 480px;
+    }
+    .stat { background: rgba(15,23,42,0.9); padding: 20px 16px; text-align: center; }
+    .stat .val { font-size: 1.8rem; font-weight: 700; color: var(--theme-color); font-family: var(--font-mono); }
+    .stat .lab { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* CTA buttons */
+    .cover-actions {
+      display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 10px;
+      background: var(--theme-color); color: #fff;
+      font-size: 0.95rem; font-weight: 600;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+    }
+    .btn-primary:hover { background: var(--theme-color-hover); text-decoration: none; transform: translateY(-1px); box-shadow: 0 6px 28px rgba(16,185,129,0.4); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 10px;
+      background: rgba(255,255,255,0.05); color: var(--text-color);
+      font-size: 0.95rem; font-weight: 500;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.09); text-decoration: none; transform: translateY(-1px); }
+
+    /* Feature grid */
+    .cover-features {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;
+      width: 100%; max-width: 640px; text-align: left;
+    }
+    .feat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 18px 20px;
+    }
+    .feat .feat-icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .feat .feat-title { font-size: 0.9rem; font-weight: 600; color: var(--heading-color); margin-bottom: 4px; }
+    .feat .feat-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin: 0; }
+
+    /* Cover footer */
+    .cover-footer {
+      position: absolute; bottom: 28px;
+      font-size: 0.78rem; color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    /* Divider line in cover */
+    .cover-hr { width: 100%; max-width: 480px; border: none; border-top: 1px solid var(--border-color); margin: 0 0 48px; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: var(--theme-bg-nav) !important;
+      border-right: 1px solid var(--border-color) !important;
+      padding-top: 20px;
+    }
+    .sidebar-toggle {
+      background: var(--theme-color) !important;
+      border-radius: 8px !important;
+      color: #fff !important;
+      top: 14px !important;
+      width: 36px !important; height: 36px !important;
+    }
+    .sidebar-toggle span { background: #fff !important; }
+
+    /* Sidebar nav */
+    .sidebar-nav ul li a {
+      color: var(--text-muted) !important;
+      font-size: 0.875rem;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .sidebar-nav ul li a:hover,
+    .sidebar-nav ul li a.active { background: rgba(16,185,129,0.1) !important; color: var(--theme-color) !important; }
+    .sidebar-nav > ul > li > a { font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted) !important; margin-top: 16px; }
+    .sidebar-nav > ul > li > a:hover { background: transparent !important; color: var(--text-color) !important; }
+
+    /* ── Content area ── */
+    .markdown-section { padding: 40px 48px !important; max-width: 860px !important; }
+    .markdown-section > h1 { font-size: 2rem; font-weight: 700; color: var(--heading-color); border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 32px; }
+    .markdown-section > h2 { font-size: 1.4rem; font-weight: 600; color: var(--heading-color); margin-top: 48px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+    .markdown-section > h3 { font-size: 1.1rem; font-weight: 600; color: var(--heading-color); margin-top: 28px; }
+    .markdown-section p, .markdown-section li { line-height: 1.75; color: var(--text-color); }
+    .markdown-section table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+    .markdown-section th { background: var(--theme-bg-nav); color: var(--heading-color); font-weight: 600; padding: 10px 14px; border: 1px solid var(--border-color); text-align: left; }
+    .markdown-section td { padding: 9px 14px; border: 1px solid var(--border-color); color: var(--text-color); vertical-align: top; }
+    .markdown-section tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .markdown-section code { background: var(--code-bg); color: #a5f3fc; }
+    .markdown-section pre { background: var(--code-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px 20px; overflow-x: auto; }
+    .markdown-section pre code { color: var(--text-color); background: transparent; }
+    .markdown-section blockquote { border-left: 3px solid var(--theme-color); background: rgba(16,185,129,0.05); border-radius: 0 8px 8px 0; padding: 12px 18px; margin: 20px 0; }
+    .markdown-section blockquote p { margin: 0; color: var(--text-muted); }
+
+    /* ── Search ── */
+    .search { margin-bottom: 16px !important; }
+    .search input {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 8px !important;
+      color: var(--text-color) !important;
+      padding: 8px 12px !important;
+    }
+    .search input:focus { border-color: var(--theme-color) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15) !important; }
+    .search input::placeholder { color: var(--text-muted) !important; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .markdown-section { padding: 24px 20px !important; }
+      .cover-stats { grid-template-columns: repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
-  <div id="app">加载中…</div>
+  <div id="app">Loading…</div>
+
   <script>
     window.$docsify = {
       name: 'SubLens',
       repo: 'Agions/SubLens',
+      homepage: 'architecture.md',
       loadSidebar: true,
       subMaxLevel: 3,
       auto2top: true,
-      search: { depth: 3, placeholder: '搜索…' }
+      topMargin: 60,
+      search: {
+        depth: 3,
+        placeholder: '搜索文档…',
+        noData: '没有找到结果',
+      },
+      copyCode: { buttonText: '复制', errorText: '复制失败', successText: '已复制' },
+      pagination: { previousButton: '← 上一篇', nextButton: '下一篇 →' },
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/plugins/copy-code.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/plugins/pagination.min.js"></script>
 </body>
 </html>

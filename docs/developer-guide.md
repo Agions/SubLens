@@ -85,9 +85,13 @@ SubLens/
 │   │       └── types.rs       # 共享类型
 │   └── tauri.conf.json        # Tauri 配置
 │
-└── docs/                       # VitePress 文档
-    ├── ARCHITECTURE.md
-    └── DEVELOPER_GUIDE.md
+└── docs/                       # Docsify 在线文档
+    ├── README.md               # 封面（Docsify 自动读取）
+    ├── _sidebar.md             # 侧边导航
+    ├── index.html              # Docsify 入口
+    ├── architecture.md
+    ├── developer-guide.md
+    └── changelog.md
 ```
 
 ---
@@ -285,8 +289,10 @@ version = "1.2.0"
 ### 7.3 更新文档
 
 ```bash
-# VitePress 本地预览
-pnpm docs:dev
+# 本地预览 Docsify（docs/ 目录直接 serve，无需构建）
+npx docsify-cli serve docs
+# 或用 Python：
+cd docs && python3 -m http.server 3000
 ```
 
 ---
