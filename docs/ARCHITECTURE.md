@@ -145,7 +145,7 @@ commands/
 ├── scene.rs         # detect_scenes（调用 scene_detect.py）
 ├── file.rs          # 对话框、文件读写
 ├── system.rs        # check_system_dependencies、get_tesseract_languages
-└── ocr_engine.rs   # 占位（OCR 已移至前端）
+└── ocr.rs          # 占位（OCR 已移至前端）
 ```
 
 ### 3.2 video.rs — 元数据与帧提取
@@ -253,7 +253,7 @@ detect_scenes(video_path, config)
 ```
 commands/video.rs      ✓ 命令名词（video, export, scene）
 commands/utils.rs      ✓ 工具类
-commands/ocr_engine.rs ✓ 占位说明
+commands/ocr.rs ✓ 占位说明
 ```
 
 ### Rust 标识符
