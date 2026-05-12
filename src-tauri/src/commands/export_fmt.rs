@@ -1,6 +1,7 @@
 //! Format-specific subtitle exporters.
 
 use serde::{Deserialize, Serialize};
+use chrono;
 
 use super::timestamp::{
     format_timestamp_ass, format_timestamp_sbv, format_timestamp_srt, format_timestamp_vtt,

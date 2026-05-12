@@ -59,11 +59,26 @@ impl ROI {
 /// A single subtitle entry with timing and text.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubtitleItem {
+    /// 1-based sequential index used in SRT/VTT/CSV export.
+    #[serde(default)]
+    pub index: usize,
+    /// Unique identifier used in JSON export.
+    #[serde(default)]
+    pub id: String,
     pub start_time: f64,
     pub end_time: f64,
     pub text: String,
     #[serde(default)]
     pub confidence: f64,
+    /// Detected language code (e.g. "en", "zh").
+    #[serde(default)]
+    pub language: String,
+    /// Frame index at which this subtitle starts (optional, 0 if unknown).
+    #[serde(default)]
+    pub start_frame: u32,
+    /// Frame index at which this subtitle ends (optional, 0 if unknown).
+    #[serde(default)]
+    pub end_frame: u32,
 }
 
 /// Supported subtitle export formats.
