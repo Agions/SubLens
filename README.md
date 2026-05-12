@@ -62,7 +62,7 @@
 | **TTML** | — | Timed Text ML |
 
 ### 📋 ROI 预设
-底部 · 顶部 · 左侧 · 右侧 · 中间 · 自定义 — 一键切换
+底部 · 顶部 · 左侧 · 右侧 · 中间 · 自定义 — 一键切换。
 
 ### 🎬 支持输入格式
 MP4 · MKV · AVI · MOV · WebM · M4V · WMV · FLV · 3GP
@@ -72,18 +72,11 @@ MP4 · MKV · AVI · MOV · WebM · M4V · WMV · FLV · 3GP
 ## 快速开始
 
 ```bash
-# 克隆仓库
 git clone https://github.com/Agions/SubLens.git
 cd SubLens
-
-# 安装前端依赖
 pnpm install
-
-# 开发模式运行（Rust 后端首次自动编译）
-pnpm tauri dev
-
-# 构建生产包
-pnpm tauri build
+pnpm tauri dev   # 开发模式
+pnpm tauri build # 生产构建
 ```
 
 ### 前置依赖
@@ -97,16 +90,41 @@ pnpm tauri build
 
 ---
 
-## 技术栈
+## 系统架构
 
-| 层级 | 技术 |
-|:---|:---|
-| 桌面框架 | Tauri 2.x |
-| 前端 | Vue 3 + TypeScript |
-| 后端 | Rust |
-| OCR 引擎 | Tesseract.js (WASM)、PaddleOCR (Native)、EasyOCR |
-| 状态管理 | Pinia |
-| 构建工具 | Vite |
+```
+ ┌─────────────────────────────────────────────────────────────────┐
+ │                      Frontend (Vue 3 + TypeScript)                │
+ │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───┐ │
+ │  │  Files   │  │   ROI    │  │   OCR    │  │  Export  │  │ ⚙ │ │
+ │  │   Tab    │  │   Tab    │  │   Tab    │  │   Tab    │  │Tab│ │
+ │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └─┬─┘ │
+ │       │             │             │             │          │   │
+ │       └─────────────┴──────┬──────┴─────────────┘          │   │
+ │                            │ Tauri IPC (invoke)              │   │
+ ├────────────────────────────┼────────────────────────────────┼───┤
+ │     Backend (Rust/Tauri)   │                                │   │
+ │  ┌──────────────┐  ┌──────┴──────┐  ┌──────────────┐       │   │
+ │  │    video     │  │   export    │  │    scene     │       │   │
+ │  │  extract_frame│  │  12 formats │  │  detect_scenes│       │   │
+ │  │  metadata    │  │             │  │              │       │   │
+ │  └──────┬───────┘  └─────────────┘  └──────┬───────┘       │   │
+ │         │                                    │               │   │
+ │         └──────────────────┬─────────────────┘               │   │
+ │                            │                                │   │
+ │                   ┌────────┴────────┐                       │   │
+ │                   │     utils       │                       │   │
+ │                   │ TempFileGuard  │                       │   │
+ │                   │ find_script    │                       │   │
+ │                   │ run_cmd_timeout│                       │   │
+ │                   └────────┬───────┘                       │   │
+ └────────────────────────────┼────────────────────────────────┴───┘
+                              │
+               ┌──────────────┼──────────────┐
+               │              │              │
+           ffmpeg/ffprobe   Python        tesseract
+           (frame extract)  (scene)       (OCR)
+```
 
 ---
 
@@ -140,20 +158,46 @@ SubLens/
 │
 ├── src-tauri/                  # Rust 后端
 │   └── src/
-│       ├── commands/           # Tauri IPC 命令
-│       │   ├── video.rs        # FFmpeg 帧提取、元数据
-│       │   ├── ocr_engine.rs  # 占位（OCR 逻辑已移至前端 WASM）
-│       │   ├── scene.rs        # 场景检测
-│       │   ├── export.rs       # 格式写入
-│       │   ├── file.rs         # 文件对话框
-│       │   ├── system.rs       # 系统依赖诊断
-│       │   ├── types.rs        # 共享类型
-│       │   └── utils.rs        # 命令工具函数
-│       └── main.rs             # Tauri 应用入口
+│       ├── lib.rs              # Tauri 应用入口、命令注册
+│       ├── main.rs             # main 函数（调用 lib::run）
+│       └── commands/           # Tauri IPC 命令（按功能分组）
+│           ├── mod.rs          # 模块声明
+│           ├── types.rs        # 共享类型（ROI 等）
+│           ├── utils.rs        # 工具函数（TempFileGuard、UUID、脚本查找）
+│           ├── video.rs        # 帧提取、元数据读取（ffprobe/ffmpeg）
+│           ├── export.rs       # 12 格式字幕导出（SRT/VTT/ASS/JSON/CSV…）
+│           ├── scene.rs        # 场景检测（调用 scene_detect.py）
+│           ├── file.rs         # 文件对话框、文件读写
+│           ├── system.rs       # 系统依赖诊断（ffmpeg/tesseract 版本）
+│           └── ocr_engine.rs   # 占位（OCR 已移至前端 WASM）
+│
+├── docs/                       # VitePress 文档
+│   ├── index.md               # 文档首页
+│   ├── guide/                 # 用户指南
+│   └── api/                   # API 参考
+│
+└── public/                    # 静态资源（logo.svg 等）
+```
+
+---
+
+## 技术栈
+
+| 层级 | 技术 |
+|:---|:---|
+| 桌面框架 | Tauri 2.x |
+| 前端 | Vue 3 + TypeScript + Vite |
+| 后端 | Rust（Tokio 异步运行时）|
+| OCR 引擎 | Tesseract.js (WASM)、EasyOCR (PyTorch)、PaddleOCR |
+| 状态管理 | Pinia |
+| 文档 | VitePress |
+| 测试 | Vitest |
+
+---
 
 ## 核心架构设计
 
-### OCR 后处理管道（Pipeline）
+### OCR 后处理管道（Pipeline.ts）
 
 四阶段纯函数管道，输入原始 OCR 结果，输出清洗后的字幕：
 
@@ -167,16 +211,35 @@ Stage 4: computeEndTime  → 根据下一条字幕计算精确 endTime
 
 每阶段独立可测试，`textSimilarity` 结果按 (文本长度前缀 + 首尾各4字) 缓存，O(n log n) 复杂度。
 
-### 置信度校准（Calibrator）
+### 置信度校准（Calibrator.ts）
 
 基于语言脚本（CJK / Latin）的多信号加权校准：
 
 - **惩罚信号**：混语、短文本（<3字）、重复字符、孤立 CJK 字符、引号不平衡、大写误识、尾随逗号
 - **奖励信号**：字符多样性、句子完整结尾、合理字幕长度
 
-### 场景检测（SceneDetect）
+### 场景检测（SceneDetect.ts / scene.rs）
 
-基于量化 RGB 直方图 + 卡方距离，每帧 O(n) 时间复杂度和 48 计数器内存占用，对光照渐变鲁棒。
+前端直方图 + 卡方检验（TypeScript，纯前端）；后端调用 `scene_detect.py` 脚本（scenedetect 库）做精确检测。双引擎并存，按需切换。
+
+---
+
+## 模块导航
+
+| 模块 | 文件 | 职责 |
+|:---|:---|:---|
+| **Rust 命令层** | | |
+| 视频处理 | `commands/video.rs` | `get_video_metadata`（ffprobe → ffmpeg → 文件估算三层降级）、`extract_frame_at_time`（Base64 PNG） |
+| 字幕导出 | `commands/export.rs` | 12 格式导出，RAII 风格 `export_timed_entries` / `export_ass_family` 复用 |
+| 场景检测 | `commands/scene.rs` | 调用 `scene_detect.py`，返回 `SceneChange[]` |
+| 文件操作 | `commands/file.rs` | 原生对话框、文本文件读写、文件信息查询 |
+| 系统诊断 | `commands/system.rs` | ffmpeg / ffprobe / tesseract / ImageMagick 版本检测 |
+| 工具函数 | `commands/utils.rs` | `TempFileGuard`（RAII 自动清理）、`find_script`（缓存搜索）、`run_command_with_timeout` |
+| **前端核心** | | |
+| 后处理管道 | `core/Pipeline.ts` | 五阶段字幕清洗，纯函数，可独立测试 |
+| 格式导出 | `core/Exporter.ts` | 12 格式序列化（复用 Rust 格式逻辑）|
+| 置信度校准 | `core/Calibrator.ts` | 多信号加权评分 |
+| 场景检测 | `core/SceneDetect.ts` | 直方图 + 卡方，纯前端 JS |
 
 ---
 

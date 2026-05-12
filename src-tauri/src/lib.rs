@@ -55,7 +55,7 @@ mod commands;
 pub use commands::file::{get_file_info, open_file_dialog, read_text_file, save_file_dialog, write_text_file};
 pub use commands::scene::detect_scenes;
 pub use commands::system::{check_system_dependencies, get_tesseract_languages};
-pub use commands::export::export_subtitles;
+pub use commands::export::{export_subtitles, ExportFormat, SubtitleItem};
 pub use commands::video::{extract_frame_at_time, get_video_metadata};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

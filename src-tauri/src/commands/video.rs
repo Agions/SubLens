@@ -2,8 +2,10 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
+use super::ffmpeg::{
+    parse_duration_from_ffmpeg_output, parse_fps_from_fraction, parse_stream_info,
+};
 use super::utils::{
-    parse_duration_from_ffmpeg_output, parse_fps_from_fraction, parse_stream_from_ffmpeg_output,
     uuid_v4, TempFileGuard, run_command_with_timeout,
 };
 
@@ -109,7 +111,7 @@ async fn get_video_metadata_ffmpeg(path: &str) -> Result<VideoMetadata, String> 
 
     // Parse duration from ffmpeg output
     let duration = parse_duration_from_ffmpeg_output(&stderr);
-    let (width, height, fps) = parse_stream_from_ffmpeg_output(&stderr);
+    let (width, height, fps) = parse_stream_info(&stderr);
 
     if duration <= 0.0 {
         return Err("Could not determine video duration".to_string());

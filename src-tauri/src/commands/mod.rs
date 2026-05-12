@@ -20,8 +20,11 @@
 
 pub mod types;
 pub mod utils;
+pub mod ffmpeg;  // FFmpeg / ffprobe 输出解析（不含命令执行）
 pub mod video;
-pub mod export;
+pub mod timestamp;   // 时间戳格式化（SRT/VTT/ASS/SSA/SBV）
+pub mod export;      // 导出命令入口 + 公共类型（SubtitleItem、ExportFormat）
+pub mod export_formats; // 12 格式具体实现
 pub mod file;
 pub mod scene;
 pub mod ocr_engine;
