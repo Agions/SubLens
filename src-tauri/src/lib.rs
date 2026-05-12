@@ -18,7 +18,7 @@
 //! │                      Frontend (Vue.js)                       │
 //! │   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
 //! │   │  OCR (WASM)│  │  ROI    │  │  Export │  │ Settings│     │
-//! │   │  Tab    │  │  Tab    │  │  Tab    │  │   Tab   │     │
+//! │   │  Tab    │  │   Tab   │  │   Tab   │  │   Tab   │     │
 //! │   └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘     │
 //! └────────┼────────────┼────────────┼────────────┼───────────┘
 //!          │            │            │            │
@@ -27,18 +27,17 @@
 //! ┌─────────────────────────┴───────────────────────────────────┐
 //! │                     Backend (Rust/Tauri)                    │
 //! │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-//! │   │  Video   │  │  Scene  │  │  Export │  │  File  │ │
-//! │   │ Commands │  │ Commands │  │ Commands │  │ Commands │ │
+//! │   │  video   │  │scene_det│  │  export  │  │ file_ops │ │
+//! │   │          │  │         │  │          │  │          │ │
 //! │   └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘ │
 //! │        │             │             │             │       │
 //! │        └─────────────┴─────────────┴─────────────┘       │
 //! │                          │                                │
 //! │                   ┌──────┴──────┐                        │
-//! │                   │  External   │                        │
-//! │                   │   Tools    │                        │
-//! │                   │ ffmpeg/tess │                        │
-//! │                   └─────────────┘                        │
-//! └───────────────────────────────────────────────────────────┘
+//! │                   │   utils     │                        │
+//! │                   │ ffmpeg_output│                       │
+//! │                   │  timestamp  │                        │
+//! └───────────────────┴─────────────┴────────────────────────┴─┘
 //! ```
 //!
 //! # Tauri Commands
@@ -52,8 +51,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod commands;
 
 // Explicit re-exports of all public Tauri commands
-pub use commands::file::{get_file_info, open_file_dialog, read_text_file, save_file_dialog, write_text_file};
-pub use commands::scene::detect_scenes;
+pub use commands::file_ops::{get_file_info, open_file_dialog, read_text_file, save_file_dialog, write_text_file};
+pub use commands::scene_detect::detect_scenes;
 pub use commands::system::{check_system_dependencies, get_tesseract_languages};
 pub use commands::export::{export_subtitles, ExportFormat, SubtitleItem};
 pub use commands::video::{extract_frame_at_time, get_video_metadata};
@@ -75,12 +74,12 @@ pub fn run() {
             commands::video::get_video_metadata,
             commands::video::extract_frame_at_time,
             commands::export::export_subtitles,
-            commands::file::save_file_dialog,
-            commands::file::open_file_dialog,
-            commands::file::write_text_file,
-            commands::file::read_text_file,
-            commands::file::get_file_info,
-            commands::scene::detect_scenes,
+            commands::file_ops::save_file_dialog,
+            commands::file_ops::open_file_dialog,
+            commands::file_ops::write_text_file,
+            commands::file_ops::read_text_file,
+            commands::file_ops::get_file_info,
+            commands::scene_detect::detect_scenes,
             commands::system::check_system_dependencies,
             commands::system::get_tesseract_languages,
         ])
