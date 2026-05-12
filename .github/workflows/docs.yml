@@ -26,33 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      # Only install VitePress — scoped to docs/ directory
-      - name: Install VitePress
-        run: |
-          cd docs
-          pnpm add -D vitepress vue
-          pnpm install
-
-      - name: Build Docs
-        run: pnpm exec vitepress build docs
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: docs
 
       - name: Deploy to GitHub Pages
         id: deployment
