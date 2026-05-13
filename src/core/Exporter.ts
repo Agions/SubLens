@@ -10,17 +10,18 @@
  * - 错误格式输入 → 返回空字符串（容错）
  */
 
-import type { SubtitleItem } from '@/types/subtitle'
+import { type SubtitleItem } from '@/types/subtitle'
+import { type ExportFormat } from '@/types/subtitle'
 
 // ─── 模块级常量（避免每调用重建）───────────────────────────────
 // ASS escape sequences — MUST process backslash FIRST to avoid double-escaping
-// Order: \\\\ → {, } → , → \n
+// Order: \\ → {, } → , → \n
 const _ASS_ESCAPE_REGEXPS: Array<[RegExp, string]> = [
   [/\\/g, '\\\\'],  // backslash first — must be before other escapes
   [/\}/g, '\\}'],   // closing brace before opening (visual grouping)
   [/\{/g, '\\{'],  // opening brace
   [/,/g, '\\,'],   // comma
-  [/\n/g, '\\N'],     // newline last — depends on \ not being double-escaped yet
+  [/\n/g, '\\N'],   // newline last — depends on \ not being double-escaped yet
 ]
 
 // Shared timestamp helpers — extract common decomposition
@@ -38,6 +39,21 @@ function pad2(n: number): string {
 
 function pad3(n: number): string {
   return n.toString().padStart(3, '0')
+}
+
+// ─── ASS/SSA shared event formatting ────────────────────────────
+function formatAssEvents(
+  subs: SubtitleItem[],
+  tsFmt: (s: number) => string,
+  prefix = '0',
+): string {
+  return subs.map(sub => {
+    let text = sub.text
+    for (const [pattern, replacement] of _ASS_ESCAPE_REGEXPS) {
+      text = text.replace(pattern, replacement)
+    }
+    return `Dialogue: ${prefix},${tsFmt(sub.startTime)},${tsFmt(sub.endTime)},Default,,0,0,0,,${text}`
+  }).join('\n')
 }
 
 // ─── 通用时间戳格式化工厂 ─────────────────────────────────────────
@@ -113,16 +129,8 @@ Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
 
-  const events = subs.map(sub => {
-    let text = sub.text
-    for (const [pattern, replacement] of _ASS_ESCAPE_REGEXPS) {
-      text = text.replace(pattern, replacement)
-    }
-    return `Dialogue: 0,${tsASS(sub.startTime)},${tsASS(sub.endTime)},Default,,0,0,0,,${text}`
-  }).join('\n')
-
   return `${header}
-${events}`
+${formatAssEvents(subs, tsASS)}`
 }
 
 function formatSSA(subs: SubtitleItem[]): string {
@@ -141,16 +149,8 @@ Style: Default,Arial,20,16777215,65535,255,0,-1,0,1,2,2,2,10,10,10,0,1
 [Events]
 Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
 
-  const events = subs.map(sub => {
-    let text = sub.text
-    for (const [pattern, replacement] of _ASS_ESCAPE_REGEXPS) {
-      text = text.replace(pattern, replacement)
-    }
-    return `Dialogue: Marked=0,${tsSSA(sub.startTime)},${tsSSA(sub.endTime)},Default,NTP,0000,0000,0000,,${text}`
-  }).join('\n')
-
   return `${header}
-${events}`
+${formatAssEvents(subs, tsSSA, 'Marked=0')}`
 }
 
 function formatJSON(subs: SubtitleItem[]): string {
@@ -213,15 +213,12 @@ function formatCSV(subs: SubtitleItem[]): string {
   if (!subs?.length) return CSV_HEADER
   const rows = subs.map(sub => {
     const escaped = `"${sub.text.replace(/"/g, '""')}"`
-    // Use float [0-1] to match JSON format, consistent across all export formats
     return `${sub.index},${sub.startTime.toFixed(3)},${sub.endTime.toFixed(3)},${sub.startFrame},${sub.endFrame},${escaped},${sub.confidence.toFixed(3)}`
   }).join('\n')
   return CSV_HEADER + rows
 }
 
 // ─── Exporter 主类 ─────────────────────────────────────────────────
-export type ExportFormat = 'srt' | 'vtt' | 'ass' | 'ssa' | 'json' | 'txt' | 'lrc' | 'sbv' | 'csv'
-
 export interface ExportResult {
   format: ExportFormat
   content: string

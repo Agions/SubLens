@@ -16,7 +16,8 @@ export { SceneDetect, DEFAULT_SCENE_DETECTOR_OPTIONS } from './SceneDetect'
 export type { SceneDetectOptions } from './SceneDetect'
 
 export { Exporter, getExporter } from './Exporter'
-export type { ExportFormat, ExportResult } from './Exporter'
+export type { ExportFormat } from '@/types/subtitle'
+export type { ExportResult } from './Exporter'
 
 export { Calibrator, getCalibrator, langToScript } from './Calibrator'
 export type { CalibrationResult, CalibrationSignal, Script } from './Calibrator'
