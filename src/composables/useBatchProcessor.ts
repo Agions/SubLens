@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useOCREngine } from './useOCREngine'
 import { type OCREngine } from '@/types/video'
+import { generateId } from '@/utils/id'
 
 export interface BatchJob {
   id: string
@@ -24,16 +25,6 @@ export interface BatchOptions {
   sceneThreshold: number
   confidenceThreshold: number
   maxConcurrency?: number
-}
-
-/**
- * 生成加密安全的唯一ID
- */
-function generateJobId(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return `job-${globalThis.crypto.randomUUID()}`;
-  }
-  return `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export function useBatchProcessor() {
@@ -83,7 +74,7 @@ export function useBatchProcessor() {
   // Add files to queue
   function addToQueue(inputPaths: string[], options: BatchOptions): BatchJob[] {
     const newJobs: BatchJob[] = inputPaths.map(inputPath => ({
-      id: generateJobId(),
+      id: generateId('job'),
       inputPath,
       outputPath: options.outputDir,
       status: 'pending',
