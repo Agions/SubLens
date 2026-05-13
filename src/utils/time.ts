@@ -17,6 +17,15 @@ function _decompose(seconds: number): { hrs: number; mins: number; secs: number 
   }
 }
 
+// Extended version with remainder (used by Exporter for fractional formatting)
+export function _decomposeWithRemainder(seconds: number) {
+  const hrs = Math.floor(seconds / HOURS_IN_SECONDS)
+  const mins = Math.floor((seconds % HOURS_IN_SECONDS) / MINUTES_IN_SECONDS)
+  const secs = Math.floor(seconds % MINUTES_IN_SECONDS)
+  const remainder = seconds % 1
+  return { hrs, mins, secs, remainder }
+}
+
 function _pad2(n: number): string {
   return n.toString().padStart(2, '0')
 }

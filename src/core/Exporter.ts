@@ -12,6 +12,7 @@
 
 import { type SubtitleItem } from '@/types/subtitle'
 import { type ExportFormat } from '@/types/subtitle'
+import { _decomposeWithRemainder } from '@/utils/time'
 
 // ─── 模块级常量（避免每调用重建）───────────────────────────────
 // ASS escape sequences — MUST process backslash FIRST to avoid double-escaping
@@ -24,15 +25,7 @@ const _ASS_ESCAPE_REGEXPS: Array<[RegExp, string]> = [
   [/\n/g, '\\N'],   // newline last — depends on \ not being double-escaped yet
 ]
 
-// Shared timestamp helpers — extract common decomposition
-function _decompose(seconds: number) {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  const remainder = seconds % 1
-  return { h, m, s, remainder }
-}
-
+// Shared timestamp helpers — now imported from utils/time
 function pad2(n: number): string {
   return n.toString().padStart(2, '0')
 }
@@ -80,7 +73,7 @@ function tsFormat(
   fracPad: (n: number) => string,
 ): (seconds: number) => string {
   return (seconds: number) => {
-    const { h, m, s, remainder } = _decompose(seconds)
+    const { hrs: h, mins: m, secs: s, remainder } = _decomposeWithRemainder(seconds)
     return `${pad2(h)}${hSep}${pad2(m)}${mSep}${pad2(s)}${sSep}${fracPad(Math.floor(remainder * fracDiv))}`
   }
 }
