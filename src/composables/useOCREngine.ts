@@ -291,7 +291,18 @@ export function useOCREngine() {
     }
   }
 
-  // ─── 多通道 OCR ───────────────────────────────────────────────
+  // ─── Multi-pass OCR with failure recovery & adaptive selection ────
+
+  /**
+   * Run multi-pass OCR with graceful per-pass failure recovery.
+   *
+   * Strategy:
+   * 1. Run passes sequentially — early exit if a pass yields very high confidence (≥ 0.95)
+   * 2. If a pass throws, capture the error and continue with remaining passes
+   * 3. After all passes, select the best result by calibrated confidence (not raw)
+   * 4. If all passes fail, fall back to a single pass at scale 2.0
+   * 5. Each pass uses a different scale factor for diversity
+   */
   async function processMultiPass(
     imageData: ImageData,
     config: OCRConfig,
@@ -308,29 +319,82 @@ export function useOCREngine() {
     isProcessing.value = true
     error.value = null
 
+    // Scale factors for diversity — ordered by expected effectiveness for subtitles
+    const scales = [2.0, 3.0, 2.5] as const
+    const passOptions = scales.map(scale => ({
+      preprocess: true,
+      preprocessMode: 'subtitle' as const,
+      scaleFactor: scale,
+    }))
+
+    const results: Array<{
+      ocrResults: OCRResult[]
+      rawConfidence: number
+      calibratedConfidence: number
+      scale: number
+      error?: string
+    }> = []
+
     try {
-      // Run all passes concurrently — the Tesseract worker serializes internally,
-      // but Promise.all avoids blocking the event loop between passes.
-      const [r1, r2, r3] = await Promise.all([
-        processImageData(imageData, config, {
+      for (let i = 0; i < passOptions.length; i++) {
+        const opts = passOptions[i]
+        try {
+          const ocrResults = await processImageData(imageData, config, opts)
+          if (ocrResults.length === 0) {
+            results.push({ ocrResults, rawConfidence: 0, calibratedConfidence: 0, scale: opts.scaleFactor!, error: 'no text detected' })
+            continue
+          }
+
+          const rawConfidence = ocrResults.reduce((s, r) => s + r.confidence, 0) / ocrResults.length
+          const lang = config.language?.[0] ?? 'ch'
+          const { confidence: calibrated } = calibrator.calibrateEnhanced(
+            ocrResults.map(r => r.text).join(' '),
+            rawConfidence,
+            langToScript(lang)
+          )
+
+          results.push({ ocrResults, rawConfidence, calibratedConfidence: calibrated, scale: opts.scaleFactor! })
+
+          // Early exit: high confidence means we can stop early
+          if (calibrated >= 0.95 && ocrResults.length >= 3) {
+            break
+          }
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : String(e)
+          results.push({
+            ocrResults: [],
+            rawConfidence: 0,
+            calibratedConfidence: 0,
+            scale: opts.scaleFactor!,
+            error: errMsg,
+          })
+        }
+      }
+
+      // Find best result by calibrated confidence
+      const validResults = results.filter(r => r.ocrResults.length > 0 && !r.error)
+      if (validResults.length === 0) {
+        // All passes failed — fallback to single pass at scale 2.0
+        const fallback = await processImageData(imageData, config, {
           preprocess: true,
           preprocessMode: 'subtitle',
           scaleFactor: 2.0,
-        }),
-        processImageData(imageData, config, {
-          preprocess: true,
-          preprocessMode: 'subtitle',
-          scaleFactor: 3.0,
-        }),
-        processImageData(imageData, config, {
-          preprocess: true,
-          preprocessMode: 'subtitle',
-          scaleFactor: 2.5,
-        }),
-      ])
+        })
+        progress.value = 100
+        return fallback
+      }
 
-      // 空间网格合并（去重）
-      const merged = _mergeOCRResults([r1, r2, r3])
+      // Sort by calibrated confidence (highest first)
+      validResults.sort((a, b) => b.calibratedConfidence - a.calibratedConfidence)
+
+      // Merge results across all valid passes using spatial grid deduplication
+      const allOcrResults = validResults
+        .slice(0, 3)
+        .flatMap(r => r.ocrResults)
+      const merged = allOcrResults.length > 1
+        ? _mergeOCRResults([allOcrResults])
+        : allOcrResults
+
       progress.value = 100
       return merged
     } catch (e) {

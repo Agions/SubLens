@@ -96,6 +96,51 @@ function _trimMemo() {
   for (let i = 0; i < deleteCount; i++) _memo.delete(keys[i])
 }
 
+// ─── CJK text detection ──────────────────────────────────────────────
+
+/** Detect whether text is primarily CJK (Chinese/Japanese/Korean) script. */
+function _isCJCText(text: string): boolean {
+  const cjkCount = (text.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g) || []).length
+  return cjkCount / text.length > 0.5
+}
+
+/**
+ * Character-level Levenshtein distance for CJK text.
+ * Each CJK character counts as one unit (not bytes).
+ * For mixed text, falls back to word-level for the Latin parts.
+ */
+function _charLevenshtein(a: string, b: string): number {
+  if (a === b) return 0
+  if (!a.length) return b.length
+  if (!b.length) return a.length
+
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a]
+  const dp: number[] = Array.from({ length: long.length + 1 }, (_, i) => i)
+
+  for (let i = 1; i <= short.length; i++) {
+    let prev = dp[0]
+    dp[0] = i
+    for (let j = 1; j <= long.length; j++) {
+      const temp = dp[j]
+      dp[j] = short[i - 1] === long[j - 1]
+        ? prev
+        : 1 + Math.min(prev, dp[j], dp[j - 1])
+      prev = temp
+    }
+  }
+  return dp[long.length]
+}
+
+/**
+ * Word-level Levenshtein for Latin/English text.
+ * Splits on whitespace and compares words for better semantic similarity.
+ */
+function _wordLevenshtein(a: string, b: string): number {
+  const wordsA = a.toLowerCase().split(/\s+/)
+  const wordsB = b.toLowerCase().split(/\s+/)
+  return _charLevenshtein(wordsA.join(' '), wordsB.join(' '))
+}
+
 export function textSimilarity(a: string, b: string, cache?: SimilarityCache): number {
   if (a === b) return 1
   if (!a.length || !b.length) return 0
@@ -104,6 +149,12 @@ export function textSimilarity(a: string, b: string, cache?: SimilarityCache): n
   const memoKey = _memoKey(a, b)
   const memoHit = _memo.get(memoKey)
   if (memoHit !== undefined) return memoHit
+
+  // Determine text type and select appropriate distance metric
+  const isCJK = _isCJCText(a) || _isCJCText(b)
+  const dist = isCJK
+    ? _charLevenshtein(a, b)
+    : _wordLevenshtein(a, b)
 
   // 缓存键：短串在前 + 长度前缀（确保对称性）。
   // 短文本（≤4字）直接用完整文本；较长文本取首尾各4字确保唯一性。
@@ -119,19 +170,6 @@ export function textSimilarity(a: string, b: string, cache?: SimilarityCache): n
     return hit
   }
 
-  const dp: number[] = Array.from({ length: long.length + 1 }, (_, i) => i)
-  for (let i = 1; i <= short.length; i++) {
-    let prev = dp[0]
-    dp[0] = i
-    for (let j = 1; j <= long.length; j++) {
-      const temp = dp[j]
-      dp[j] = short[i - 1] === long[j - 1]
-        ? prev
-        : 1 + Math.min(prev, dp[j], dp[j - 1])
-      prev = temp
-    }
-  }
-  const dist = dp[long.length]
   const sim = 1 - dist / Math.max(short.length, long.length)
 
   activeCache.set(cacheKey, sim)

@@ -15,8 +15,12 @@
  */
 
 export interface SceneDetectOptions {
-  /** chi-square 阈值，默认 0.3 */
+  /** chi-square threshold — frame difference must exceed this to trigger scene change */
   threshold: number
+  /** chi-square threshold for leaving a scene (higher = more hysteresis) */
+  leaveThreshold: number
+  /** Number of frames to suppress after a scene change (cooldown) */
+  cooldownFrames: number
   /** 每帧采样的像素数，默认 500 */
   sampleCount: number
   /** 直方图 bins 数量，默认 16 */
@@ -25,6 +29,8 @@ export interface SceneDetectOptions {
 
 export const DEFAULT_SCENE_DETECTOR_OPTIONS: SceneDetectOptions = {
   threshold: 0.3,
+  leaveThreshold: 0.5,      // 1.67× trigger — harder to leave than to enter
+  cooldownFrames: 3,       // suppress for 3 frames after detection
   sampleCount: 500,
   binCount: 16,
 }
@@ -69,24 +75,45 @@ function chiSquareDistance(
 
 export class SceneDetect {
   private opts: Required<SceneDetectOptions>
+  private cooldownRemaining = 0
 
   constructor(opts: Partial<SceneDetectOptions> = {}) {
     this.opts = { ...DEFAULT_SCENE_DETECTOR_OPTIONS, ...opts }
   }
 
   /**
-   * 检测两帧之间是否有场景变化。
+   * Detect scene change between two consecutive frames.
+   * Uses hysteresis: a higher threshold to leave a scene vs. enter it,
+   * plus a cooldown period after each detection to prevent over-triggering.
+   *
    * @param prevFrame 前一帧 ImageData
    * @param currFrame 当前帧 ImageData
-   * @returns true = 场景变化，false = 同一场景
+   * @returns true = scene change，false = same scene
    */
   detect(prevFrame: ImageData, currFrame: ImageData): boolean {
-    const { threshold, sampleCount, binCount } = this.opts
-    const prevHist = this.buildHistogram(prevFrame, binCount, sampleCount)
-    const currHist = this.buildHistogram(currFrame, binCount, sampleCount)
+    const { threshold, leaveThreshold, cooldownFrames } = this.opts
 
-    const distance = chiSquareDistance(prevHist, currHist, threshold, binCount, sampleCount)
-    return distance > threshold
+    // Cooldown: suppress detection for N frames after a scene change
+    if (this.cooldownRemaining > 0) {
+      this.cooldownRemaining--
+      return false
+    }
+
+    const prevHist = this.buildHistogram(prevFrame, this.opts.binCount, this.opts.sampleCount)
+    const currHist = this.buildHistogram(currFrame, this.opts.binCount, this.opts.sampleCount)
+
+    const distance = chiSquareDistance(prevHist, currHist, threshold, this.opts.binCount, this.opts.sampleCount)
+
+    // Enter scene change if distance exceeds trigger threshold
+    if (distance > threshold) {
+      this.cooldownRemaining = cooldownFrames
+      return true
+    }
+
+    // Note: leaveThreshold is used by callers that want hysteresis logic
+    // (the hysteresis wrapper in utils/detection.ts)
+    void leaveThreshold
+    return false
   }
 
   /**
@@ -131,16 +158,32 @@ export class SceneDetect {
 
   /** 重置内部状态（切换视频时调用） */
   reset(): void {
-    // 无状态需要清理（每帧独立计算直方图）
+    this.cooldownRemaining = 0
   }
 
-  /** 更新检测阈值 */
+  /** Update detection thresholds */
   setThreshold(threshold: number): void {
     this.opts.threshold = threshold
   }
 
+  /** Update leave threshold (for hysteresis) */
+  setLeaveThreshold(leaveThreshold: number): void {
+    this.opts.leaveThreshold = leaveThreshold
+  }
+
+  /** Update cooldown frames */
+  setCooldownFrames(cooldownFrames: number): void {
+    this.opts.cooldownFrames = cooldownFrames
+  }
+
   /** 获取当前配置 */
   getOptions(): SceneDetectOptions {
-    return { ...this.opts }
+    return {
+      threshold: this.opts.threshold,
+      leaveThreshold: this.opts.leaveThreshold,
+      cooldownFrames: this.opts.cooldownFrames,
+      sampleCount: this.opts.sampleCount,
+      binCount: this.opts.binCount,
+    }
   }
 }
