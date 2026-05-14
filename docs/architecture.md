@@ -79,9 +79,10 @@ src/
 RawSubtitle[]
   │
   ▼ Stage 0: normalize
-  │  · CRLF → LF
-  │  · trim 每行首尾空白
-  │  · 压缩连续换行
+  │  · CRLF / CR → LF
+  │  · trim 首尾空白
+  │  · 全角/半角标点规范化
+  │  · 压缩连续空行（3+ → 1）
   │
   ▼ Stage 1: filterJitter
   │  · 短时间 + 低置信度 → 视为噪声
@@ -107,22 +108,37 @@ CleanSubtitle[]
 
 #### Calibrator.ts — 置信度校准
 
-多信号加权模型，识别 OCR 误识模式：
+多信号加权模型，v2 实现（`calibrateEnhanced`）包含 CJK 专项规则。设计原则：**纯函数、规则驱动、易于扩展**。
 
-```
-信号类型：
-  惩罚 (-weight)          奖励 (+weight)
-  ──────────────          ─────────────
-  混语脚本                字符多样性
-  短文本 < 3字            句子完整结尾
-  重复字符                合理字幕长度
-  孤立 CJK 字符
-  引号不平衡
-  大写误识
-  尾随逗号
+```typescript
+// 惩罚因子（< 1.0 降低置信度）
+F_MIXED_SCRIPTS       = 0.78   // 混语种（同时含 CJK/Latin/Digit）
+F_TEXT_TOO_SHORT      = 0.82   // 字符数 ≤ 2
+F_REPEATED_CHAR       = 0.72   // 连续 3+ 相同字符
+F_ORPHANED_CJK        = 0.78   // CJK 字符前有空格（孤立 CJK）
+F_UNBALANCED_QUOTE    = 0.88   // 引号不成对
+F_ALL_CAPS            = 0.80   // 全大写（拉丁字母）
+F_ISOLATED_DIGIT      = 0.85   // 独立数字碎片
+F_TRAILING_COMMA      = 0.85   // 尾部逗号/分号（不完整句子）
+F_REPEATED_PUNCT      = 0.82   // 尾部重复标点
+F_LEADING_SPACE       = 0.88   // 首位空白或标点
+F_VERTICAL_BAR        = 0.70   // 竖线字符（OCR 典型错误）
+F_CJK_BIGRAM_ANOMALY  = 0.75   // 不可能/无意义的 CJK 字二元组
+F_CJK_LINE_BREAK      = 0.83   // 句中换行
+F_CJK_NUMBER          = 0.82   // CJK 文本含阿拉伯数字
+F_CONF_DEVIATION      = 0.84   // 原始置信度与文本质量严重不匹配
+F_EMPTY_AFTER_TRIM    = 0.50   // trim 后文本为空
+
+// 奖励因子（> 1.0 提升置信度）
+F_CHAR_DIVERSITY      = 1.06   // 字符多样性高
+F_SENTENCE_END        = 1.04   // 完整句子结尾（. ! ?）
+F_GOOD_LENGTH         = 1.05   // 合理字幕长度（3~100 字符）
+F_CJK_PUNCT_NORM      = 1.03   // CJK 全角标点已规范化
 
 → 输出: calibrated_confidence ∈ [0.0, 1.0]
 ```
+
+另有 `detectIssues()` 方法提供人工可读的问题描述与修正建议（括号不匹配、全角字符等）。
 
 #### SceneDetect.ts — 前端场景检测
 
@@ -309,8 +325,13 @@ commands/ocr.rs ✓ 占位说明
 ```typescript
 // src-tauri/src/commands/types.rs  →  TypeScript
 interface ROI {
-  x: number; y: number; width: number; height: number;
-  position: 'bottom' | 'top' | 'left' | 'right' | 'center' | 'custom';
+  id: string;
+  name: string;
+  type: string;          // 'rect' | 'polygon' | ...
+  x: number; y: number;   // 左上角坐标（像素）
+  width: number; height: number; // 区域宽高
+  enabled: boolean;
+  unit: 'pixel' | 'percent'; // 坐标单位（默认 pixel）
 }
 
 interface VideoMetadata {
