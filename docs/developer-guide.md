@@ -169,31 +169,43 @@ const afterDenoise = pipeline.processStage(rawSubtitles, 1)
 
 ### 4.2 添加新导出格式
 
-1. 在 `export.rs` 添加格式变体：
+1. 在 `src-tauri/src/commands/types.rs` 的 `ExportFormat` 枚举添加变体：
 
 ```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExportFormat {
-    // ... existing ...
-    #[serde(rename = "md")]
-    MD,  // 新增 Markdown 格式
+    SRT,
+    WebVTT,
+    ASS,
+    SSA,
+    JSON,
+    TXT,
+    LRC,   // 新增 LRC 格式
+    SBV,
+    CSV,
 }
+```
 
-fn export_as_md(subtitles: &[SubtitleItem]) -> String {
+2. 在 `src-tauri/src/commands/export_fmt.rs` 添加导出函数：
+
+```rust
+pub fn export_as_lrc(subtitles: &[SubtitleItem]) -> String {
     subtitles.iter()
-        .map(|sub| format!("[{}] {}\n", sub.start_time, sub.text))
+        .map(|sub| {
+            let start = format_timestamp_lrc(sub.start_time);
+            format!("[{}] {}", start, sub.text)
+        })
         .collect::<Vec<_>>()
         .join("\n")
 }
 ```
 
-2. 在 `export_subtitles` 的 `match` 分支添加：
+3. 在 `src-tauri/src/commands/export.rs` 的 `export_subtitles` match 中添加分支：
 
 ```rust
-ExportFormat::MD => export_as_md(&subtitles),
+ExportFormat::LRC => export_as_lrc(&subtitles),
 ```
 
-3. 前端同步更新 `ExportFormat` 类型定义。
+4. 前端 TypeScript `ExportFormat` 类型定义同步更新。
 
 ---
 
@@ -261,7 +273,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 ```bash
 # 手动验证导出文件
-cargo run --manifest-path src-tauri/Cargo.toml --example export_test
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
 ---

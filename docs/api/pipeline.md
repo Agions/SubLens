@@ -50,12 +50,12 @@ const cleaned = pipeline.process(rawSubtitles)
 
 // 自定义配置
 const customPipeline = new Pipeline({
-  jitterMinDuration: 0.5,           // 调高：过滤更多噪声
-  jitterMinConfidence: 0.6,
+  jitterMinDuration: 0.3,           // 调高：过滤更多噪声
+  jitterMinConfidence: 0.5,
   splitGapThreshold: 1.5,          // 调整合并阈值
-  splitSimilarityThreshold: 0.9,   // 调高：更少合并
+  splitSimilarityThreshold: 0.85,  // 调高：更少合并
   similarGapThreshold: 0.5,
-  similarSimilarityThreshold: 0.85,
+  similarSimilarityThreshold: 0.80,
 })
 
 // 单独运行某阶段（调试）
