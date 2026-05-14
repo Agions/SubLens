@@ -195,7 +195,7 @@ extract_frame_at_time(path, timestamp_secs, crop_filter?)
 - `-y`：自动覆盖输出文件（避免 prompt 阻塞）
 - 临时文件位于 `std::env::temp_dir()`，仅 temp 目录内清理
 
-### 3.3 export.rs — 十二格式导出
+### 3.3 export.rs — 九格式导出
 
 #### 格式分类
 
