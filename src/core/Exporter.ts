@@ -12,7 +12,7 @@
 
 import { type SubtitleItem } from '@/types/subtitle'
 import { type ExportFormat } from '@/types/subtitle'
-import { _decomposeWithRemainder } from '@/utils/time'
+import { _decomposeWithRemainder, formatTimeLrc } from '@/utils/time'
 
 // ─── 模块级常量（避免每调用重建）───────────────────────────────
 // ASS escape sequences — MUST process backslash FIRST to avoid double-escaping
@@ -183,10 +183,7 @@ function formatLRC(subs: SubtitleItem[]): string {
 
 `
   const content = subs.map(sub => {
-    const min = Math.floor(sub.startTime / 60)
-    const sec = Math.floor(sub.startTime % 60)
-    const ms = Math.floor((sub.startTime % 1) * 100)
-    return `[${pad2(min)}:${pad2(sec)}.${pad2(ms)}]${sub.text}`
+    return `${formatTimeLrc(sub.startTime)}${sub.text}`
   }).join('\n\n')
 
   return `${header}${content}`

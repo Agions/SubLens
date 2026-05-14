@@ -116,6 +116,17 @@ export function formatTimePrecise(seconds: number): string {
 }
 
 /**
+ * Format seconds to LRC format ([MM:SS.xx])
+ * Used for .lrc lyric files
+ */
+export function formatTimeLrc(seconds: number): string {
+  const mins = Math.floor(seconds / MINUTES_IN_SECONDS)
+  const secs = Math.floor(seconds % MINUTES_IN_SECONDS)
+  const cs = Math.floor((seconds % 1) * 100)
+  return `[${_pad2(mins)}:${_pad2(secs)}.${_pad2(cs)}]`
+}
+
+/**
  * Format frame number with thousand separators
  */
 export function formatFrameNumber(frame: number): string {
