@@ -373,7 +373,7 @@ pnpm tauri build
 
 ## 11. 命名规范速查
 
-详见 [architecture.md](../architecture) 完整规范。
+详见 [architecture.md](./architecture) 完整规范。
 
 ### Rust
 
