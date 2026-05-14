@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useOCREngine } from './useOCREngine'
 import { type OCREngine } from '@/types/video'
 import { generateId } from '@/utils/id'
+import { resolveOcrLanguages } from '@/utils/lang'
 
 export interface BatchJob {
   id: string
@@ -171,13 +172,7 @@ export function useBatchProcessor() {
     // 2. Initialize OCR engine
     job.progress = 10
     job.stageLabel = '初始化 OCR 引擎'
-    const langMap: Record<string, string[]> = {
-      ch: ['eng', 'chi_sim'],
-      en: ['eng'],
-      ja: ['eng', 'jpn'],
-      ko: ['eng', 'kor']
-    }
-    const langs = langMap[options.languages[0]] || ['eng']
+    const langs = resolveOcrLanguages(options.languages[0])
 
     const ocr = useOCREngine()
     await ocr.init(options.ocrEngine, langs)
