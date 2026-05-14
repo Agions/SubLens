@@ -78,7 +78,6 @@ export function extractFrameMetrics(
 
   let sum = 0
   let sumSq = 0
-  let brightCount = 0
   let edgeCount = 0
   let count = 0
 
@@ -92,8 +91,6 @@ export function extractFrameMetrics(
       sum += gray
       sumSq += gray * gray
       count++
-
-      if (gray > 20 && gray < 235) brightCount++
 
       // Naive horizontal edge: gradient between adjacent sampled pixels
       if (prevGray >= 0) {
