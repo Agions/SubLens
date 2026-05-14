@@ -212,7 +212,7 @@ const filePath = await invoke<string>('export_subtitles', {
 | `format` | `ExportFormat` | 导出格式（`srt`/`vtt`/`ass`/...）|
 | `outputPath` | `string` | 输出文件路径 |
 
-**支持格式：** `srt` `vtt` `ass` `ssa` `lrc` `sbv` `json` `csv` `txt` `md` `stl` `ttml`
+**支持格式：** `srt` `vtt` `ass` `ssa` `lrc` `sbv` `json` `csv` `txt`
 
 ---
 

@@ -56,9 +56,6 @@ await worker.terminate()
 ```bash
 # Python 环境
 pip install easyocr
-
-# 或通过 Tauri plugin 调用
-# 参见 PADDLEOCR_SETUP.md
 ```
 
 ## PaddleOCR
@@ -82,7 +79,7 @@ pip install paddlepaddle-gpu  # GPU 版本
 pip install paddleocr
 ```
 
-详细配置请参考 `PADDLEOCR_SETUP.md`。
+详见 [PaddleOCR 安装指南](https://github.com/Agions/SubLens/tree/main/docs/guide/ocr-engines)。
 
 ## 引擎选择建议
 

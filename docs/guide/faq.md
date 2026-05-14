@@ -23,7 +23,7 @@ pnpm store prune && pnpm install
 
 ### Q: `pnpm tauri dev` 报错 "Rust 1.75.0 too old for Tauri 2.x"？
 
-**A:** Tauri 2.x 要求 Rust 1.82+。升级 Rust：
+**A:** Tauri 2.x 要求 Rust 1.82+（而非旧版 Tauri 的 1.70+）。升级 Rust：
 
 ```bash
 rustup update stable

@@ -21,9 +21,6 @@ title: SubLens Exporter
 | JSON | `exportJson` | `.json` |
 | CSV | `exportCsv` | `.csv` |
 | TXT | `exportTxt` | `.txt` |
-| MD | `exportMd` | `.md` |
-| STL | `exportStl` | `.stl` |
-| TTML | `exportTtml` | `.ttml` |
 
 ## 统一导出入口
 
