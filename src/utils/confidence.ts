@@ -1,21 +1,18 @@
 /**
  * Confidence level utilities
- * Re-exports from types/video.ts + filter-level constants + heatmap.
+ *
+ * Canonical source for confidence thresholds and heatmap visualization.
  */
 
-import {
-  type ConfidenceLevel,
-  getConfidenceLevel,
-  CONFIDENCE_HIGH,
-  CONFIDENCE_MID,
-} from '@/types/video'
+export const CONFIDENCE_HIGH = 0.85
+export const CONFIDENCE_MID = 0.60
 
-// Re-export for convenience
-export {
-  CONFIDENCE_HIGH,
-  CONFIDENCE_MID,
-  type ConfidenceLevel,
-  getConfidenceLevel,
+export type ConfidenceLevel = 'high' | 'mid' | 'low'
+
+export function getConfidenceLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= CONFIDENCE_HIGH) return 'high'
+  if (confidence >= CONFIDENCE_MID) return 'mid'
+  return 'low'
 }
 
 // ── Filter values ───────────────────────────────────────────────

@@ -15,9 +15,7 @@
  *
  * ## Confidence Levels
  *
- * - High (≥85%): Auto-accepted, reliable
- * - Mid (60-85%): Needs review
- * - Low (<60%): Likely OCR error
+ * Re-exported from `@/utils/confidence` for convenience.
  */
 
 // Video Types
@@ -90,19 +88,6 @@ export interface OCRConfig {
   confidenceThreshold: number
 }
 
-/**
- * Confidence level thresholds (unified across UI and filter).
- * High: ≥ 85% — reliable, auto-accepted
- * Mid:  60–85% — needs review
- * Low:  < 60% — likely OCR error, batch-delete candidate
- */
-export const CONFIDENCE_HIGH = 0.85
-export const CONFIDENCE_MID = 0.60
-
-export type ConfidenceLevel = 'high' | 'mid' | 'low'
-
-export function getConfidenceLevel(confidence: number): ConfidenceLevel {
-  if (confidence >= CONFIDENCE_HIGH) return 'high'
-  if (confidence >= CONFIDENCE_MID) return 'mid'
-  return 'low'
-}
+// Re-export everything confidence-related from the canonical utils module.
+// consumers: import { CONFIDENCE_HIGH, getConfidenceLevel, type ConfidenceLevel } from '@/utils/confidence'
+export { CONFIDENCE_HIGH, CONFIDENCE_MID, getConfidenceLevel, type ConfidenceLevel } from '@/utils/confidence'

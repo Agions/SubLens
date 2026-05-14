@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, EditableField, EditableValue, ExportFormats } from '@/types/subtitle'
-import { CONFIDENCE_HIGH, CONFIDENCE_MID } from '@/types/video'
+import { CONFIDENCE_HIGH, CONFIDENCE_MID } from '@/utils/confidence'
 import { type ConfidenceFilterValue } from '@/utils/confidence'
 import { getExporter, type ExportFormat } from '@/core'
 
