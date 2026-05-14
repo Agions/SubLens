@@ -40,7 +40,6 @@ All notable changes to SubLens are documented here.
 
 **文档更新：**
 - README.md：更新目录结构（修正 core 模块文件名、移除 `ocr.rs`、更新 composables 数量）
-- `docs/file-naming-conventions.md`：完全重写，与实际代码结构对齐
 
 ## [3.5.1] - 2026-05-05
 

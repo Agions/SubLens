@@ -117,12 +117,41 @@ SubLens/
 │       ├── utils.rs        # 工具（TempFileGuard、UUID、脚本查找）
 │       └── ocr.rs          # OCR 占位（已移至前端 WASM）
 │
-├── docs/                    # 文档（Markdown，无需构建）
-│   ├── ARCHITECTURE.md     # 深度架构文档
-│   ├── DEVELOPER_GUIDE.md  # 开发者指南
-│   └── CHANGELOG.md        # 版本变更
+├── docs/                    # VitePress 文档站
+│   ├── .vitepress/         # VitePress 配置
+│   ├── guide/              # 用户指南（面向使用者）
+│   │   ├── getting-started.md
+│   │   ├── first-extraction.md
+│   │   ├── ocr-engines.md
+│   │   ├── roi.md
+│   │   ├── export-formats.md
+│   │   ├── keyboard-shortcuts.md
+│   │   └── faq.md
+│   ├── api/                # API 参考（面向开发者）
+│   │   ├── commands.md
+│   │   ├── pipeline.md
+│   │   ├── exporter.md
+│   │   ├── scene-detect.md
+│   │   └── calibrator.md
+│   ├── architecture.md     # 深度架构文档
+│   ├── developer-guide.md # 开发者指南
+│   └── index.md            # 文档首页
 │
-└── public/                  # 静态资源
+├── .github/                # GitHub 配置
+│   └── workflows/          # CI/CD 工作流
+│       ├── ci.yml         # 前端质量（tsc + ESLint + Vitest）
+│       ├── docs.yml       # VitePress → GitHub Pages
+│       └── release.yml    # 发布构建
+│
+├── public/                 # 静态资源
+│   ├── logo.svg
+│   └── logo-preview.html
+│
+└── src-tauri/             # Tauri 后端（Rust）
+    ├── Cargo.toml
+    └── src/
+        ├── lib.rs
+        └── commands/
 ```
 
 ---

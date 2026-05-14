@@ -293,16 +293,15 @@ version = "3.6.0"
 
 发布流程：更新版本 → git tag → GitHub Actions 自动构建 → Draft Release。详细 Release 工作流见 `.github/workflows/release.yml`。
 
-### GitHub Actions 四路并行
+### GitHub Actions 工作流
 
-CI 配置在 `.github/workflows/` 目录下，四路并行执行：
+CI 配置在 `.github/workflows/` 目录下：
 
 | 工作流 | 触发 | 说明 |
 |:---|:---|:---|
 | `ci.yml` | PR / push | 前端质量：vue-tsc + ESLint + Vitest |
-| `rust-test.yml` | PR / push | Rust 测试：cargo test + clippy |
-| `build.yml` | PR / push | Tauri 生产构建 |
 | `docs.yml` | push (main) | VitePress 构建 → GitHub Pages |
+| `release.yml` | Git tag | Tauri 生产构建 + 发布 |
 
 ### 质量门禁标准
 
@@ -357,16 +356,15 @@ A: 确认命令已在 `lib.rs` 的 `generate_handler!` 中注册。
 
 ## 10. CI/CD 工作流
 
-### GitHub Actions 四路并行
+### GitHub Actions 工作流
 
-CI 配置在 `.github/workflows/` 目录下，四路并行执行：
+CI 配置在 `.github/workflows/` 目录下：
 
 | 工作流 | 触发 | 说明 |
 |:---|:---|:---|
 | `ci.yml` | PR / push | 前端质量：vue-tsc + ESLint + Vitest |
-| `rust-test.yml` | PR / push | Rust 测试：cargo test + clippy |
-| `build.yml` | PR / push | Tauri 生产构建 |
 | `docs.yml` | push (main) | VitePress 构建 → GitHub Pages |
+| `release.yml` | Git tag | Tauri 生产构建 + 发布 |
 
 **质量门禁标准：**
 - `vue-tsc --noEmit` 必须通过
