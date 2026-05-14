@@ -336,11 +336,110 @@ A: 确认命令已在 `lib.rs` 的 `generate_handler!` 中注册。
 
 ---
 
-## 9. 贡献指南
+## 10. CI/CD 工作流
+
+### GitHub Actions 三路并行
+
+CI 配置在 `.github/workflows/` 目录下，三路并行执行：
+
+| 工作流 | 触发 | 说明 |
+|:---|:---|:---|
+| `quality.yml` | PR / push | vue-tsc 类型检查 + ESLint + 前端测试 |
+| `build.yml` | PR / push | Tauri 生产构建（产物用于 Release）|
+| `rust-test.yml` | PR / push | `cargo test` + `cargo clippy` |
+
+**质量门禁标准：**
+- `vue-tsc --noEmit` 必须通过
+- ESLint `pnpm lint` 必须通过（允许 `--fix` 自动修复）
+- Vitest 测试套件全部通过
+
+### 本地模拟 CI
+
+```bash
+# 质量检查（CI 第一路）
+pnpm type-check && pnpm lint
+
+# Rust 检查
+cargo clippy -- -D warnings
+
+# 前端测试
+pnpm test
+
+# 完整构建
+pnpm tauri build
+```
+
+---
+
+## 11. 命名规范速查
+
+详见 [architecture.md](../architecture) 完整规范。
+
+### Rust
+
+| 类型 | 规范 | 示例 |
+|:---|:---|:---|
+| 模块文件 | snake_case | `video_processor.rs` |
+| 公开函数 | snake_case | `get_video_metadata` |
+| 公开结构体/枚举 | PascalCase | `VideoMetadata`, `ExportFormat` |
+| 私有函数 | snake_case | `extract_frame_ffmpeg` |
+| 常量 | SCREAMING_SNAKE_CASE | `DEFAULT_TIMEOUT_SECS` |
+
+### TypeScript / Vue
+
+| 类型 | 规范 | 示例 |
+|:---|:---|:---|
+| 组件 | PascalCase | `SubtitleList.vue` |
+| Composables | camelCase + `use` 前缀 | `useSubtitleList.ts` |
+| 工具函数 | camelCase | `textSimilarity` |
+| 类型/接口 | PascalCase | `PipelineOptions` |
+| 常量 | SCREAMING_SNAKE_CASE | `DEFAULT_PIPELINE_OPTIONS` |
+
+---
+
+## 12. 文档结构
+
+SubLens 使用 **VitePress** 作为文档系统，源码在 `docs/` 目录：
+
+```
+docs/
+├── .vitepress/
+│   └── config.ts       # VitePress 配置（导航 + 侧边栏）
+├── guide/              # 用户指南（面向使用者）
+│   ├── getting-started.md
+│   ├── first-extraction.md
+│   ├── ocr-engines.md
+│   ├── roi.md
+│   ├── export-formats.md
+│   ├── keyboard-shortcuts.md
+│   └── faq.md
+├── api/               # API 参考（面向开发者）
+│   ├── commands.md     # Tauri IPC 命令
+│   ├── pipeline.md
+│   ├── exporter.md
+│   ├── scene-detect.md
+│   └── calibrator.md
+├── index.md           # 文档首页（VitePress Home）
+└── architecture.md    # 架构设计文档
+```
+
+本地预览文档：
+
+```bash
+# VitePress dev server（需先安装依赖）
+npx vitepress dev docs
+
+# 或
+cd docs && npx vitepress dev .
+```
+
+---
+
+## 13. 贡献指南
 
 1. Fork 仓库，创建分支：`git checkout -b feat/my-feature`
-2. 遵循本指南的命名规范（snake_case / PascalCase）
-3. 运行 `pnpm vue-tsc --noEmit` 确保类型检查通过
-4. 运行 `pnpm lint --fix` 自动修复格式问题
-5. Commit 遵循 [Conventional Commits](https://www.conventionalcommits.org/)：`feat:`, `fix:`, `docs:`, `refactor:`
+2. 遵循本文档的命名规范
+3. 运行 `pnpm type-check` 确保类型检查通过
+4. 运行 `pnpm lint:fix` 自动修复格式问题
+5. Commit 遵循 [Conventional Commits](https://www.conventionalcommits.org/)：`feat:`, `fix:`, `docs:`, `refactor:`, `perf:`
 6. Push 并提 PR

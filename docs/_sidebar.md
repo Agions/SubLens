@@ -1,4 +1,0 @@
-- [🏠 首页](README)
-- [📐 架构设计](architecture)
-- [🔧 开发指南](developer-guide)
-- [📋 更新日志](changelog)

@@ -13,9 +13,9 @@ export default defineConfig({
     logo: '/logo.svg',
     siteTitle: 'SubLens',
     nav: [
-      { text: '指南', link: '/guide/getting-started' },
+      { text: '快速开始', link: '/guide/getting-started' },
+      { text: '操作流程', link: '/guide/first-extraction' },
       { text: 'API', link: '/api/commands' },
-      { text: '变更日志', link: '/CHANGELOG' },
     ],
     sidebar: {
       '/guide/': [
@@ -24,21 +24,20 @@ export default defineConfig({
           items: [
             { text: '安装与运行', link: '/guide/getting-started' },
             { text: '首次提取', link: '/guide/first-extraction' },
+            { text: 'OCR 引擎', link: '/guide/ocr-engines' },
+            { text: 'ROI 区域', link: '/guide/roi' },
+            { text: '导出格式', link: '/guide/export-formats' },
+            { text: '快捷键', link: '/guide/keyboard-shortcuts' },
+            { text: '常见问题', link: '/guide/faq' },
           ],
         },
         {
           text: '核心功能',
+          collapsed: true,
           items: [
-            { text: 'OCR 引擎', link: '/guide/ocr-engines' },
-            { text: 'ROI 区域选择', link: '/guide/roi' },
-            { text: '导出格式', link: '/guide/export-formats' },
-          ],
-        },
-        {
-          text: '参考',
-          items: [
-            { text: '键盘快捷键', link: '/guide/keyboard-shortcuts' },
-            { text: '常见问题', link: '/guide/faq' },
+            { text: '多引擎 OCR', link: '/guide/ocr-engines' },
+            { text: '智能后处理', link: '/api/pipeline' },
+            { text: '场景检测', link: '/api/scene-detect' },
           ],
         },
       ],
@@ -47,11 +46,6 @@ export default defineConfig({
           text: 'Tauri 命令',
           items: [
             { text: '命令总览', link: '/api/commands' },
-            { text: 'video', link: '/api/commands#video' },
-            { text: 'scene', link: '/api/commands#scene' },
-            { text: 'export', link: '/api/commands#export' },
-            { text: 'file', link: '/api/commands#file' },
-            { text: 'system', link: '/api/commands#system' },
           ],
         },
         {

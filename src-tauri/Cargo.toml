@@ -1,6 +1,6 @@
 [package]
 name = "sublens"
-version = "3.5.1"
+version = "3.6.0"
 description = "SubLens - Professional Video OCR Subtitle Extraction Tool"
 authors = ["Agions"]
 license = "MIT"

@@ -137,15 +137,18 @@ CleanSubtitle[]
 
 ```
 commands/
-├── mod.rs          # 模块声明 + 公开导出
-├── types.rs        # ROI（Region of Interest）
+├── mod.rs           # 模块声明 + 公开导出
+├── types.rs         # ROI、SceneChange、SubtitleItem、ExportFormat 等共享类型
 ├── utils.rs         # 工具函数（TempFileGuard、find_script、run_command_with_timeout）
 ├── video.rs         # get_video_metadata、extract_frame_at_time
-├── export.rs        # export_subtitles（12 格式）
+├── ffmpeg.rs        # FFmpeg/ffprobe 输出解析（内部模块，供 video/scene 使用）
+├── export.rs        # export_subtitles 入口
+├── export_fmt.rs   # 12 格式具体实现（SRT/VTT/ASS/SSA/JSON/CSV/TXT/LRC/SBV/MD/STL/TTML）
+├── timestamp.rs     # 时间戳格式化（SRT/VTT/SBV 等使用逗号分隔毫秒的格式）
 ├── scene.rs         # detect_scenes（调用 scene_detect.py）
 ├── file.rs          # 对话框、文件读写
 ├── system.rs        # check_system_dependencies、get_tesseract_languages
-└── ocr.rs          # 占位（OCR 已移至前端）
+└── ocr.rs          # 占位文件（OCR 已移至前端 WASM，无实际命令）
 ```
 
 ### 3.2 video.rs — 元数据与帧提取
