@@ -1,3 +1,7 @@
+---
+title: SubLens SceneDetect
+---
+
 # SceneDetect — 场景检测
 
 ## 概述

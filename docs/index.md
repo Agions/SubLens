@@ -1,6 +1,8 @@
 ---
 layout: home
-
+title: SubLens — 智能视频字幕提取工具
+titleTemplate: false
+---
 hero:
   name: SubLens
   text: 智能视频字幕提取
@@ -11,7 +13,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: 查看架构设计
-      link: /guide/architecture
+      link: /architecture
     - theme: alt
       text: GitHub
       link: https://github.com/Agions/SubLens
