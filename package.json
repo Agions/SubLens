@@ -13,6 +13,7 @@
     "lint:fix": "eslint src --ext .vue,.ts,.tsx --fix",
     "test": "vitest run",
     "test:watch": "vitest",
+    "docs:build": "vitepress build docs",
     "postinstall": "pnpm dedupe"
   },
   "keywords": [

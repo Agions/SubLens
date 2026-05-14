@@ -39,7 +39,8 @@ export default defineConfig({
         items: [
           { text: '快捷键', link: '/guide/keyboard-shortcuts' },
           { text: '常见问题', link: '/guide/faq' },
-          { text: '开发者指南', link: '/guide/architecture' },
+          { text: '架构设计', link: '/architecture' },
+          { text: '开发者指南', link: '/developer-guide' },
           { text: 'GitHub', link: 'https://github.com/Agions/SubLens' },
         ],
       },
@@ -68,8 +69,8 @@ export default defineConfig({
         {
           text: '架构与开发',
           items: [
-            { text: '架构设计', link: '/guide/architecture' },
-            { text: '开发者指南', link: '/guide/developer-guide' },
+            { text: '架构设计', link: '/architecture' },
+            { text: '开发者指南', link: '/developer-guide' },
           ],
         },
       ],

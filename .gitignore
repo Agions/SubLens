@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# VitePress build output
+docs/.vitepress/dist/
+
 # Build outputs
 dist/
 dist-tauri/
