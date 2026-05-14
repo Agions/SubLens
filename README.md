@@ -11,6 +11,10 @@
 [![Tauri](https://img.shields.io/badge/Tauri-FFC131?style=flat-square&logo=tauri&logoColor=FFC131)](https://tauri.app)
 [![Vue](https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org)
 [![Rust](https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![Test](https://img.shields.io/badge/Tests-193%20%E9%80%89%E9%80%89%E9%80%9A%E8%BF%87-green?style=flat-square)](https://github.com/Agions/SubLens/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/Agions/SubLens/CI.yml?branch=main&style=flat-square)](https://github.com/Agions/SubLens/actions/workflows/CI.yml)
+[![npm](https://img.shields.io/npm/v/sublens?style=flat-square)](https://www.npmjs.com/package/sublens)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=flat-square)](https://nodejs.org)
 
 ---
 
@@ -139,9 +143,9 @@ SubLens/
 
 | 文档 | 说明 |
 |:---|:---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 前后端分层、数据流、接口定义、命名规范 |
-| [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | 环境搭建、调试、测试、添加新命令 / 新格式 |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 版本变更记录 |
+| [docs/architecture.md](docs/architecture.md) | 前后端分层、数据流、接口定义、命名规范 |
+| [docs/developer-guide.md](docs/developer-guide.md) | 环境搭建、调试、测试、添加新命令 / 新格式 |
+| [CHANGELOG.md](./CHANGELOG.md) | 版本变更记录 |
 
 ---
 

@@ -32,10 +32,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-vue': ['vue', 'pinia'],
-          'vendor-ocr': ['tesseract.js'],
-          'vendor-ui': ['@vueuse/core']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('tesseract.js')) return 'vendor-ocr'
+            if (id.includes('vue') || id.includes('pinia')) return 'vendor-vue'
+          }
         }
       }
     }
