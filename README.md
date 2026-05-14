@@ -24,7 +24,7 @@
 
 | 引擎 | 技术 | 精度 | 速度 | 语言 |
 |:---|:---|:---:|:---:|:---:|
-| **PaddleOCR** | PP-OCRv5 深度学习 | 优秀 | 快（GPU）| 80+ |
+| **PaddleOCR** | PP-OCRv4 深度学习 | 优秀 | 快（GPU）| 80+ |
 | **EasyOCR** | PyTorch | 优秀 | 中等 | 80+ |
 | **Tesseract.js** | LSTM + WASM | 良好 | 最快 | 100+ |
 
@@ -36,9 +36,9 @@
 - **字幕合并** — Levenshtein 相似度智能去重
 - **场景检测** — 直方图 + 卡方检验跳过无字幕帧
 
-### 📦 12 种导出格式
+### 📦 9 种导出格式
 
-SRT · VTT · ASS · SSA · JSON · CSV · TXT · LRC · SBV · MD · STL · TTML
+SRT · VTT · ASS · SSA · JSON · CSV · TXT · LRC · SBV
 
 ### 📋 ROI 预设
 
@@ -98,7 +98,7 @@ SubLens/
 │   ├── stores/               # Pinia 状态管理
 │   └── core/                 # 纯业务逻辑（可 Tree-shake / 独立测试）
 │       ├── Pipeline.ts       # 5 阶段 OCR 后处理管道
-│       ├── Exporter.ts       # 12 格式导出器
+│       ├── Exporter.ts       # 9 格式导出器
 │       ├── SceneDetect.ts    # 直方图 + 卡方场景检测
 │       └── Calibrator.ts     # 置信度校准
 │
@@ -107,7 +107,7 @@ SubLens/
 │   └── commands/            # Rust 命令层
 │       ├── video.rs        # 元数据 + 帧提取
 │       ├── export.rs       # 导出入口 + 类型（SubtitleItem、ExportFormat）
-│       ├── export_fmt.rs   # 12 格式实现
+│       ├── export_fmt.rs   # 9 格式实现
 │       ├── scene.rs        # 场景检测
 │       ├── file.rs         # 文件对话框 + 读写
 │       ├── system.rs       # 系统依赖诊断

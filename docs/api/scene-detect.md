@@ -68,7 +68,7 @@ function detectScenes(frames: ImageData[], threshold: number): number[] {
 import { SceneDetector } from '@/core/SceneDetect'
 
 const detector = new SceneDetector({
-  threshold: 0.5,    // 卡方阈值（默认 0.5，越高越敏感）
+  threshold: 0.5,    // 卡方阈值（默认 0.5，越低越敏感）
   skipFrames: 1,     // 每隔 N 帧检测一次（默认 1）
 })
 

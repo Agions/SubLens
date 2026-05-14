@@ -6,7 +6,7 @@ title: 导出格式
 
 ## 支持的格式
 
-SubLens 支持 12 种字幕格式导出：
+SubLens 支持 9 种字幕格式导出：
 
 | 格式 | 文件扩展名 | 兼容性 | 特点 |
 |:---|:---|:---|:---|
@@ -19,9 +19,6 @@ SubLens 支持 12 种字幕格式导出：
 | **JSON** | `.json` | ★★ | 结构化数据，程序处理友好 |
 | **CSV** | `.csv` | ★★★ | Excel / Sheets 可直接打开 |
 | **TXT** | `.txt` | ★★★ | 纯文本，无时间信息 |
-| **MD** | `.md` | ★★ | Markdown，含时间戳标题 |
-| **STL** | `.stl` | ★ | Spruce Subtitle File，广播级 |
-| **TTML** | `.ttml` | ★ | Timed Text Markup Language，W3C 标准 |
 
 ## SRT（默认推荐）
 

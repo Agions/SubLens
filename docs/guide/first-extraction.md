@@ -43,7 +43,7 @@ ROI（Region of Interest）定义了字幕在画面中的位置。
 
 | 引擎 | 精度 | 速度 | 语言数 | 显存需求 |
 |:---|:---:|:---:|:---:|:---:|
-| **PaddleOCR** | ★★★ | 快（GPU） | 80+ | ~2GB GPU |
+| **PaddleOCR** | ★★★ | 快 | 80+ | GPU 2GB+ |
 | **EasyOCR** | ★★★ | 中等 | 80+ | ~4GB GPU |
 | **Tesseract.js** | ★★ | 快（CPU） | 100+ | 无 |
 

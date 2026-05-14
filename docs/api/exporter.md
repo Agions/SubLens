@@ -6,7 +6,7 @@ title: SubLens Exporter
 
 ## 概述
 
-`Exporter.ts` 负责将 `SubtitleItem[]` 序列化为 12 种不同的字幕文件格式。纯函数实现，无 I/O 依赖，可直接测试。
+`Exporter.ts` 负责将 `SubtitleItem[]` 序列化为 9 种不同的字幕文件格式。纯函数实现，无 I/O 依赖，可直接测试。
 
 ## 导出格式一览
 

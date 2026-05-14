@@ -34,7 +34,7 @@ Video File
 | 元数据读取 | 后端 Rust | `get_video_metadata`，ffprobe → ffmpeg → 文件估算三层降级 |
 | 场景检测（前端）| 前端 TS | `SceneDetect.ts`，直方图 + 卡方，纯 JS |
 | 场景检测（后端）| 后端 Rust | `scene.rs`，调用 `scene_detect.py`（scenedetect 库）|
-| 字幕导出 | 后端 Rust | `export.rs`，12 格式，支持异步写入 |
+| 字幕导出 | 后端 Rust | `export.rs`，9 格式，支持异步写入 |
 | 系统诊断 | 后端 Rust | `system.rs`，ffmpeg / ffprobe / tesseract 版本检测 |
 
 ---
@@ -147,7 +147,7 @@ commands/
 ├── video.rs         # get_video_metadata、extract_frame_at_time
 ├── ffmpeg.rs        # FFmpeg/ffprobe 输出解析（内部模块，供 video/scene 使用）
 ├── export.rs        # export_subtitles 入口
-├── export_fmt.rs   # 12 格式具体实现（SRT/VTT/ASS/SSA/JSON/CSV/TXT/LRC/SBV/MD/STL/TTML）
+├── export_fmt.rs   # 9 格式具体实现（SRT/VTT/ASS/SSA/JSON/CSV/TXT/LRC/SBV）
 ├── timestamp.rs     # 时间戳格式化（SRT/VTT/SBV 等使用逗号分隔毫秒的格式）
 ├── scene.rs         # detect_scenes（调用 scene_detect.py）
 ├── file.rs          # 对话框、文件读写

@@ -8,7 +8,7 @@ title: OCR 引擎详解
 
 | 引擎 | 精度 | 速度 | 语言 | 硬件需求 | 推荐场景 |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| **PaddleOCR** | ★★★ | 快 | 80+ | GPU 2GB+ | 高精度生产使用 |
+| **PaddleOCR** | ★★★ | 快（GPU） | 80+ | GPU 2GB+ | 高精度生产使用 |
 | **EasyOCR** | ★★★ | 中 | 80+ | GPU 4GB+ | 多语言混合字幕 |
 | **Tesseract.js** | ★★ | 快 | 100+ | 仅 CPU | 快速预览、零配置 |
 
@@ -63,10 +63,10 @@ pip install easyocr
 
 ## PaddleOCR
 
-百度开源的 PP-OCRv5 深度学习 OCR，精度与速度兼顾。
+百度开源的 PP-OCRv4 深度学习 OCR，精度与速度兼顾。
 
 **优点：**
-- PP-OCRv5 最新模型，精度优秀
+- PP-OCRv4 最新模型，精度优秀
 - GPU 加速效果好（2GB+ 显存）
 - 中文识别效果特别好
 
@@ -77,7 +77,6 @@ pip install easyocr
 **适用场景：** 中文视频字幕提取、高精度商业应用
 
 **安装：**
-
 ```bash
 pip install paddlepaddle-gpu  # GPU 版本
 pip install paddleocr

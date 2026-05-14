@@ -81,7 +81,7 @@ SubLens/
 │   │   └── commands/          # IPC 命令
 │   │       ├── mod.rs
 │   │       ├── video.rs       # get_video_metadata, extract_frame_at_time
-│   │       ├── export.rs      # 12 格式字幕导出
+│   │       ├── export.rs      # 9 格式字幕导出
 │   │       ├── scene.rs       # 场景检测
 │   │       ├── file.rs        # 文件对话框
 │   │       ├── system.rs      # 系统依赖检查
@@ -279,24 +279,39 @@ pnpm tauri build
 - Linux: `.AppImage` / `.deb`
 - Windows: `.exe` / `.msi`
 
-### 7.2 版本管理
+## 9. 版本管理
+
+版本在 `package.json` 和 `src-tauri/Cargo.toml` 中必须保持同步：
 
 ```bash
-# 更新版本（在 package.json 和 Cargo.toml 中同步）
 # package.json
-"version": "1.2.0"
+"version": "3.6.0"
 
 # src-tauri/Cargo.toml
-version = "1.2.0"
+version = "3.6.0"
 ```
 
-### 7.3 更新文档
+发布流程：更新版本 → git tag → GitHub Actions 自动构建 → Draft Release。详细 Release 工作流见 `.github/workflows/release.yml`。
+
+### GitHub Actions 四路并行
+
+CI 配置在 `.github/workflows/` 目录下，四路并行执行：
+
+| 工作流 | 触发 | 说明 |
+|:---|:---|:---|
+| `ci.yml` | PR / push | 前端质量：vue-tsc + ESLint + Vitest |
+| `rust-test.yml` | PR / push | Rust 测试：cargo test + clippy |
+| `build.yml` | PR / push | Tauri 生产构建 |
+| `docs.yml` | push (main) | VitePress 构建 → GitHub Pages |
+
+### 质量门禁标准
+
+本地预览文档（VitePress）：
 
 ```bash
-# 本地预览 Docsify（docs/ 目录直接 serve，无需构建）
-npx docsify-cli serve docs
-# 或用 Python：
-cd docs && python3 -m http.server 3000
+pnpm docs:build    # 构建到 docs/.vitepress/dist/
+# 或开发模式热重载
+pnpm vitepress dev docs
 ```
 
 ---
@@ -342,15 +357,16 @@ A: 确认命令已在 `lib.rs` 的 `generate_handler!` 中注册。
 
 ## 10. CI/CD 工作流
 
-### GitHub Actions 三路并行
+### GitHub Actions 四路并行
 
-CI 配置在 `.github/workflows/` 目录下，三路并行执行：
+CI 配置在 `.github/workflows/` 目录下，四路并行执行：
 
 | 工作流 | 触发 | 说明 |
 |:---|:---|:---|
-| `quality.yml` | PR / push | vue-tsc 类型检查 + ESLint + 前端测试 |
-| `build.yml` | PR / push | Tauri 生产构建（产物用于 Release）|
-| `rust-test.yml` | PR / push | `cargo test` + `cargo clippy` |
+| `ci.yml` | PR / push | 前端质量：vue-tsc + ESLint + Vitest |
+| `rust-test.yml` | PR / push | Rust 测试：cargo test + clippy |
+| `build.yml` | PR / push | Tauri 生产构建 |
+| `docs.yml` | push (main) | VitePress 构建 → GitHub Pages |
 
 **质量门禁标准：**
 - `vue-tsc --noEmit` 必须通过
