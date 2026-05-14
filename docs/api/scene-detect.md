@@ -15,30 +15,30 @@ SubLens 有两套场景检测实现：
 
 ## 前端实现（SceneDetect.ts）
 
-纯 JavaScript 实现，基于 **16-bin 量化直方图 + 卡方检验**。
+纯 JavaScript 实现，基于 **RGB 直方图（16 bins/通道）+ 卡方检验**。
 
 ### 核心算法
 
 ```typescript
-// 1. 构建灰度直方图（16 bins）
-function buildHistogram(frame: ImageData): number[] {
-  const bins = new Array(16).fill(0)
-  for (const pixel of frame.data) {
-    const gray = 0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b
-    const binIndex = Math.min(15, Math.floor(gray / 16))
-    bins[binIndex]++
+// 1. 构建 RGB 直方图（每通道 16 bins，共 48 个计数器）
+// R: bins[0-15], G: bins[16-31], B: bins[32-47]
+function buildHistogram(frame: ImageData): Int32Array {
+  const binCount = 16
+  const hist = new Int32Array(binCount * 3)  // R, G, B
+  for (let i = 0; i < frame.data.length; i += 4 * SAMPLE_STRIDE) {
+    hist[Math.floor(frame.data[i]     / 256 * binCount)]++
+    hist[binCount + Math.floor(frame.data[i + 1] / 256 * binCount)]++
+    hist[binCount * 2 + Math.floor(frame.data[i + 2] / 256 * binCount)]++
   }
-  return normalize(bins)
+  return hist
 }
 
 // 2. 卡方检验比较两帧
-function chiSquareTest(hist1: number[], hist2: number[]): number {
+function chiSquareTest(hist1: Int32Array, hist2: Int32Array): number {
   let chiSq = 0
   for (let i = 0; i < hist1.length; i++) {
-    const expected = hist1[i]
-    const observed = hist2[i]
-    if (expected > 0) {
-      chiSq += (observed - expected) ** 2 / expected
+    if (hist1[i] > 0) {
+      chiSq += (hist2[i] - hist1[i]) ** 2 / hist1[i]
     }
   }
   return chiSq

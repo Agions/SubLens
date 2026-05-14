@@ -295,13 +295,15 @@ version = "3.6.0"
 
 ### GitHub Actions 工作流
 
-CI 配置在 `.github/workflows/` 目录下：
+`.github/workflows/` 下有 3 个 workflow 文件，其中 `ci.yml` 内含 **3 个并行 job**：
 
-| 工作流 | 触发 | 说明 |
-|:---|:---|:---|
-| `ci.yml` | PR / push | 前端质量：vue-tsc + ESLint + Vitest |
-| `docs.yml` | push (main) | VitePress 构建 → GitHub Pages |
-| `release.yml` | Git tag | Tauri 生产构建 + 发布 |
+| Workflow | 触发 | Job | 说明 |
+|:---|:---|:---|:---|
+| `ci.yml` | PR / push | `quality` | vue-tsc + ESLint + Vitest |
+| `ci.yml` | PR / push | `build` | Tauri 生产构建 |
+| `ci.yml` | PR / push | `rust-test` | cargo test（lib + bins）|
+| `docs.yml` | push (main) | — | VitePress → GitHub Pages |
+| `release.yml` | Git tag | — | Tauri 发布构建 |
 
 ### 质量门禁标准
 
@@ -358,13 +360,15 @@ A: 确认命令已在 `lib.rs` 的 `generate_handler!` 中注册。
 
 ### GitHub Actions 工作流
 
-CI 配置在 `.github/workflows/` 目录下：
+`.github/workflows/` 下有 3 个 workflow 文件，其中 `ci.yml` 内含 **3 个并行 job**：
 
-| 工作流 | 触发 | 说明 |
-|:---|:---|:---|
-| `ci.yml` | PR / push | 前端质量：vue-tsc + ESLint + Vitest |
-| `docs.yml` | push (main) | VitePress 构建 → GitHub Pages |
-| `release.yml` | Git tag | Tauri 生产构建 + 发布 |
+| Workflow | 触发 | Job | 说明 |
+|:---|:---|:---|:---|
+| `ci.yml` | PR / push | `quality` | vue-tsc + ESLint + Vitest |
+| `ci.yml` | PR / push | `build` | Tauri 生产构建 |
+| `ci.yml` | PR / push | `rust-test` | cargo test（lib + bins）|
+| `docs.yml` | push (main) | — | VitePress → GitHub Pages |
+| `release.yml` | Git tag | — | Tauri 发布构建 |
 
 **质量门禁标准：**
 - `vue-tsc --noEmit` 必须通过
