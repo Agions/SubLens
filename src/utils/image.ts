@@ -31,17 +31,17 @@ export function normalizeROI(
   height: number,
   minSize = 0,
 ): NormalizedROI {
-  const x0 = Math.max(0, Math.min(Math.floor((roi.x / 100) * width), width))
-  const y0 = Math.max(0, Math.min(Math.floor((roi.y / 100) * height), height))
-  const rw = Math.max(minSize, Math.min(Math.floor((roi.width / 100) * width), width - x0))
-  const rh = Math.max(minSize, Math.min(Math.floor((roi.height / 100) * height), height - y0))
+  const x0 = clamp(Math.floor((roi.x / 100) * width), 0, width)
+  const y0 = clamp(Math.floor((roi.y / 100) * height), 0, height)
+  const rw = clamp(Math.floor((roi.width / 100) * width), minSize, width - x0)
+  const rh = clamp(Math.floor((roi.height / 100) * height), minSize, height - y0)
   return {
     x0,
     y0,
     rw,
     rh,
-    xEnd: Math.min(x0 + rw, width),
-    yEnd: Math.min(y0 + rh, height),
+    xEnd: x0 + rw,
+    yEnd: y0 + rh,
   }
 }
 

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { VideoMetadata, ROI, ExtractOptions, OCREngine } from '@/types/video'
 import { ROI_PRESETS } from '@/types/video'
+import { clamp } from '@/utils/math'
 import {
   DEFAULT_OCR_ENGINE,
   DEFAULT_LANGUAGES,
@@ -93,7 +94,7 @@ export const useProjectStore = defineStore('project', () => {
   
   function setCurrentFrame(frame: number) {
     if (!videoMeta.value) return
-    currentFrame.value = Math.max(0, Math.min(frame, videoMeta.value.totalFrames - 1))
+    currentFrame.value = clamp(frame, 0, videoMeta.value.totalFrames - 1)
   }
   
   function setPlaying(playing: boolean) {

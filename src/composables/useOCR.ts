@@ -5,6 +5,7 @@
 import { ref, computed } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import type { OCREngine } from '@/types/video'
+import { clamp } from '@/utils/math'
 
 export interface OCREngineInfo {
   id: OCREngine
@@ -102,7 +103,7 @@ export function useOCR() {
     let adjusted = baseAccuracy
     if (multiPass.value) adjusted += 3
     if (postProcess.value) adjusted += 2
-    return Math.min(adjusted, 99)
+    return clamp(adjusted, 0, 99)
   })
 
   // Methods

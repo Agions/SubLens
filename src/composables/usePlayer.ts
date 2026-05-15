@@ -1,6 +1,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { CANVAS_CONTEXT_2D, MIME_IMAGE_PNG } from '@/utils/constants'
+import { clamp } from '@/utils/math'
 
 // ─── Video event constants ───────────────────────────────────────────
 const VIDEO_EVENTS = {
@@ -133,8 +134,7 @@ export function useVideoPlayer() {
   function seek(time: number) {
     if (videoRef.value) {
       const duration = videoRef.value.duration || 0
-      // Clamp to valid range [0, duration]
-      const clampedTime = Math.max(0, Math.min(time, duration))
+      const clampedTime = clamp(time, 0, duration)
       videoRef.value.currentTime = clampedTime
     }
   }
@@ -148,13 +148,13 @@ export function useVideoPlayer() {
 
   function seekRelative(deltaFrames: number) {
     const newFrame = projectStore.currentFrame + deltaFrames
-    seekToFrame(Math.max(0, newFrame))
+    seekToFrame(clamp(newFrame, 0))
   }
 
   // Volume
   function setVolume(volume: number) {
     if (videoRef.value) {
-      videoRef.value.volume = Math.max(0, Math.min(1, volume))
+      videoRef.value.volume = clamp(volume, 0, 1)
       projectStore.volume = videoRef.value.volume
     }
   }
