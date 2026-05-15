@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SubtitleItem, SubtitleEdit, EditableField, EditableValue, ExportFormats } from '@/types/subtitle'
-import { CONFIDENCE_HIGH, CONFIDENCE_MID } from '@/utils/confidence'
+import { CONFIDENCE_HIGH, CONFIDENCE_MID, getConfidenceLevel } from '@/utils/confidence'
 import { type ConfidenceFilterValue } from '@/utils/confidence'
 import { getExporter, type ExportFormat } from '@/core'
 
@@ -42,12 +42,7 @@ export const useSubtitleStore = defineStore('subtitle', () => {
 
     // Apply confidence filter
     if (confidenceFilter.value !== 'all') {
-      result = result.filter(sub => {
-        if (confidenceFilter.value === 'low') return sub.confidence < CONFIDENCE_MID
-        if (confidenceFilter.value === 'mid') return sub.confidence >= CONFIDENCE_MID && sub.confidence < CONFIDENCE_HIGH
-        if (confidenceFilter.value === 'high') return sub.confidence >= CONFIDENCE_HIGH
-        return true
-      })
+      result = result.filter(sub => getConfidenceLevel(sub.confidence) === confidenceFilter.value)
     }
 
     // Apply search filter
