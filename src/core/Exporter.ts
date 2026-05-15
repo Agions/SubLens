@@ -26,8 +26,10 @@ const _ASS_ESCAPE_REGEXPS: Array<[RegExp, string]> = [
 ]
 
 // Shared timestamp helpers — now imported from utils/time
+import { _pad2 } from '@/utils/time'
+
 function pad2(n: number): string {
-  return n.toString().padStart(2, '0')
+  return _pad2(n)
 }
 
 function pad3(n: number): string {
