@@ -9,6 +9,7 @@
  */
 
 import { pixelLuma } from '@/utils/math'
+import { normalizeROI } from '@/utils/image'
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -68,13 +69,7 @@ export function extractFrameMetrics(
   const { data, width, height } = frameData
 
   // Convert percentage ROI to pixel coordinates
-  const x0 = Math.max(0, Math.min(Math.floor((roi.x / 100) * width), width))
-  const y0 = Math.max(0, Math.min(Math.floor((roi.y / 100) * height), height))
-  const rw  = Math.max(1, Math.min(Math.floor((roi.width / 100) * width),  width  - x0))
-  const rh  = Math.max(1, Math.min(Math.floor((roi.height / 100) * height), height - y0))
-
-  const xEnd = Math.min(x0 + rw, width)
-  const yEnd = Math.min(y0 + rh, height)
+  const { x0, y0, xEnd, yEnd } = normalizeROI(roi, width, height, 1)
 
   let sum = 0
   let sumSq = 0

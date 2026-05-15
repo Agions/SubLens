@@ -12,6 +12,39 @@ export interface DeskewResult {
   corrected: ImageData
 }
 
+export interface NormalizedROI {
+  x0: number
+  y0: number
+  rw: number
+  rh: number
+  xEnd: number
+  yEnd: number
+}
+
+/**
+ * Converts percentage-based ROI [0–100] to absolute pixel coordinates
+ * with boundary clamping. Used by both the OCR extractor and scene detector.
+ */
+export function normalizeROI(
+  roi: { x: number; y: number; width: number; height: number },
+  width: number,
+  height: number,
+  minSize = 0,
+): NormalizedROI {
+  const x0 = Math.max(0, Math.min(Math.floor((roi.x / 100) * width), width))
+  const y0 = Math.max(0, Math.min(Math.floor((roi.y / 100) * height), height))
+  const rw = Math.max(minSize, Math.min(Math.floor((roi.width / 100) * width), width - x0))
+  const rh = Math.max(minSize, Math.min(Math.floor((roi.height / 100) * height), height - y0))
+  return {
+    x0,
+    y0,
+    rw,
+    rh,
+    xEnd: Math.min(x0 + rw, width),
+    yEnd: Math.min(y0 + rh, height),
+  }
+}
+
 // ─── Kernel utilities ─────────────────────────────────────────────
 
 type NeighborCallback = (nx: number, ny: number, srcIdx: number) => void
