@@ -84,7 +84,7 @@ function _applyRules(rules: Rule[], signals: CalibrationSignal[], quality: numbe
   for (const { condition, factor, reason, bonus } of rules) {
     if (!condition) continue
     signals.push(bonus ? BONUS(factor, reason) : PENALTY(factor, reason))
-    quality = bonus ? Math.min(1, quality * factor) : quality * factor
+    quality = bonus ? clamp(quality * factor) : quality * factor
   }
   return quality
 }
@@ -289,7 +289,7 @@ export class Calibrator {
     // v2: punctuation normalization bonus
     if (punctChanged) {
       signals.push(BONUS(F_CJK_PUNCT_NORM, 'CJK punctuation normalized'))
-      quality = Math.min(1, quality * F_CJK_PUNCT_NORM)
+      quality = clamp(quality * F_CJK_PUNCT_NORM)
     }
 
     // Common rules
